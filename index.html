@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Voice Joke Webpage</title>
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      font-family: 'Comic Sans MS', 'Comic Sans', cursive, sans-serif;
+      background: #ffeaa7;
+      color: #222;
+    }
+    .centered {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+    .joke {
+      background: #fffde7;
+      border-radius: 20px;
+      padding: 2em 2em;
+      font-size: 1.5em;
+      margin: 1.5em 0;
+      min-width: 320px;
+      min-height: 80px;
+      text-align: center;
+      box-shadow: 0 6px 24px rgba(0,0,0,0.1);
+      max-width: 90vw;
+    }
+    .buttons {
+      display: flex;
+      gap: 1em;
+      margin-top: 1em;
+    }
+    button {
+      background: #f6e58d;
+      border: none;
+      border-radius: 30px;
+      padding: 0.8em 2em;
+      font-size: 1.1em;
+      cursor: pointer;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.07);
+      transition: background 0.2s, transform 0.1s;
+    }
+    button:hover {
+      background: #ffbe76;
+      transform: scale(1.06);
+    }
+    @media (max-width: 500px) {
+      .joke { font-size: 1em; min-width: 150px; padding: 1em; }
+      button { font-size: 0.95em; padding: 0.6em 1.2em; }
+    }
+  </style>
+</head>
+<body>
+  <div class="centered">
+    <h1>😂 Voice Joke Webpage</h1>
+    <div id="joke" class="joke">Loading joke...</div>
+    <div class="buttons">
+      <button id="play">Play 🔊</button>
+      <button id="next">Next Joke 👉</button>
+      <button id="replay">Replay ♻️</button>
+    </div>
+  </div>
+  <script>
+    let currentJoke = '';
+
+    function displayJoke(joke) {
+      document.getElementById('joke').textContent = joke;
+    }
+
+    function speakJoke(joke) {
+      if (!window.speechSynthesis) return;
+      window.speechSynthesis.cancel();
+      const utter = new window.SpeechSynthesisUtterance(joke);
+      utter.rate = 1.05;
+      utter.pitch = 1.1;
+      utter.lang = 'en-US';
+      window.speechSynthesis.speak(utter);
+    }
+
+    async function fetchJoke() {
+      displayJoke('Loading joke...');
+      try {
+        const resp = await fetch('https://v2.jokeapi.dev/joke/Any?type=single,twopart&safe-mode');
+        const data = await resp.json();
+        let joke = '';
+        if (data.type === 'single') {
+          joke = data.joke;
+        } else if (data.type === 'twopart') {
+          joke = data.setup + '\n' + data.delivery;
+        } else {
+          joke = "Oops! Couldn't find a joke.";
+        }
+        currentJoke = joke;
+        displayJoke(joke);
+      } catch (e) {
+        currentJoke = "Oops! Failed to load a joke.";
+        displayJoke(currentJoke);
+      }
+    }
+
+    document.getElementById('play').onclick = () => speakJoke(currentJoke);
+    document.getElementById('replay').onclick = () => speakJoke(currentJoke);
+    document.getElementById('next').onclick = () => fetchJoke();
+
+    // On page load, load the first joke
+    window.onload = () => {
+      fetchJoke();
+    };
+  </script>
+</body>
+</html>
