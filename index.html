@@ -306,8 +306,17 @@
       return "Oops! Couldn't find a joke.";
     }
 
+    function buildApiUrl(apiLang) {
+      const categories = apiLang === 'en' ? 'Misc,Pun' : 'Any';
+      return `https://v2.jokeapi.dev/joke/${categories}?type=single&safe-mode&blacklistFlags=nsfw,religious,political,racist,sexist,explicit&lang=${apiLang}`;
+    }
+
+    function isLanguageMatch(data, apiLang) {
+      return !data.lang || data.lang === apiLang;
+    }
+
     async function fetchJokeFromApi(apiLang) {
-      const url = `https://v2.jokeapi.dev/joke/Misc,Pun?type=single&safe-mode&blacklistFlags=nsfw,religious,political,racist,sexist,explicit&lang=${apiLang}`;
+      const url = buildApiUrl(apiLang);
       const resp = await fetch(url);
       if (!resp.ok) {
         throw new Error('Joke request failed');
@@ -323,6 +332,9 @@
       const maxAttempts = 5;
       for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
         const data = await fetchJokeFromApi(apiLang);
+        if (!isLanguageMatch(data, apiLang)) {
+          continue;
+        }
         const joke = buildJoke(data);
         if (isCalmJoke(joke)) {
           return { joke, usedFallback: false };
