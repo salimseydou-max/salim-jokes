@@ -37,6 +37,19 @@
       gap: 1em;
       margin-top: 1em;
     }
+    .ad-unit {
+      margin-top: 1.5em;
+      border: 2px solid #222;
+      padding: 0.4em;
+      background: #fffde7;
+      width: 468px;
+      max-width: 90vw;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.07);
+    }
     button {
       background: #f6e58d;
       border: none;
@@ -66,17 +79,19 @@
       <button id="next">Next Joke 👉</button>
       <button id="replay">Replay ♻️</button>
     </div>
+    <div class="ad-unit" aria-label="Advertisement">
+      <script>
+        atOptions = {
+          'key' : '44737517597e4d4fd2582ae54ae399b2',
+          'format' : 'iframe',
+          'height' : 60,
+          'width' : 468,
+          'params' : {}
+        };
+      </script>
+      <script src="https://www.highperformanceformat.com/44737517597e4d4fd2582ae54ae399b2/invoke.js"></script>
+    </div>
   </div>
-  <script>
-    atOptions = {
-      'key' : '44737517597e4d4fd2582ae54ae399b2',
-      'format' : 'iframe',
-      'height' : 60,
-      'width' : 468,
-      'params' : {}
-    };
-  </script>
-  <script src="https://www.highperformanceformat.com/44737517597e4d4fd2582ae54ae399b2/invoke.js"></script>
   <script>
     let currentJoke = '';
 
