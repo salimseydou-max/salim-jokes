@@ -331,7 +331,15 @@
     async function fetchCalmJoke(apiLang) {
       const maxAttempts = 5;
       for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
-        const data = await fetchJokeFromApi(apiLang);
+        let data;
+        try {
+          data = await fetchJokeFromApi(apiLang);
+        } catch (error) {
+          continue;
+        }
+        if (!data) {
+          continue;
+        }
         if (!isLanguageMatch(data, apiLang)) {
           continue;
         }
@@ -357,20 +365,6 @@
           setFeedback(`Loaded a short calm joke in ${languageLabel}.`);
         }
       } catch (e) {
-        if (apiLang !== 'en') {
-          try {
-            const result = await fetchCalmJoke('en');
-            applyNewJoke(result.joke);
-            if (result.usedFallback) {
-              setFeedback('Loaded a short calm joke in English (local list).');
-            } else {
-              setFeedback('Loaded a short calm joke in English (fallback).');
-            }
-            return;
-          } catch (fallbackError) {
-            // Fall through to error message below.
-          }
-        }
         const fallbackJoke = pickFallbackJoke(apiLang);
         applyNewJoke(fallbackJoke);
         setFeedback('Loaded a short calm joke from the local list.');
