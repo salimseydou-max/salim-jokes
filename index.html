@@ -34,6 +34,8 @@
     }
     .buttons {
       display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
       gap: 1em;
       margin-top: 1em;
     }
@@ -95,6 +97,11 @@
       background: #ffbe76;
       transform: scale(1.06);
     }
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
     @media (max-width: 500px) {
       .joke { font-size: 1em; min-width: 150px; padding: 1em; }
       button { font-size: 0.95em; padding: 0.6em 1.2em; }
@@ -107,9 +114,11 @@
     <h1>😂 Voice Joke Webpage</h1>
     <div id="joke" class="joke">Loading joke...</div>
     <div class="buttons">
+      <button id="previous">Previous</button>
       <button id="play">Play 🔊</button>
-      <button id="next">Next Joke 👉</button>
       <button id="replay">Replay ♻️</button>
+      <button id="forward">Forward</button>
+      <button id="new">New Joke</button>
     </div>
     <div class="language-controls">
       <label for="language">Language</label>
@@ -137,10 +146,46 @@
     let currentJoke = '';
     const languageSelect = document.getElementById('language');
     const feedback = document.getElementById('feedback');
+    const previousButton = document.getElementById('previous');
+    const forwardButton = document.getElementById('forward');
+    const newButton = document.getElementById('new');
+    const jokeHistory = [];
+    let historyIndex = -1;
+    const MAX_JOKE_LENGTH = 120;
     const languageMap = {
       'en-US': 'en',
       'fr-FR': 'fr',
       'es-ES': 'es'
+    };
+    const fallbackJokes = {
+      en: [
+        'I told my coffee to be calm. It nodded quietly.',
+        'Small steps make big smiles.',
+        'Why did the cloud stay home? It felt a little foggy.',
+        'I asked the plant for advice. It said, "Keep it simple."',
+        'The calendar is on a diet. It has fewer dates.',
+        'The pencil felt relaxed. It was drawn to peace.',
+        'A quiet joke is still a good joke.',
+        'The moon whispered, "Take it slow."',
+        'I gave my day a hug. It softened.',
+        'A soft breeze told a gentle story.'
+      ],
+      fr: [
+        'Petit rire, grand calme.',
+        'Le vent souffle doucement. Tout va bien.',
+        'Je fais une pause cafe. Le cafe dit merci.',
+        'Pourquoi le chat sourit? Il a trouve un rayon de soleil.',
+        'Un petit sourire change la journee.',
+        'Le ciel est calme, comme une pensee douce.'
+      ],
+      es: [
+        'Risa pequena, calma grande.',
+        'El viento sopla suave. Todo esta bien.',
+        'Tomo un cafe tranquilo. El cafe dice gracias.',
+        'Por que el gato sonrie? Encontro un rayo de sol.',
+        'Un pequeno sorriso cambia el dia.',
+        'El cielo esta en calma, como un pensamiento suave.'
+      ]
     };
 
     function setFeedback(message) {
@@ -159,8 +204,57 @@
       return languageMap[getSelectedLanguage()] || 'en';
     }
 
+    function updateHistoryButtons() {
+      previousButton.disabled = historyIndex <= 0;
+      forwardButton.disabled = historyIndex === -1 || historyIndex >= jokeHistory.length - 1;
+    }
+
     function displayJoke(joke) {
       document.getElementById('joke').textContent = joke;
+    }
+
+    function showJoke(joke) {
+      currentJoke = joke;
+      displayJoke(joke);
+    }
+
+    function recordJoke(joke) {
+      if (!joke) {
+        return;
+      }
+      if (historyIndex < jokeHistory.length - 1) {
+        jokeHistory.splice(historyIndex + 1);
+      }
+      jokeHistory.push(joke);
+      historyIndex = jokeHistory.length - 1;
+      updateHistoryButtons();
+    }
+
+    function applyNewJoke(joke) {
+      showJoke(joke);
+      recordJoke(joke);
+    }
+
+    function showHistoryJoke() {
+      const joke = jokeHistory[historyIndex];
+      showJoke(joke);
+      updateHistoryButtons();
+      setFeedback(`Showing joke ${historyIndex + 1} of ${jokeHistory.length}.`);
+    }
+
+    function resetHistory() {
+      jokeHistory.length = 0;
+      historyIndex = -1;
+      updateHistoryButtons();
+    }
+
+    function isCalmJoke(joke) {
+      return Boolean(joke) && joke.length <= MAX_JOKE_LENGTH;
+    }
+
+    function pickFallbackJoke(apiLang) {
+      const list = fallbackJokes[apiLang] || fallbackJokes.en;
+      return list[Math.floor(Math.random() * list.length)];
     }
 
     function speakJoke(joke) {
@@ -209,7 +303,7 @@
     }
 
     async function fetchJokeFromApi(apiLang) {
-      const url = `https://v2.jokeapi.dev/joke/Any?type=single,twopart&safe-mode&lang=${apiLang}`;
+      const url = `https://v2.jokeapi.dev/joke/Misc,Pun?type=single&safe-mode&blacklistFlags=nsfw,religious,political,racist,sexist,explicit&lang=${apiLang}`;
       const resp = await fetch(url);
       if (!resp.ok) {
         throw new Error('Joke request failed');
@@ -221,44 +315,82 @@
       return data;
     }
 
+    async function fetchCalmJoke(apiLang) {
+      const maxAttempts = 5;
+      for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+        const data = await fetchJokeFromApi(apiLang);
+        const joke = buildJoke(data);
+        if (isCalmJoke(joke)) {
+          return { joke, usedFallback: false };
+        }
+      }
+      return { joke: pickFallbackJoke(apiLang), usedFallback: true };
+    }
+
     async function fetchJoke() {
       const languageLabel = getSelectedLanguageLabel();
       displayJoke('Loading joke...');
-      setFeedback(`Loading a joke in ${languageLabel}...`);
+      setFeedback(`Loading a short, calm joke in ${languageLabel}...`);
       const apiLang = getApiLanguage();
       try {
-        const data = await fetchJokeFromApi(apiLang);
-        currentJoke = buildJoke(data);
-        displayJoke(currentJoke);
-        setFeedback(`Loaded a new joke in ${languageLabel}.`);
+        const result = await fetchCalmJoke(apiLang);
+        applyNewJoke(result.joke);
+        if (result.usedFallback) {
+          setFeedback('Loaded a short calm joke (local list).');
+        } else {
+          setFeedback(`Loaded a short calm joke in ${languageLabel}.`);
+        }
       } catch (e) {
         if (apiLang !== 'en') {
           try {
-            const data = await fetchJokeFromApi('en');
-            currentJoke = buildJoke(data);
-            displayJoke(currentJoke);
-            setFeedback('Loaded a joke in English (fallback).');
+            const result = await fetchCalmJoke('en');
+            applyNewJoke(result.joke);
+            if (result.usedFallback) {
+              setFeedback('Loaded a short calm joke in English (local list).');
+            } else {
+              setFeedback('Loaded a short calm joke in English (fallback).');
+            }
             return;
           } catch (fallbackError) {
             // Fall through to error message below.
           }
         }
-        currentJoke = 'Oops! Failed to load a joke.';
-        displayJoke(currentJoke);
-        setFeedback('Failed to load a joke. Please try again.');
+        const fallbackJoke = pickFallbackJoke(apiLang);
+        applyNewJoke(fallbackJoke);
+        setFeedback('Loaded a short calm joke from the local list.');
       }
     }
 
     document.getElementById('play').onclick = () => speakJoke(currentJoke);
     document.getElementById('replay').onclick = () => speakJoke(currentJoke);
-    document.getElementById('next').onclick = () => fetchJoke();
+    previousButton.onclick = () => {
+      if (historyIndex > 0) {
+        historyIndex -= 1;
+        showHistoryJoke();
+      } else {
+        setFeedback('No previous jokes yet.');
+        updateHistoryButtons();
+      }
+    };
+    forwardButton.onclick = () => {
+      if (historyIndex < jokeHistory.length - 1) {
+        historyIndex += 1;
+        showHistoryJoke();
+      } else {
+        setFeedback('No newer jokes yet.');
+        updateHistoryButtons();
+      }
+    };
+    newButton.onclick = () => fetchJoke();
     languageSelect.onchange = () => {
+      resetHistory();
       setFeedback(`Language set to ${getSelectedLanguageLabel()}.`);
       fetchJoke();
     };
 
     // On page load, load the first joke
     window.onload = () => {
+      updateHistoryButtons();
       fetchJoke();
     };
   </script>
