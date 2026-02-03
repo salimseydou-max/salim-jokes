@@ -37,6 +37,37 @@
       gap: 1em;
       margin-top: 1em;
     }
+    .language-controls {
+      display: flex;
+      align-items: center;
+      gap: 0.6em;
+      margin-top: 1em;
+      padding: 0.4em 0.8em;
+      border-radius: 999px;
+      background: #fffde7;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.07);
+    }
+    .language-controls label {
+      font-weight: 600;
+    }
+    .language-controls select {
+      border: 1px solid #e1b12c;
+      border-radius: 999px;
+      padding: 0.35em 0.8em;
+      font-size: 1em;
+      background: #fff;
+      cursor: pointer;
+    }
+    .language-controls select:focus {
+      outline: 2px solid #ffbe76;
+      outline-offset: 2px;
+    }
+    .feedback {
+      margin-top: 0.75em;
+      min-height: 1.2em;
+      font-size: 0.95em;
+      color: #444;
+    }
     .ad-unit {
       margin-top: 1.5em;
       border: 2px solid #222;
@@ -67,6 +98,7 @@
     @media (max-width: 500px) {
       .joke { font-size: 1em; min-width: 150px; padding: 1em; }
       button { font-size: 0.95em; padding: 0.6em 1.2em; }
+      .language-controls { font-size: 0.95em; }
     }
   </style>
 </head>
@@ -79,6 +111,15 @@
       <button id="next">Next Joke 👉</button>
       <button id="replay">Replay ♻️</button>
     </div>
+    <div class="language-controls">
+      <label for="language">Language</label>
+      <select id="language">
+        <option value="en-US" selected>English</option>
+        <option value="fr-FR">French</option>
+        <option value="es-ES">Spanish</option>
+      </select>
+    </div>
+    <div id="feedback" class="feedback" aria-live="polite"></div>
     <div class="ad-unit" aria-label="Advertisement">
       <script>
         atOptions = {
@@ -94,45 +135,127 @@
   </div>
   <script>
     let currentJoke = '';
+    const languageSelect = document.getElementById('language');
+    const feedback = document.getElementById('feedback');
+    const languageMap = {
+      'en-US': 'en',
+      'fr-FR': 'fr',
+      'es-ES': 'es'
+    };
+
+    function setFeedback(message) {
+      feedback.textContent = message;
+    }
+
+    function getSelectedLanguage() {
+      return languageSelect.value;
+    }
+
+    function getSelectedLanguageLabel() {
+      return languageSelect.options[languageSelect.selectedIndex].text;
+    }
+
+    function getApiLanguage() {
+      return languageMap[getSelectedLanguage()] || 'en';
+    }
 
     function displayJoke(joke) {
       document.getElementById('joke').textContent = joke;
     }
 
     function speakJoke(joke) {
-      if (!window.speechSynthesis) return;
+      if (!joke) {
+        setFeedback('Load a joke first.');
+        return;
+      }
+      if (!window.speechSynthesis) {
+        setFeedback('Speech synthesis is not supported in this browser.');
+        return;
+      }
       window.speechSynthesis.cancel();
       const utter = new window.SpeechSynthesisUtterance(joke);
+      const selectedLang = getSelectedLanguage();
+      const voices = window.speechSynthesis.getVoices();
+      const exactVoice = voices.find((voice) => voice.lang === selectedLang);
+      const fallbackVoice = voices.find((voice) =>
+        voice.lang.startsWith(selectedLang.split('-')[0])
+      );
+      if (exactVoice || fallbackVoice) {
+        utter.voice = exactVoice || fallbackVoice;
+      }
       utter.rate = 1.05;
       utter.pitch = 1.1;
-      utter.lang = 'en-US';
+      utter.lang = selectedLang;
+      utter.onstart = () => {
+        setFeedback(`Speaking in ${getSelectedLanguageLabel()}...`);
+      };
+      utter.onend = () => {
+        setFeedback('Done speaking.');
+      };
+      utter.onerror = () => {
+        setFeedback('Could not play the voice. Please try again.');
+      };
       window.speechSynthesis.speak(utter);
     }
 
+    function buildJoke(data) {
+      if (data.type === 'single') {
+        return data.joke;
+      }
+      if (data.type === 'twopart') {
+        return `${data.setup}\n${data.delivery}`;
+      }
+      return "Oops! Couldn't find a joke.";
+    }
+
+    async function fetchJokeFromApi(apiLang) {
+      const url = `https://v2.jokeapi.dev/joke/Any?type=single,twopart&safe-mode&lang=${apiLang}`;
+      const resp = await fetch(url);
+      if (!resp.ok) {
+        throw new Error('Joke request failed');
+      }
+      const data = await resp.json();
+      if (data.error) {
+        throw new Error(data.message || 'Joke request failed');
+      }
+      return data;
+    }
+
     async function fetchJoke() {
+      const languageLabel = getSelectedLanguageLabel();
       displayJoke('Loading joke...');
+      setFeedback(`Loading a joke in ${languageLabel}...`);
+      const apiLang = getApiLanguage();
       try {
-        const resp = await fetch('https://v2.jokeapi.dev/joke/Any?type=single,twopart&safe-mode');
-        const data = await resp.json();
-        let joke = '';
-        if (data.type === 'single') {
-          joke = data.joke;
-        } else if (data.type === 'twopart') {
-          joke = data.setup + '\n' + data.delivery;
-        } else {
-          joke = "Oops! Couldn't find a joke.";
-        }
-        currentJoke = joke;
-        displayJoke(joke);
-      } catch (e) {
-        currentJoke = "Oops! Failed to load a joke.";
+        const data = await fetchJokeFromApi(apiLang);
+        currentJoke = buildJoke(data);
         displayJoke(currentJoke);
+        setFeedback(`Loaded a new joke in ${languageLabel}.`);
+      } catch (e) {
+        if (apiLang !== 'en') {
+          try {
+            const data = await fetchJokeFromApi('en');
+            currentJoke = buildJoke(data);
+            displayJoke(currentJoke);
+            setFeedback('Loaded a joke in English (fallback).');
+            return;
+          } catch (fallbackError) {
+            // Fall through to error message below.
+          }
+        }
+        currentJoke = 'Oops! Failed to load a joke.';
+        displayJoke(currentJoke);
+        setFeedback('Failed to load a joke. Please try again.');
       }
     }
 
     document.getElementById('play').onclick = () => speakJoke(currentJoke);
     document.getElementById('replay').onclick = () => speakJoke(currentJoke);
     document.getElementById('next').onclick = () => fetchJoke();
+    languageSelect.onchange = () => {
+      setFeedback(`Language set to ${getSelectedLanguageLabel()}.`);
+      fetchJoke();
+    };
 
     // On page load, load the first joke
     window.onload = () => {
