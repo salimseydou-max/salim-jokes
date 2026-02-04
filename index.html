@@ -9,6 +9,7 @@
       height: 100%;
       margin: 0;
       padding: 0;
+      padding-top: 84px;
       font-family: 'Comic Sans MS', 'Comic Sans', cursive, sans-serif;
       background-color: #ffeaa7;
       background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Crect width='160' height='160' fill='none'/%3E%3Ctext x='12' y='42' font-size='28' opacity='0.18'%3E%F0%9F%98%82%3C/text%3E%3Ctext x='92' y='88' font-size='28' opacity='0.18'%3E%F0%9F%A4%A3%3C/text%3E%3Ctext x='40' y='132' font-size='28' opacity='0.18'%3E%F0%9F%98%9C%3C/text%3E%3C/svg%3E");
@@ -23,6 +24,68 @@
       justify-content: center;
       align-items: center;
       min-height: 100vh;
+    }
+    .top-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 10;
+      background: rgba(255, 253, 231, 0.96);
+      border-bottom: 2px solid #222;
+      padding: 0.6em 1em;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      backdrop-filter: blur(4px);
+    }
+    .top-bar-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 0.6em;
+    }
+    .top-bar button {
+      padding: 0.5em 1.2em;
+      font-size: 0.95em;
+    }
+    .saved-count {
+      font-weight: 600;
+    }
+    .saved-list {
+      margin-top: 0.6em;
+      max-height: 200px;
+      overflow: auto;
+      display: grid;
+      gap: 0.6em;
+    }
+    .saved-item {
+      display: flex;
+      align-items: center;
+      gap: 0.6em;
+      background: #fff;
+      padding: 0.5em 0.8em;
+      border-radius: 12px;
+      border: 1px solid #f0d877;
+    }
+    .saved-text {
+      flex: 1;
+      font-size: 0.95em;
+    }
+    .saved-actions {
+      display: flex;
+      gap: 0.4em;
+      flex-wrap: wrap;
+    }
+    .saved-tag {
+      font-size: 0.8em;
+      background: #f6e58d;
+      border-radius: 999px;
+      padding: 0.2em 0.6em;
+    }
+    .saved-empty {
+      text-align: center;
+      color: #666;
+      font-size: 0.95em;
     }
     .joke {
       background: #fffde7;
@@ -107,6 +170,7 @@
       transform: none;
     }
     @media (max-width: 500px) {
+      html, body { padding-top: 110px; }
       .joke { font-size: 1em; min-width: 150px; padding: 1em; }
       button { font-size: 0.95em; padding: 0.6em 1.2em; }
       .language-controls { font-size: 0.95em; }
@@ -114,6 +178,15 @@
   </style>
 </head>
 <body>
+  <div class="top-bar" aria-label="Saved jokes">
+    <div class="top-bar-row">
+      <button id="save-joke">Save Joke</button>
+      <button id="unsave-joke">Remove Saved</button>
+      <button id="toggle-saved">Show Saved</button>
+      <span id="saved-count" class="saved-count">0 saved</span>
+    </div>
+    <div id="saved-list" class="saved-list" hidden></div>
+  </div>
   <div class="centered">
     <h1>😂 Voice Joke Webpage</h1>
     <div id="joke" class="joke">Loading joke...</div>
@@ -153,14 +226,31 @@
     const previousButton = document.getElementById('previous');
     const forwardButton = document.getElementById('forward');
     const newButton = document.getElementById('new');
+    const saveButton = document.getElementById('save-joke');
+    const unsaveButton = document.getElementById('unsave-joke');
+    const toggleSavedButton = document.getElementById('toggle-saved');
+    const savedCount = document.getElementById('saved-count');
+    const savedList = document.getElementById('saved-list');
     const jokeHistory = [];
     let historyIndex = -1;
     const MAX_JOKE_LENGTH = 120;
+    const MAX_SEEN_PER_LANG = 500;
+    const STORAGE_KEYS = {
+      saved: 'savedJokes',
+      seen: 'seenJokes'
+    };
     const languageMap = {
       'en-US': 'en',
       'fr-FR': 'fr',
       'es-ES': 'es'
     };
+    const seenStore = loadSeenStore();
+    const seenSets = {
+      en: new Set(seenStore.en),
+      fr: new Set(seenStore.fr),
+      es: new Set(seenStore.es)
+    };
+    let savedJokes = loadSavedJokes();
     const fallbackJokes = {
       en: [
         'I told my coffee to be calm. It nodded quietly.',
@@ -172,7 +262,16 @@
         'A quiet joke is still a good joke.',
         'The moon whispered, "Take it slow."',
         'I gave my day a hug. It softened.',
-        'A soft breeze told a gentle story.'
+        'A soft breeze told a gentle story.',
+        'The teacup said, "Sip and smile."',
+        'A small joke is a calm hug.',
+        'My pillow said, "Rest easy."',
+        'The light bulb had a bright idea: relax.',
+        'The book sighed, "One page at a time."',
+        'A gentle laugh is a tiny sunshine.',
+        'The clock said, "No rush."',
+        'The tree waved and kept quiet.',
+        'A calm joke lands softly.'
       ],
       fr: [
         'Petit rire, grand calme.',
@@ -180,7 +279,13 @@
         'Je fais une pause cafe. Le cafe dit merci.',
         'Pourquoi le chat sourit? Il a trouve un rayon de soleil.',
         'Un petit sourire change la journee.',
-        'Le ciel est calme, comme une pensee douce.'
+        'Le ciel est calme, comme une pensee douce.',
+        'Un rire doux fait du bien.',
+        'La tasse de the dit: "Tout doucement."',
+        'Un nuage passe et dit bonjour.',
+        'La lampe murmure: "Reste zen."',
+        'Le livre dit: "Une page a la fois."',
+        'Le matin sourit doucement.'
       ],
       es: [
         'Risa pequena, calma grande.',
@@ -188,7 +293,13 @@
         'Tomo un cafe tranquilo. El cafe dice gracias.',
         'Por que el gato sonrie? Encontro un rayo de sol.',
         'Un pequeno sorriso cambia el dia.',
-        'El cielo esta en calma, como un pensamiento suave.'
+        'El cielo esta en calma, como un pensamiento suave.',
+        'Un chiste suave abraza el dia.',
+        'La taza de te dice: "Despacio."',
+        'Una nube pasa y saluda.',
+        'La lampara dice: "Todo tranquilo."',
+        'El libro dice: "Pagina por pagina."',
+        'La manana sonrie despacio.'
       ]
     };
 
@@ -208,6 +319,124 @@
       return languageMap[getSelectedLanguage()] || 'en';
     }
 
+    function setLanguageByApiLang(apiLang) {
+      const map = { en: 'en-US', fr: 'fr-FR', es: 'es-ES' };
+      const value = map[apiLang];
+      if (value && languageSelect.value !== value) {
+        languageSelect.value = value;
+      }
+    }
+
+    function loadSeenStore() {
+      const empty = { en: [], fr: [], es: [] };
+      try {
+        const stored = JSON.parse(localStorage.getItem(STORAGE_KEYS.seen));
+        if (!stored || typeof stored !== 'object') {
+          return empty;
+        }
+        return {
+          en: Array.isArray(stored.en) ? stored.en : [],
+          fr: Array.isArray(stored.fr) ? stored.fr : [],
+          es: Array.isArray(stored.es) ? stored.es : []
+        };
+      } catch (e) {
+        return empty;
+      }
+    }
+
+    function saveSeenStore() {
+      try {
+        localStorage.setItem(STORAGE_KEYS.seen, JSON.stringify(seenStore));
+      } catch (e) {
+        // Ignore storage errors (private mode, quota, etc).
+      }
+    }
+
+    function loadSavedJokes() {
+      try {
+        const stored = JSON.parse(localStorage.getItem(STORAGE_KEYS.saved));
+        if (!Array.isArray(stored)) {
+          return [];
+        }
+        return stored.filter(
+          (entry) => entry && typeof entry.joke === 'string' && typeof entry.lang === 'string'
+        );
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function saveSavedJokes() {
+      try {
+        localStorage.setItem(STORAGE_KEYS.saved, JSON.stringify(savedJokes));
+      } catch (e) {
+        // Ignore storage errors (private mode, quota, etc).
+      }
+    }
+
+    function isJokeSaved(joke, apiLang) {
+      if (!joke) {
+        return false;
+      }
+      return savedJokes.some((entry) => entry.joke === joke && entry.lang === apiLang);
+    }
+
+    function updateSavedControls() {
+      savedCount.textContent = `${savedJokes.length} saved`;
+      const apiLang = getApiLanguage();
+      const hasJoke = Boolean(currentJoke);
+      saveButton.disabled = !hasJoke || isJokeSaved(currentJoke, apiLang);
+      unsaveButton.disabled = !hasJoke || !isJokeSaved(currentJoke, apiLang);
+    }
+
+    function saveCurrentJoke() {
+      if (!currentJoke) {
+        setFeedback('Load a joke first.');
+        return;
+      }
+      const apiLang = getApiLanguage();
+      if (isJokeSaved(currentJoke, apiLang)) {
+        setFeedback('This joke is already saved.');
+        return;
+      }
+      savedJokes.push({
+        joke: currentJoke,
+        lang: apiLang,
+        label: getSelectedLanguageLabel()
+      });
+      saveSavedJokes();
+      updateSavedControls();
+      renderSavedList();
+      setFeedback('Saved this joke.');
+    }
+
+    function removeSavedJokeByIndex(index) {
+      if (index < 0 || index >= savedJokes.length) {
+        return;
+      }
+      savedJokes.splice(index, 1);
+      saveSavedJokes();
+      updateSavedControls();
+      renderSavedList();
+    }
+
+    function removeCurrentSavedJoke() {
+      if (!currentJoke) {
+        setFeedback('Load a joke first.');
+        return;
+      }
+      const apiLang = getApiLanguage();
+      const index = savedJokes.findIndex(
+        (entry) => entry.joke === currentJoke && entry.lang === apiLang
+      );
+      if (index === -1) {
+        setFeedback('This joke is not saved yet.');
+        return;
+      }
+      removeSavedJokeByIndex(index);
+      setFeedback('Removed saved joke.');
+    }
+
     function updateHistoryButtons() {
       previousButton.disabled = historyIndex <= 0;
       forwardButton.disabled = historyIndex === -1 || historyIndex >= jokeHistory.length - 1;
@@ -220,6 +449,7 @@
     function showJoke(joke) {
       currentJoke = joke;
       displayJoke(joke);
+      updateSavedControls();
     }
 
     function recordJoke(joke) {
@@ -234,9 +464,10 @@
       updateHistoryButtons();
     }
 
-    function applyNewJoke(joke) {
+    function applyNewJoke(joke, apiLangOverride) {
       showJoke(joke);
       recordJoke(joke);
+      rememberSeenJoke(joke, apiLangOverride || getApiLanguage());
     }
 
     function showHistoryJoke() {
@@ -252,13 +483,90 @@
       updateHistoryButtons();
     }
 
+    function hasSeenJoke(joke, apiLang) {
+      const seenSet = seenSets[apiLang];
+      return Boolean(joke && seenSet && seenSet.has(joke));
+    }
+
+    function rememberSeenJoke(joke, apiLang) {
+      if (!joke) {
+        return;
+      }
+      if (!seenStore[apiLang]) {
+        seenStore[apiLang] = [];
+        seenSets[apiLang] = new Set();
+      }
+      const list = seenStore[apiLang];
+      const seenSet = seenSets[apiLang];
+      if (seenSet.has(joke)) {
+        return;
+      }
+      list.push(joke);
+      seenSet.add(joke);
+      if (list.length > MAX_SEEN_PER_LANG) {
+        const removed = list.shift();
+        seenSet.delete(removed);
+      }
+      saveSeenStore();
+    }
+
     function isCalmJoke(joke) {
       return Boolean(joke) && joke.length <= MAX_JOKE_LENGTH;
     }
 
     function pickFallbackJoke(apiLang) {
       const list = fallbackJokes[apiLang] || fallbackJokes.en;
-      return list[Math.floor(Math.random() * list.length)];
+      const unseen = list.filter((joke) => !hasSeenJoke(joke, apiLang));
+      const pool = unseen.length > 0 ? unseen : list;
+      return {
+        joke: pool[Math.floor(Math.random() * pool.length)],
+        wasRepeat: unseen.length === 0
+      };
+    }
+
+    function renderSavedList() {
+      savedList.innerHTML = '';
+      if (savedJokes.length === 0) {
+        const empty = document.createElement('div');
+        empty.className = 'saved-empty';
+        empty.textContent = 'No saved jokes yet.';
+        savedList.appendChild(empty);
+        return;
+      }
+      savedJokes.forEach((entry, index) => {
+        const item = document.createElement('div');
+        item.className = 'saved-item';
+
+        const text = document.createElement('div');
+        text.className = 'saved-text';
+        text.textContent = entry.joke;
+
+        const tag = document.createElement('span');
+        tag.className = 'saved-tag';
+        tag.textContent = entry.label || entry.lang;
+
+        const actions = document.createElement('div');
+        actions.className = 'saved-actions';
+
+        const showButton = document.createElement('button');
+        showButton.type = 'button';
+        showButton.dataset.action = 'show';
+        showButton.dataset.index = String(index);
+        showButton.textContent = 'Show';
+
+        const removeButton = document.createElement('button');
+        removeButton.type = 'button';
+        removeButton.dataset.action = 'remove';
+        removeButton.dataset.index = String(index);
+        removeButton.textContent = 'Remove';
+
+        actions.appendChild(showButton);
+        actions.appendChild(removeButton);
+        item.appendChild(text);
+        item.appendChild(tag);
+        item.appendChild(actions);
+        savedList.appendChild(item);
+      });
     }
 
     function speakJoke(joke) {
@@ -344,11 +652,12 @@
           continue;
         }
         const joke = buildJoke(data);
-        if (isCalmJoke(joke)) {
+        if (isCalmJoke(joke) && !hasSeenJoke(joke, apiLang)) {
           return { joke, usedFallback: false };
         }
       }
-      return { joke: pickFallbackJoke(apiLang), usedFallback: true };
+      const fallback = pickFallbackJoke(apiLang);
+      return { joke: fallback.joke, usedFallback: true, wasRepeat: fallback.wasRepeat };
     }
 
     async function fetchJoke() {
@@ -358,21 +667,65 @@
       const apiLang = getApiLanguage();
       try {
         const result = await fetchCalmJoke(apiLang);
-        applyNewJoke(result.joke);
+        applyNewJoke(result.joke, apiLang);
         if (result.usedFallback) {
-          setFeedback('Loaded a short calm joke (local list).');
+          setFeedback(
+            result.wasRepeat
+              ? 'All short calm jokes were used. Showing a familiar one.'
+              : 'Loaded a short calm joke (local list).'
+          );
         } else {
           setFeedback(`Loaded a short calm joke in ${languageLabel}.`);
         }
       } catch (e) {
-        const fallbackJoke = pickFallbackJoke(apiLang);
-        applyNewJoke(fallbackJoke);
-        setFeedback('Loaded a short calm joke from the local list.');
+        const fallback = pickFallbackJoke(apiLang);
+        applyNewJoke(fallback.joke, apiLang);
+        setFeedback(
+          fallback.wasRepeat
+            ? 'All short calm jokes were used. Showing a familiar one.'
+            : 'Loaded a short calm joke from the local list.'
+        );
       }
     }
 
     document.getElementById('play').onclick = () => speakJoke(currentJoke);
     document.getElementById('replay').onclick = () => speakJoke(currentJoke);
+    saveButton.onclick = () => saveCurrentJoke();
+    unsaveButton.onclick = () => removeCurrentSavedJoke();
+    toggleSavedButton.onclick = () => {
+      const isHidden = savedList.hasAttribute('hidden');
+      if (isHidden) {
+        savedList.removeAttribute('hidden');
+        toggleSavedButton.textContent = 'Hide Saved';
+        renderSavedList();
+      } else {
+        savedList.setAttribute('hidden', '');
+        toggleSavedButton.textContent = 'Show Saved';
+      }
+    };
+    savedList.onclick = (event) => {
+      const button = event.target.closest('button');
+      if (!button) {
+        return;
+      }
+      const index = Number(button.dataset.index);
+      if (Number.isNaN(index)) {
+        return;
+      }
+      const entry = savedJokes[index];
+      if (!entry) {
+        return;
+      }
+      if (button.dataset.action === 'show') {
+        setLanguageByApiLang(entry.lang);
+        applyNewJoke(entry.joke, entry.lang);
+        setFeedback(`Showing saved ${entry.label || entry.lang} joke.`);
+      }
+      if (button.dataset.action === 'remove') {
+        removeSavedJokeByIndex(index);
+        setFeedback('Removed saved joke.');
+      }
+    };
     previousButton.onclick = () => {
       if (historyIndex > 0) {
         historyIndex -= 1;
@@ -401,6 +754,8 @@
     // On page load, load the first joke
     window.onload = () => {
       updateHistoryButtons();
+      updateSavedControls();
+      renderSavedList();
       fetchJoke();
     };
   </script>
