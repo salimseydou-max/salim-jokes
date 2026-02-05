@@ -73,6 +73,36 @@
       margin: 0 auto;
       padding: 1.5rem;
     }
+    .view-section {
+      display: none;
+      outline: none;
+    }
+    .view-section.active {
+      display: block;
+      animation: fadeSlide 0.25s ease;
+    }
+    @keyframes fadeSlide {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .page-transition {
+      position: fixed;
+      inset: 0;
+      background: rgba(255, 253, 231, 0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+      z-index: 60;
+    }
+    [data-theme="dark"] .page-transition {
+      background: rgba(20, 20, 20, 0.7);
+    }
+    .page-transition.show {
+      opacity: 1;
+    }
     .top-bar {
       position: fixed;
       top: 0;
@@ -118,6 +148,9 @@
     }
     .nav a:hover {
       background: var(--bg-soft);
+    }
+    .nav a.active {
+      background: var(--accent-strong);
     }
     .top-actions {
       display: flex;
@@ -633,11 +666,10 @@
         <span class="brand-name" data-i18n="brand.name">Voice Joke Club</span>
       </div>
       <nav class="nav">
-        <a href="#home" data-i18n="nav.home">Home</a>
-        <a href="#saved" data-i18n="nav.saved">Saved Jokes</a>
-        <a href="#listen" data-i18n="nav.listen">Listen</a>
-        <a href="#creator" data-i18n="nav.creator">About Creator</a>
-        <a href="#contact" data-i18n="nav.contact">Contact</a>
+        <a href="#/home" data-route="home" data-i18n="nav.home">Home</a>
+        <a href="#/saved" data-route="saved" data-i18n="nav.saved">Saved Jokes</a>
+        <a href="#/creator" data-route="creator" data-i18n="nav.creator">About Creator</a>
+        <a href="#/contact" data-route="contact" data-i18n="nav.contact">Contact</a>
       </nav>
       <div class="top-actions">
         <label class="inline-label" for="language" data-i18n="controls.language">Language</label>
@@ -659,7 +691,7 @@
     </div>
   </div>
   <main class="page">
-    <header id="home" class="hero">
+    <header id="home" class="hero view-section active" data-view="home">
       <div class="hero-content">
         <div class="hero-badge" data-i18n="hero.badge">Welcome</div>
         <h1 data-i18n="hero.title">Welcome to Voice Joke Club</h1>
@@ -682,7 +714,7 @@
       </div>
     </header>
 
-    <section id="about" class="section">
+    <section id="about" class="section view-section active" data-view="home">
       <h2 data-i18n="about.title">About</h2>
       <p data-i18n="about.text">
         Voice Joke Club is a friendly space for quick laughs, community sharing, and gentle humor in multiple languages.
@@ -703,7 +735,7 @@
       </div>
     </section>
 
-    <section id="listen" class="section">
+    <section id="listen" class="section view-section active" data-view="home">
       <h2 data-i18n="listen.title">Listen & Laugh</h2>
       <p data-i18n="listen.subtitle">Choose a category, hit random, and enjoy a smooth voice experience.</p>
       <div class="controls">
@@ -761,7 +793,7 @@
       </div>
     </section>
 
-    <section id="saved" class="section">
+    <section id="saved" class="section view-section" data-view="saved" hidden>
       <h2 data-i18n="saved.title">Saved Jokes</h2>
       <p data-i18n="saved.subtitle">Search, review, and manage the jokes you saved.</p>
       <div class="controls">
@@ -777,7 +809,7 @@
       <div id="saved-section-list" class="list"></div>
     </section>
 
-    <section id="community" class="section">
+    <section id="community" class="section view-section active" data-view="home">
       <h2 data-i18n="community.title">Community Highlights</h2>
       <div class="grid-2">
         <div class="card">
@@ -791,7 +823,7 @@
       </div>
     </section>
 
-    <section id="submit" class="section">
+    <section id="submit" class="section view-section active" data-view="home">
       <h2 data-i18n="submit.title">Submit a Joke</h2>
       <p data-i18n="submit.subtitle">Share your jokes with the community. Approved jokes appear in the random feed.</p>
       <form id="submission-form" class="card form-card">
@@ -832,21 +864,28 @@
       </div>
     </section>
 
-    <section id="creator" class="section">
+    <section id="creator" class="section view-section" data-view="creator" hidden>
       <h2 data-i18n="creator.title">About the Creator</h2>
       <div class="card">
         <p data-i18n="creator.text">
           My name is Salim. I created this website because I enjoy technology, creativity, and humor, and I wanted a place
           where people can listen to jokes in multiple languages while relaxing and having fun.
         </p>
+        <p data-i18n="creator.textSecondary">
+          This project is part of my learning journey in web development. I plan to keep improving the website with
+          better features, design, and interactive experiences for users worldwide.
+        </p>
+        <p class="muted">
+          <span data-i18n="creator.contactText">Send feedback:</span>
+          <a href="mailto:hello@voicejoke.club">hello@voicejoke.club</a>
+        </p>
         <div class="card-actions">
           <button id="creator-modal-open" class="ghost" data-i18n="creator.more">Read Story</button>
-          <a id="creator-contact" href="mailto:hello@voicejoke.club" data-i18n="creator.contactLabel">Contact</a>
         </div>
       </div>
     </section>
 
-    <section id="achievements" class="section">
+    <section id="achievements" class="section view-section active" data-view="home">
       <h2 data-i18n="achievements.title">Achievements</h2>
       <div class="grid-2">
         <div class="card">
@@ -863,7 +902,7 @@
       </div>
     </section>
 
-    <section id="contact" class="section">
+    <section id="contact" class="section view-section" data-view="contact" hidden>
       <h2 data-i18n="contact.title">Contact</h2>
       <p data-i18n="contact.text">Have feedback or suggestions? Email anytime and I will read it.</p>
       <div class="grid-2">
@@ -911,8 +950,15 @@
     </div>
 
     <div id="toast-container" class="toast-container" aria-live="polite"></div>
+    <div id="page-transition" class="page-transition" aria-hidden="true">
+      <div class="skeleton">
+        <div class="skeleton-line medium"></div>
+        <div class="skeleton-line"></div>
+        <div class="skeleton-line short"></div>
+      </div>
+    </div>
 
-    <div class="ad-unit" aria-label="Advertisement">
+    <div class="ad-unit view-section active" data-view="home" aria-label="Advertisement">
       <script>
         atOptions = {
           'key' : '44737517597e4d4fd2582ae54ae399b2',
@@ -955,6 +1001,7 @@
       savedTotal: document.getElementById('saved-total'),
       savedSectionList: document.getElementById('saved-section-list'),
       toastContainer: document.getElementById('toast-container'),
+      pageTransition: document.getElementById('page-transition'),
       creatorModal: document.getElementById('creator-modal'),
       creatorModalOpen: document.getElementById('creator-modal-open'),
       creatorModalClose: document.getElementById('creator-modal-close'),
@@ -1076,6 +1123,8 @@
         'saved.savedOn': 'Saved on {date}',
         'creator.title': 'About the Creator',
         'creator.text': 'My name is Salim. I created this website because I enjoy technology, creativity, and humor, and I wanted a place where people can listen to jokes in multiple languages while relaxing and having fun.',
+        'creator.textSecondary': 'This project is part of my learning journey in web development. I plan to keep improving the website with better features, design, and interactive experiences for users worldwide.',
+        'creator.contactText': 'Send feedback:',
         'creator.more': 'Read Story',
         'creator.modalTitle': 'Creator Story',
         'creator.modalText': 'This project is part of my learning journey in web development, and I plan to keep improving the website with better features, design, and interactive experiences for users worldwide. Send feedback or suggestions anytime.',
@@ -1227,6 +1276,8 @@
         'saved.savedOn': 'Sauvegardee le {date}',
         'creator.title': 'A propos du createur',
         'creator.text': 'Je m appelle Salim. J ai cree ce site car j aime la technologie, la creativite et l humour, et je voulais un lieu pour ecouter des blagues en plusieurs langues en se relaxant.',
+        'creator.textSecondary': 'Ce projet fait partie de mon apprentissage du web. Je veux continuer a ameliorer le site avec de meilleures fonctions, un design plus pro et des experiences interactives pour tous.',
+        'creator.contactText': 'Envoyer des retours:',
         'creator.more': 'Lire l histoire',
         'creator.modalTitle': 'Histoire du createur',
         'creator.modalText': 'Ce projet fait partie de mon apprentissage du web. Je veux continuer a ameliorer le site avec de meilleures fonctions, un design plus pro et des experiences interactives pour tous.',
@@ -1377,6 +1428,8 @@
         'saved.savedOn': 'Guardado el {date}',
         'creator.title': 'Sobre el creador',
         'creator.text': 'Me llamo Salim. Cree este sitio porque disfruto la tecnologia, la creatividad y el humor, y queria un lugar para escuchar chistes en varios idiomas mientras te relajas.',
+        'creator.textSecondary': 'Este proyecto es parte de mi aprendizaje en desarrollo web. Quiero seguir mejorando el sitio con mejores funciones, diseno y experiencias interactivas para usuarios de todo el mundo.',
+        'creator.contactText': 'Enviar comentarios:',
         'creator.more': 'Leer historia',
         'creator.modalTitle': 'Historia del creador',
         'creator.modalText': 'Este proyecto es parte de mi aprendizaje en desarrollo web. Quiero seguir mejorando el sitio con mejores funciones, diseno y experiencias interactivas para usuarios de todo el mundo.',
@@ -1527,6 +1580,8 @@
         'saved.savedOn': 'تم الحفظ في {date}',
         'creator.title': 'عن المبدع',
         'creator.text': 'اسمي سليم. انشات هذا الموقع لانني احب التقنية والابداع والضحك، واريد مكانا يستمع فيه الناس للنكات بلغات متعددة وهم مسترخون ومستمتعون.',
+        'creator.textSecondary': 'هذا المشروع جزء من رحلة تعلمي في تطوير الويب، وساستمر في تحسين الموقع بميزات افضل وتصميم اجمل وتجارب تفاعلية للمستخدمين في كل مكان.',
+        'creator.contactText': 'ارسال الملاحظات:',
         'creator.more': 'اقرأ القصة',
         'creator.modalTitle': 'قصة المبدع',
         'creator.modalText': 'هذا المشروع جزء من رحلة تعلمي في تطوير الويب، وساستمر في تحسين الموقع بميزات افضل وتصميم اجمل وتجارب تفاعلية للمستخدمين في كل مكان.',
@@ -1677,6 +1732,8 @@
         'saved.savedOn': 'An ajiye {date}',
         'creator.title': 'Game da mai kirkira',
         'creator.text': 'Sunana Salim. Na kirkiro wannan shafin saboda ina son fasaha, kirkira da dariya, kuma ina so a sami wuri da mutane za su saurari barkwanci cikin harsuna daban yayin nishadi.',
+        'creator.textSecondary': 'Wannan aiki bangare ne na tafiyata ta koyon gina yanar gizo. Zan ci gaba da inganta shafin da sabbin fasali, kyakkyawan zane, da abubuwan mu amala ga masu amfani a duniya.',
+        'creator.contactText': 'Aika ra ayi:',
         'creator.more': 'Karanta labari',
         'creator.modalTitle': 'Labarin mai kirkira',
         'creator.modalText': 'Wannan aiki bangare ne na tafiyata ta koyon gina yanar gizo. Zan ci gaba da inganta shafin da sabbin fasali, kyakkyawan zane, da abubuwan mu amala ga masu amfani a duniya.',
@@ -1827,6 +1884,8 @@
         'saved.savedOn': 'Salvo em {date}',
         'creator.title': 'Sobre o criador',
         'creator.text': 'Meu nome e Salim. Criei este site porque gosto de tecnologia, criatividade e humor, e queria um lugar para ouvir piadas em varios idiomas enquanto relaxa e se diverte.',
+        'creator.textSecondary': 'Este projeto faz parte da minha jornada de aprendizado em desenvolvimento web. Vou continuar melhorando o site com mais recursos, design melhor e experiencias interativas para usuarios do mundo todo.',
+        'creator.contactText': 'Enviar feedback:',
         'creator.more': 'Ler historia',
         'creator.modalTitle': 'Historia do criador',
         'creator.modalText': 'Este projeto faz parte da minha jornada de aprendizado em desenvolvimento web. Vou continuar melhorando o site com mais recursos, design melhor e experiencias interativas para usuarios do mundo todo.',
@@ -2133,6 +2192,7 @@
       renderAchievements();
       renderModeration();
       applyTheme(settings.theme);
+      updateNavActive(getRouteFromHash());
     }
 
     function applyLanguage(lang, options = {}) {
@@ -2208,6 +2268,60 @@
         dom.jokeSkeleton.hidden = !isLoading;
       }
       dom.jokeText.style.opacity = isLoading ? '0.35' : '1';
+    }
+
+    const ROUTES = ['home', 'saved', 'creator', 'contact'];
+
+    function getRouteFromHash() {
+      const raw = location.hash.replace('#', '');
+      const route = raw.startsWith('/') ? raw.slice(1) : raw;
+      return route || 'home';
+    }
+
+    function updateNavActive(route) {
+      document.querySelectorAll('.nav a[data-route]').forEach((link) => {
+        const isActive = link.dataset.route === route;
+        link.classList.toggle('active', isActive);
+        if (isActive) {
+          link.setAttribute('aria-current', 'page');
+        } else {
+          link.removeAttribute('aria-current');
+        }
+      });
+    }
+
+    function showView(route) {
+      document.querySelectorAll('[data-view]').forEach((section) => {
+        const isActive = section.dataset.view === route;
+        section.classList.toggle('active', isActive);
+        if (isActive) {
+          section.removeAttribute('hidden');
+        } else {
+          section.setAttribute('hidden', '');
+        }
+      });
+      updateNavActive(route);
+    }
+
+    function showPageTransition() {
+      if (!dom.pageTransition) {
+        return;
+      }
+      dom.pageTransition.classList.add('show');
+      setTimeout(() => {
+        dom.pageTransition.classList.remove('show');
+      }, 220);
+    }
+
+    function handleRouteChange() {
+      const route = getRouteFromHash();
+      if (!ROUTES.includes(route)) {
+        location.hash = '#/home';
+        return;
+      }
+      showPageTransition();
+      showView(route);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     function updateSavedControls() {
@@ -3140,6 +3254,8 @@
     }
     applyLanguage(settings.language);
     updateHistoryButtons();
+    window.addEventListener('hashchange', handleRouteChange);
+    handleRouteChange();
   </script>
 </body>
 </html>
