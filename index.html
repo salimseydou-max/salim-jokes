@@ -492,6 +492,33 @@
       justify-content: center;
       font-weight: 600;
     }
+    .toast-container {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      display: grid;
+      gap: 0.6rem;
+      z-index: 70;
+    }
+    .toast {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 0.6rem 1rem;
+      box-shadow: var(--shadow);
+      font-size: 0.95rem;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .toast.hide {
+      opacity: 0;
+      transform: translateY(10px);
+    }
     .ad-unit {
       margin: 2rem auto 0;
       border: 2px solid var(--border);
@@ -584,6 +611,11 @@
       button {
         width: 100%;
       }
+      .toast-container {
+        right: 16px;
+        left: 16px;
+        bottom: 16px;
+      }
     }
     @media (prefers-reduced-motion: reduce) {
       * {
@@ -623,10 +655,8 @@
     <div class="top-bar-row">
       <button id="save-joke" data-i18n="buttons.save">Save Joke</button>
       <button id="unsave-joke" data-i18n="buttons.unsave">Remove Saved</button>
-      <button id="toggle-saved" data-i18n="buttons.showSaved">Show Saved</button>
       <span id="saved-count" class="saved-count">0 saved</span>
     </div>
-    <div id="saved-list" class="saved-list" hidden></div>
   </div>
   <main class="page">
     <header id="home" class="hero">
@@ -806,7 +836,8 @@
       <h2 data-i18n="creator.title">About the Creator</h2>
       <div class="card">
         <p data-i18n="creator.text">
-          Created by Salim to spread calm, positive humor with voice-first experiences.
+          My name is Salim. I created this website because I enjoy technology, creativity, and humor, and I wanted a place
+          where people can listen to jokes in multiple languages while relaxing and having fun.
         </p>
         <div class="card-actions">
           <button id="creator-modal-open" class="ghost" data-i18n="creator.more">Read Story</button>
@@ -834,7 +865,7 @@
 
     <section id="contact" class="section">
       <h2 data-i18n="contact.title">Contact</h2>
-      <p data-i18n="contact.text">Have feedback or want to collaborate? Reach out anytime.</p>
+      <p data-i18n="contact.text">Have feedback or suggestions? Email anytime and I will read it.</p>
       <div class="grid-2">
         <div class="card">
           <h3 data-i18n="contact.emailLabel">Email</h3>
@@ -873,11 +904,13 @@
           <button id="creator-modal-close" class="ghost" data-i18n="buttons.close">Close</button>
         </div>
         <p data-i18n="creator.modalText">
-          Hi, I'm Salim. I built Voice Joke Club to make gentle humor accessible in multiple languages with voice-first
-          experiences. Thanks for listening and sharing!
+          This project is part of my learning journey in web development, and I plan to keep improving the website with
+          better features, design, and interactive experiences for users worldwide. Send feedback or suggestions anytime.
         </p>
       </div>
     </div>
+
+    <div id="toast-container" class="toast-container" aria-live="polite"></div>
 
     <div class="ad-unit" aria-label="Advertisement">
       <script>
@@ -917,12 +950,11 @@
       jotdCopy: document.getElementById('jotd-copy'),
       save: document.getElementById('save-joke'),
       unsave: document.getElementById('unsave-joke'),
-      toggleSaved: document.getElementById('toggle-saved'),
       savedCount: document.getElementById('saved-count'),
-      savedList: document.getElementById('saved-list'),
       savedSearch: document.getElementById('saved-search'),
       savedTotal: document.getElementById('saved-total'),
       savedSectionList: document.getElementById('saved-section-list'),
+      toastContainer: document.getElementById('toast-container'),
       creatorModal: document.getElementById('creator-modal'),
       creatorModalOpen: document.getElementById('creator-modal-open'),
       creatorModalClose: document.getElementById('creator-modal-close'),
@@ -1043,13 +1075,13 @@
         'saved.delete': 'Delete',
         'saved.savedOn': 'Saved on {date}',
         'creator.title': 'About the Creator',
-        'creator.text': 'Created by Salim to spread calm, positive humor with voice-first experiences.',
+        'creator.text': 'My name is Salim. I created this website because I enjoy technology, creativity, and humor, and I wanted a place where people can listen to jokes in multiple languages while relaxing and having fun.',
         'creator.more': 'Read Story',
         'creator.modalTitle': 'Creator Story',
-        'creator.modalText': 'Hi, I am Salim. I built Voice Joke Club to make gentle humor accessible in multiple languages with voice-first experiences.',
+        'creator.modalText': 'This project is part of my learning journey in web development, and I plan to keep improving the website with better features, design, and interactive experiences for users worldwide. Send feedback or suggestions anytime.',
         'creator.contactLabel': 'Contact',
         'contact.title': 'Contact',
-        'contact.text': 'Have feedback or want to collaborate? Reach out anytime.',
+        'contact.text': 'Have feedback or suggestions? Email anytime and I will read it.',
         'contact.emailLabel': 'Email',
         'contact.socialLabel': 'Social',
         'submit.title': 'Submit a Joke',
@@ -1112,6 +1144,8 @@
         'feedback.voiceTooLarge': 'Voice clip is too large. Try a shorter recording.',
         'feedback.moderationApproved': 'Submission approved.',
         'feedback.moderationRejected': 'Submission rejected.',
+        'toast.saved': 'Joke saved!',
+        'toast.removed': 'Saved joke removed.',
         'loadingMessages': [
           'Tickling the funny bone...',
           'Warming up the punchline...',
@@ -1192,13 +1226,13 @@
         'saved.delete': 'Supprimer',
         'saved.savedOn': 'Sauvegardee le {date}',
         'creator.title': 'A propos du createur',
-        'creator.text': 'Cree par Salim pour partager un humour positif.',
+        'creator.text': 'Je m appelle Salim. J ai cree ce site car j aime la technologie, la creativite et l humour, et je voulais un lieu pour ecouter des blagues en plusieurs langues en se relaxant.',
         'creator.more': 'Lire l histoire',
         'creator.modalTitle': 'Histoire du createur',
-        'creator.modalText': 'Bonjour, je suis Salim. J ai cree Voice Joke Club pour un humour doux et multilingue.',
+        'creator.modalText': 'Ce projet fait partie de mon apprentissage du web. Je veux continuer a ameliorer le site avec de meilleures fonctions, un design plus pro et des experiences interactives pour tous.',
         'creator.contactLabel': 'Contact',
         'contact.title': 'Contact',
-        'contact.text': 'Vous avez une idee? Contactez nous.',
+        'contact.text': 'Des idees ou suggestions? Envoyez un email quand vous voulez.',
         'contact.emailLabel': 'Email',
         'contact.socialLabel': 'Social',
         'submit.title': 'Envoyer une blague',
@@ -1261,6 +1295,8 @@
         'feedback.voiceTooLarge': 'Clip vocal trop grand. Essayez plus court.',
         'feedback.moderationApproved': 'Soumission approuvee.',
         'feedback.moderationRejected': 'Soumission rejetee.',
+        'toast.saved': 'Blague sauvegardee.',
+        'toast.removed': 'Blague retiree.',
         'loadingMessages': [
           'On chauffe la blague...',
           'On polit le rire...',
@@ -1340,13 +1376,13 @@
         'saved.delete': 'Eliminar',
         'saved.savedOn': 'Guardado el {date}',
         'creator.title': 'Sobre el creador',
-        'creator.text': 'Creado por Salim para compartir humor positivo.',
+        'creator.text': 'Me llamo Salim. Cree este sitio porque disfruto la tecnologia, la creatividad y el humor, y queria un lugar para escuchar chistes en varios idiomas mientras te relajas.',
         'creator.more': 'Leer historia',
         'creator.modalTitle': 'Historia del creador',
-        'creator.modalText': 'Hola, soy Salim. Cree Voice Joke Club para humor suave y multilingue.',
+        'creator.modalText': 'Este proyecto es parte de mi aprendizaje en desarrollo web. Quiero seguir mejorando el sitio con mejores funciones, diseno y experiencias interactivas para usuarios de todo el mundo.',
         'creator.contactLabel': 'Contacto',
         'contact.title': 'Contacto',
-        'contact.text': 'Tienes ideas? Escribenos.',
+        'contact.text': 'Tienes sugerencias? Envia un correo cuando quieras.',
         'contact.emailLabel': 'Email',
         'contact.socialLabel': 'Social',
         'submit.title': 'Enviar un chiste',
@@ -1409,6 +1445,8 @@
         'feedback.voiceTooLarge': 'Audio demasiado grande. Prueba mas corto.',
         'feedback.moderationApproved': 'Envio aprobado.',
         'feedback.moderationRejected': 'Envio rechazado.',
+        'toast.saved': 'Chiste guardado.',
+        'toast.removed': 'Chiste eliminado.',
         'loadingMessages': [
           'Preparando el chiste...',
           'Buscando una sonrisa...',
@@ -1488,13 +1526,13 @@
         'saved.delete': 'حذف',
         'saved.savedOn': 'تم الحفظ في {date}',
         'creator.title': 'عن المبدع',
-        'creator.text': 'انشأه سليم لنشر حس فكاهي ايجابي.',
+        'creator.text': 'اسمي سليم. انشات هذا الموقع لانني احب التقنية والابداع والضحك، واريد مكانا يستمع فيه الناس للنكات بلغات متعددة وهم مسترخون ومستمتعون.',
         'creator.more': 'اقرأ القصة',
         'creator.modalTitle': 'قصة المبدع',
-        'creator.modalText': 'مرحبا، انا سليم. بنيت Voice Joke Club لتقديم مرح لطيف بلغات متعددة.',
+        'creator.modalText': 'هذا المشروع جزء من رحلة تعلمي في تطوير الويب، وساستمر في تحسين الموقع بميزات افضل وتصميم اجمل وتجارب تفاعلية للمستخدمين في كل مكان.',
         'creator.contactLabel': 'تواصل',
         'contact.title': 'تواصل',
-        'contact.text': 'هل لديك ملاحظات؟ تواصل معنا.',
+        'contact.text': 'هل لديك ملاحظات او اقتراحات؟ ارسل بريدا في اي وقت.',
         'contact.emailLabel': 'البريد',
         'contact.socialLabel': 'اجتماعي',
         'submit.title': 'ارسل نكتة',
@@ -1557,6 +1595,8 @@
         'feedback.voiceTooLarge': 'التسجيل كبير جدا.',
         'feedback.moderationApproved': 'تمت الموافقة.',
         'feedback.moderationRejected': 'تم الرفض.',
+        'toast.saved': 'تم حفظ النكتة.',
+        'toast.removed': 'تم حذف النكتة المحفوظة.',
         'loadingMessages': [
           'نبحث عن ضحكة...',
           'نجهز النهاية...',
@@ -1636,13 +1676,13 @@
         'saved.delete': 'Goge',
         'saved.savedOn': 'An ajiye {date}',
         'creator.title': 'Game da mai kirkira',
-        'creator.text': 'Salim ya kirkiro domin barkwanci mai kyau.',
+        'creator.text': 'Sunana Salim. Na kirkiro wannan shafin saboda ina son fasaha, kirkira da dariya, kuma ina so a sami wuri da mutane za su saurari barkwanci cikin harsuna daban yayin nishadi.',
         'creator.more': 'Karanta labari',
         'creator.modalTitle': 'Labarin mai kirkira',
-        'creator.modalText': 'Sannu, ni Salim. Na gina Voice Joke Club don barkwanci mai laushi a harsuna daban.',
+        'creator.modalText': 'Wannan aiki bangare ne na tafiyata ta koyon gina yanar gizo. Zan ci gaba da inganta shafin da sabbin fasali, kyakkyawan zane, da abubuwan mu amala ga masu amfani a duniya.',
         'creator.contactLabel': 'Tuntuza',
         'contact.title': 'Tuntuza',
-        'contact.text': 'Kana da ra ayi? Tuntu ba mu.',
+        'contact.text': 'Kana da ra ayi ko shawara? Aika imel a kowane lokaci.',
         'contact.emailLabel': 'Email',
         'contact.socialLabel': 'Sadaukarwa',
         'submit.title': 'Aika barkwanci',
@@ -1705,6 +1745,8 @@
         'feedback.voiceTooLarge': 'Murya ta yi girma.',
         'feedback.moderationApproved': 'An amince.',
         'feedback.moderationRejected': 'An ki.',
+        'toast.saved': 'An ajiye barkwanci.',
+        'toast.removed': 'An cire ajiyayyen barkwanci.',
         'loadingMessages': [
           'Ana shirya barkwanci...',
           'Ana nemo murmushi...',
@@ -1784,13 +1826,13 @@
         'saved.delete': 'Excluir',
         'saved.savedOn': 'Salvo em {date}',
         'creator.title': 'Sobre o criador',
-        'creator.text': 'Criado por Salim para humor positivo.',
+        'creator.text': 'Meu nome e Salim. Criei este site porque gosto de tecnologia, criatividade e humor, e queria um lugar para ouvir piadas em varios idiomas enquanto relaxa e se diverte.',
         'creator.more': 'Ler historia',
         'creator.modalTitle': 'Historia do criador',
-        'creator.modalText': 'Oi, sou Salim. Criei o Voice Joke Club para humor suave e multilingue.',
+        'creator.modalText': 'Este projeto faz parte da minha jornada de aprendizado em desenvolvimento web. Vou continuar melhorando o site com mais recursos, design melhor e experiencias interativas para usuarios do mundo todo.',
         'creator.contactLabel': 'Contato',
         'contact.title': 'Contato',
-        'contact.text': 'Tem ideias? Fale com a gente.',
+        'contact.text': 'Tem sugestoes? Envie um email quando quiser.',
         'contact.emailLabel': 'Email',
         'contact.socialLabel': 'Social',
         'submit.title': 'Enviar uma piada',
@@ -1853,6 +1895,8 @@
         'feedback.voiceTooLarge': 'Audio muito grande.',
         'feedback.moderationApproved': 'Envio aprovado.',
         'feedback.moderationRejected': 'Envio rejeitado.',
+        'toast.saved': 'Piada salva.',
+        'toast.removed': 'Piada removida.',
         'loadingMessages': [
           'Preparando a piada...',
           'Buscando um sorriso...',
@@ -2083,8 +2127,6 @@
         el.placeholder = t(el.dataset.i18nPlaceholder);
       });
       updateSavedControls();
-      updateSavedToggleLabel();
-      renderSavedList();
       renderSavedSection();
       renderTopRated();
       renderLeaderboard();
@@ -2132,6 +2174,25 @@
       dom.submissionFeedback.textContent = t(key, params);
     }
 
+    function showToast(message) {
+      if (!dom.toastContainer || !message) {
+        return;
+      }
+      const toast = document.createElement('div');
+      toast.className = 'toast';
+      toast.textContent = message;
+      dom.toastContainer.appendChild(toast);
+      requestAnimationFrame(() => {
+        toast.classList.add('show');
+      });
+      setTimeout(() => {
+        toast.classList.add('hide');
+        setTimeout(() => {
+          toast.remove();
+        }, 300);
+      }, 2200);
+    }
+
     function getLoadingMessage() {
       const messages = t('loadingMessages');
       if (Array.isArray(messages) && messages.length) {
@@ -2157,11 +2218,6 @@
       const hasJoke = Boolean(state.currentJoke);
       dom.save.disabled = !hasJoke || isJokeSaved(state.currentJoke, state.currentLang, state.currentCategory);
       dom.unsave.disabled = !hasJoke || !isJokeSaved(state.currentJoke, state.currentLang, state.currentCategory);
-    }
-
-    function updateSavedToggleLabel() {
-      const isHidden = dom.savedList.hasAttribute('hidden');
-      dom.toggleSaved.textContent = isHidden ? t('buttons.showSaved') : t('buttons.hideSaved');
     }
 
     function formatSavedDate(value) {
@@ -2199,9 +2255,8 @@
       });
       saveSavedJokes();
       updateSavedControls();
-      renderSavedList();
       renderSavedSection();
-      setFeedback('feedback.saved');
+      showToast(t('toast.saved'));
     }
 
     function removeSavedJokeByIndex(index, options = {}) {
@@ -2211,10 +2266,9 @@
       savedJokes.splice(index, 1);
       saveSavedJokes();
       updateSavedControls();
-      renderSavedList();
       renderSavedSection();
       if (!options.silent) {
-        setFeedback('feedback.unsaved');
+        showToast(t('toast.removed'));
       }
     }
 
@@ -2230,58 +2284,6 @@
         return;
       }
       removeSavedJokeByIndex(index, { silent: false });
-    }
-
-    function renderSavedList() {
-      dom.savedList.innerHTML = '';
-      if (savedJokes.length === 0) {
-        const empty = document.createElement('div');
-        empty.className = 'saved-empty';
-        empty.textContent = t('saved.empty');
-        dom.savedList.appendChild(empty);
-        return;
-      }
-      savedJokes.forEach((entry, index) => {
-        const item = document.createElement('div');
-        item.className = 'saved-item';
-
-        const text = document.createElement('div');
-        text.className = 'saved-text';
-        text.textContent = entry.joke;
-
-        const tag = document.createElement('span');
-        tag.className = 'saved-tag';
-        tag.textContent = `${t(`categories.${entry.category}`)} · ${t(`languages.${entry.lang}`)}`;
-
-        const meta = document.createElement('div');
-        meta.className = 'saved-meta';
-        if (entry.savedAt) {
-          meta.textContent = t('saved.savedOn', { date: formatSavedDate(entry.savedAt) });
-        }
-
-        const actions = document.createElement('div');
-        actions.className = 'saved-actions';
-
-        const showButton = document.createElement('button');
-        showButton.type = 'button';
-        showButton.dataset.action = 'show';
-        showButton.dataset.index = String(index);
-        showButton.textContent = t('saved.show');
-
-        const removeButton = document.createElement('button');
-        removeButton.type = 'button';
-        removeButton.dataset.action = 'remove';
-        removeButton.dataset.index = String(index);
-        removeButton.textContent = t('saved.remove');
-
-        actions.appendChild(showButton);
-        actions.appendChild(removeButton);
-        item.appendChild(text);
-        item.appendChild(tag);
-        item.appendChild(meta);
-        item.appendChild(actions);
-        dom.savedList.appendChild(item);
-      });
     }
 
     function renderSavedSection() {
@@ -3066,36 +3068,6 @@
     };
     dom.save.onclick = () => saveCurrentJoke();
     dom.unsave.onclick = () => removeCurrentSavedJoke();
-    dom.toggleSaved.onclick = () => {
-      const isHidden = dom.savedList.hasAttribute('hidden');
-      if (isHidden) {
-        dom.savedList.removeAttribute('hidden');
-        renderSavedList();
-      } else {
-        dom.savedList.setAttribute('hidden', '');
-      }
-      updateSavedToggleLabel();
-    };
-    dom.savedList.onclick = (event) => {
-      const button = event.target.closest('button');
-      if (!button) {
-        return;
-      }
-      const index = Number(button.dataset.index);
-      const entry = savedJokes[index];
-      if (!entry) {
-        return;
-      }
-      if (button.dataset.action === 'show') {
-        applyLanguage(entry.lang, { skipFetch: true });
-        dom.category.value = entry.category;
-        state.currentCategory = entry.category;
-        showJoke(entry.joke);
-      }
-      if (button.dataset.action === 'remove') {
-        removeSavedJokeByIndex(index);
-      }
-    };
     if (dom.savedSearch) {
       dom.savedSearch.oninput = () => renderSavedSection();
     }
