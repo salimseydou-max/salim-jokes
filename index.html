@@ -757,7 +757,7 @@
         <h1 data-i18n="hero.title">Welcome to Voice Joke Club</h1>
         <p data-i18n="hero.subtitle">Discover calm laughs, community favorites, and daily smiles with voice playback.</p>
         <div class="hero-actions">
-          <button id="hero-random" data-i18n="hero.primary">Random Joke</button>
+          <button id="hero-start" data-i18n="hero.primary">Start Jokes</button>
           <button id="hero-scroll" class="ghost" data-i18n="hero.secondary">Start Listening</button>
         </div>
       </div>
@@ -797,7 +797,7 @@
 
     <section id="listen" class="section view-section active" data-view="jokes" data-emoji="🎧">
       <h2 data-i18n="listen.title">Jokes</h2>
-      <p data-i18n="listen.subtitle">Choose a category, hit random, and enjoy a smooth voice experience.</p>
+      <p data-i18n="listen.subtitle">Choose a category and move through jokes in order.</p>
       <div class="controls">
         <div class="control-group">
           <label for="category-select" data-i18n="controls.category">Category</label>
@@ -827,21 +827,18 @@
           <span id="joke-language" class="badge"></span>
         </div>
         <div class="buttons">
-          <button id="previous" data-i18n="buttons.previous">Previous</button>
-          <button id="play" data-i18n="buttons.play">Play</button>
-          <button id="replay" data-i18n="buttons.replay">Replay</button>
-          <button id="forward" data-i18n="buttons.forward">Forward</button>
-          <button id="random" data-i18n="buttons.random">Random Joke</button>
-          <button id="copy-joke" data-i18n="buttons.copyJoke">Copy Joke</button>
+          <button id="previous" data-i18n="buttons.previous">Previous Joke</button>
+          <button id="next" data-i18n="buttons.next">Next Joke</button>
         </div>
         <div class="quick-actions">
           <span class="section-label" data-i18n="actions.title">Quick Actions</span>
           <div class="quick-buttons">
+            <button id="play" data-i18n="buttons.play">Play</button>
+            <button id="replay" data-i18n="buttons.replay">Replay</button>
+            <button id="copy-joke" data-i18n="buttons.copyJoke">Copy Joke</button>
             <button id="save-joke" data-i18n="buttons.save">Save Joke</button>
             <button id="unsave-joke" data-i18n="buttons.unsave">Remove Saved</button>
             <span id="saved-count" class="badge saved-count">0 saved</span>
-            <button data-reaction="funny" data-i18n="buttons.like">Like</button>
-            <button data-reaction="notFunny" data-i18n="buttons.dislike">Dislike</button>
           </div>
         </div>
         <div class="reactions">
@@ -896,7 +893,7 @@
 
     <section id="submit" class="section view-section" data-view="submit" data-emoji="✍️" hidden>
       <h2 data-i18n="submit.title">Submit a Joke</h2>
-      <p data-i18n="submit.subtitle">Share your jokes with the community. Approved jokes appear in the random feed.</p>
+      <p data-i18n="submit.subtitle">Share your jokes with the community. Approved jokes appear in the jokes list.</p>
       <form id="submission-form" class="card form-card">
         <label for="submission-text" data-i18n="submit.jokeLabel">Your joke</label>
         <textarea id="submission-text" maxlength="240" data-i18n-placeholder="submit.textPlaceholder"></textarea>
@@ -1055,12 +1052,11 @@
       jokeLanguage: document.getElementById('joke-language'),
       feedback: document.getElementById('feedback'),
       previous: document.getElementById('previous'),
+      next: document.getElementById('next'),
       play: document.getElementById('play'),
       replay: document.getElementById('replay'),
-      forward: document.getElementById('forward'),
-      random: document.getElementById('random'),
       copyJoke: document.getElementById('copy-joke'),
-      heroRandom: document.getElementById('hero-random'),
+      heroStart: document.getElementById('hero-start'),
       heroScroll: document.getElementById('hero-scroll'),
       jotdText: document.getElementById('jotd-text'),
       jotdDate: document.getElementById('jotd-date'),
@@ -1136,7 +1132,7 @@
         'hero.badge': 'Welcome',
         'hero.title': 'Welcome to Voice Joke Club',
         'hero.subtitle': 'Discover calm laughs, community favorites, and daily smiles with voice playback.',
-        'hero.primary': 'Random Joke',
+        'hero.primary': 'Start Jokes',
         'hero.secondary': 'Start Listening',
         'about.title': 'About',
         'about.text': 'Voice Joke Club is a friendly space for quick laughs, community sharing, and gentle humor in multiple languages.',
@@ -1145,7 +1141,7 @@
         'about.creatorTitle': 'Creator',
         'about.creatorText': 'Built by Salim to bring calm, positive humor to everyone.',
         'listen.title': 'Jokes',
-        'listen.subtitle': 'Choose a category, hit random, and enjoy a smooth voice experience.',
+        'listen.subtitle': 'Choose a category and move through jokes in order.',
         'controls.category': 'Category',
         'controls.language': 'Language',
         'controls.voiceSpeed': 'Voice Speed',
@@ -1154,7 +1150,8 @@
         'categories.relationship': 'Relationship',
         'categories.dark': 'Dark Humor',
         'categories.roast': 'Roasting',
-        'buttons.previous': 'Previous',
+        'buttons.previous': 'Previous Joke',
+        'buttons.next': 'Next Joke',
         'buttons.play': 'Play',
         'buttons.replay': 'Replay',
         'buttons.forward': 'Forward',
@@ -1213,7 +1210,7 @@
         'contact.emailLabel': 'Email',
         'contact.socialLabel': 'Social',
         'submit.title': 'Submit a Joke',
-        'submit.subtitle': 'Share your jokes with the community. Approved jokes appear in the random feed.',
+        'submit.subtitle': 'Share your jokes with the community. Approved jokes appear in the jokes list.',
         'submit.jokeLabel': 'Your joke',
         'submit.categoryLabel': 'Category',
         'submit.nameLabel': 'Name (optional)',
@@ -1296,7 +1293,7 @@
         'hero.badge': 'Bienvenue',
         'hero.title': 'Bienvenue au Club des Blagues',
         'hero.subtitle': 'Des rires calmes, des favoris communautaires et une lecture vocale douce.',
-        'hero.primary': 'Blague Aleatoire',
+        'hero.primary': 'Commencer les blagues',
         'hero.secondary': 'Commencer',
         'about.title': 'A propos',
         'about.text': 'Un espace amical pour rire vite, partager et profiter de blagues douces en plusieurs langues.',
@@ -1305,7 +1302,7 @@
         'about.creatorTitle': 'Createur',
         'about.creatorText': 'Cree par Salim pour un humour positif.',
         'listen.title': 'Blagues',
-        'listen.subtitle': 'Choisissez une categorie et profitez de la lecture vocale.',
+        'listen.subtitle': 'Choisissez une categorie et parcourez les blagues dans l ordre.',
         'controls.category': 'Categorie',
         'controls.language': 'Langue',
         'controls.voiceSpeed': 'Vitesse voix',
@@ -1314,7 +1311,8 @@
         'categories.relationship': 'Relations',
         'categories.dark': 'Humour noir',
         'categories.roast': 'Taquinerie',
-        'buttons.previous': 'Precedent',
+        'buttons.previous': 'Blague precedente',
+        'buttons.next': 'Blague suivante',
         'buttons.play': 'Jouer',
         'buttons.replay': 'Rejouer',
         'buttons.forward': 'Suivant',
@@ -1373,7 +1371,7 @@
         'contact.emailLabel': 'Email',
         'contact.socialLabel': 'Social',
         'submit.title': 'Envoyer une blague',
-        'submit.subtitle': 'Partagez vos blagues. Les blagues approuvees apparaissent en aleatoire.',
+        'submit.subtitle': 'Partagez vos blagues. Les blagues approuvees apparaissent dans la liste.',
         'submit.jokeLabel': 'Votre blague',
         'submit.categoryLabel': 'Categorie',
         'submit.nameLabel': 'Nom (optionnel)',
@@ -1455,7 +1453,7 @@
         'hero.badge': 'Bienvenido',
         'hero.title': 'Bienvenido al Club de Chistes',
         'hero.subtitle': 'Risas calmadas, favoritos de la comunidad y voz suave.',
-        'hero.primary': 'Chiste Aleatorio',
+        'hero.primary': 'Empezar chistes',
         'hero.secondary': 'Empezar',
         'about.title': 'Sobre',
         'about.text': 'Un espacio amable para risas rapidas, compartir y humor suave en varios idiomas.',
@@ -1464,7 +1462,7 @@
         'about.creatorTitle': 'Creador',
         'about.creatorText': 'Creado por Salim para un humor positivo.',
         'listen.title': 'Chistes',
-        'listen.subtitle': 'Elige una categoria y disfruta la voz.',
+        'listen.subtitle': 'Elige una categoria y recorre los chistes en orden.',
         'controls.category': 'Categoria',
         'controls.language': 'Idioma',
         'controls.voiceSpeed': 'Velocidad de voz',
@@ -1473,7 +1471,8 @@
         'categories.relationship': 'Relaciones',
         'categories.dark': 'Humor oscuro',
         'categories.roast': 'Bromear',
-        'buttons.previous': 'Anterior',
+        'buttons.previous': 'Chiste anterior',
+        'buttons.next': 'Chiste siguiente',
         'buttons.play': 'Reproducir',
         'buttons.replay': 'Repetir',
         'buttons.forward': 'Siguiente',
@@ -1532,7 +1531,7 @@
         'contact.emailLabel': 'Email',
         'contact.socialLabel': 'Social',
         'submit.title': 'Enviar un chiste',
-        'submit.subtitle': 'Comparte tus chistes. Los aprobados aparecen en aleatorio.',
+        'submit.subtitle': 'Comparte tus chistes. Los aprobados aparecen en la lista de chistes.',
         'submit.jokeLabel': 'Tu chiste',
         'submit.categoryLabel': 'Categoria',
         'submit.nameLabel': 'Nombre (opcional)',
@@ -1614,7 +1613,7 @@
         'hero.badge': 'اهلا',
         'hero.title': 'اهلا بك في نادي النكات الصوتية',
         'hero.subtitle': 'ضحكات لطيفة ومحتوى مجتمعي وقراءة صوتية سلسة.',
-        'hero.primary': 'نكتة عشوائية',
+        'hero.primary': 'ابدأ النكات',
         'hero.secondary': 'ابدأ الاستماع',
         'about.title': 'حول',
         'about.text': 'مساحة ودية للضحك السريع والمشاركة بلغات متعددة.',
@@ -1623,7 +1622,7 @@
         'about.creatorTitle': 'المبدع',
         'about.creatorText': 'انشأه سليم لنشر حس فكاهي ايجابي.',
         'listen.title': 'النكات',
-        'listen.subtitle': 'اختر الفئة واستمتع بالصوت.',
+        'listen.subtitle': 'اختر الفئة وتصفح النكات بالترتيب.',
         'controls.category': 'الفئة',
         'controls.language': 'اللغة',
         'controls.voiceSpeed': 'سرعة الصوت',
@@ -1632,7 +1631,8 @@
         'categories.relationship': 'العلاقات',
         'categories.dark': 'دعابة داكنة',
         'categories.roast': 'سخرية',
-        'buttons.previous': 'السابق',
+        'buttons.previous': 'النكتة السابقة',
+        'buttons.next': 'النكتة التالية',
         'buttons.play': 'تشغيل',
         'buttons.replay': 'اعادة',
         'buttons.forward': 'التالي',
@@ -1691,7 +1691,7 @@
         'contact.emailLabel': 'البريد',
         'contact.socialLabel': 'اجتماعي',
         'submit.title': 'ارسل نكتة',
-        'submit.subtitle': 'شارك نكاتك. المعتمدة تظهر في العشوائي.',
+        'submit.subtitle': 'شارك نكاتك. المعتمدة تظهر في قائمة النكات.',
         'submit.jokeLabel': 'نكتتك',
         'submit.categoryLabel': 'الفئة',
         'submit.nameLabel': 'الاسم (اختياري)',
@@ -1773,7 +1773,7 @@
         'hero.badge': 'Barka',
         'hero.title': 'Barka da zuwa Gidan Dariya',
         'hero.subtitle': 'Dariya mai laushi, abubuwan al umma, da karatu da murya.',
-        'hero.primary': 'Barkwanci Bazata',
+        'hero.primary': 'Fara barkwanci',
         'hero.secondary': 'Fara Saurara',
         'about.title': 'Bayani',
         'about.text': 'Wurin sada dariya da barkwanci cikin harsuna da dama.',
@@ -1782,7 +1782,7 @@
         'about.creatorTitle': 'Mai kirkira',
         'about.creatorText': 'Salim ya kirkiro don dariya mai kyau.',
         'listen.title': 'Barkwanci',
-        'listen.subtitle': 'Zabi rukuni ka more murya.',
+        'listen.subtitle': 'Zabi rukuni ka bi barkwanci a tsari.',
         'controls.category': 'Rukuni',
         'controls.language': 'Harshe',
         'controls.voiceSpeed': 'Gudun murya',
@@ -1791,7 +1791,8 @@
         'categories.relationship': 'Alaka',
         'categories.dark': 'Dariya mai duhu',
         'categories.roast': 'Barkwanci',
-        'buttons.previous': 'Baya',
+        'buttons.previous': 'Barkwanci na baya',
+        'buttons.next': 'Barkwanci na gaba',
         'buttons.play': 'Kunna',
         'buttons.replay': 'Sake kunnawa',
         'buttons.forward': 'Gaba',
@@ -1850,7 +1851,7 @@
         'contact.emailLabel': 'Email',
         'contact.socialLabel': 'Sadaukarwa',
         'submit.title': 'Aika barkwanci',
-        'submit.subtitle': 'Raba barkwanci. Wanda aka amince ya shiga bazata.',
+        'submit.subtitle': 'Raba barkwanci. Wanda aka amince ya shiga jerin barkwanci.',
         'submit.jokeLabel': 'Barkwancinka',
         'submit.categoryLabel': 'Rukuni',
         'submit.nameLabel': 'Suna (zabi)',
@@ -1932,7 +1933,7 @@
         'hero.badge': 'Bem vindo',
         'hero.title': 'Bem vindo ao Clube de Piadas',
         'hero.subtitle': 'Risadas calmas, favoritos da comunidade e voz suave.',
-        'hero.primary': 'Piada Aleatoria',
+        'hero.primary': 'Comecar piadas',
         'hero.secondary': 'Comecar',
         'about.title': 'Sobre',
         'about.text': 'Espaco amigavel para risadas rapidas e humor leve em varios idiomas.',
@@ -1941,7 +1942,7 @@
         'about.creatorTitle': 'Criador',
         'about.creatorText': 'Criado por Salim para humor positivo.',
         'listen.title': 'Piadas',
-        'listen.subtitle': 'Escolha a categoria e aproveite a voz.',
+        'listen.subtitle': 'Escolha a categoria e percorra as piadas em ordem.',
         'controls.category': 'Categoria',
         'controls.language': 'Idioma',
         'controls.voiceSpeed': 'Velocidade da voz',
@@ -1950,7 +1951,8 @@
         'categories.relationship': 'Relacionamento',
         'categories.dark': 'Humor negro',
         'categories.roast': 'Zoeira',
-        'buttons.previous': 'Anterior',
+        'buttons.previous': 'Piada anterior',
+        'buttons.next': 'Proxima piada',
         'buttons.play': 'Tocar',
         'buttons.replay': 'Repetir',
         'buttons.forward': 'Proximo',
@@ -2009,7 +2011,7 @@
         'contact.emailLabel': 'Email',
         'contact.socialLabel': 'Social',
         'submit.title': 'Enviar uma piada',
-        'submit.subtitle': 'Compartilhe sua piada. As aprovadas aparecem no aleatorio.',
+        'submit.subtitle': 'Compartilhe sua piada. As aprovadas aparecem na lista de piadas.',
         'submit.jokeLabel': 'Sua piada',
         'submit.categoryLabel': 'Categoria',
         'submit.nameLabel': 'Nome (opcional)',
@@ -2263,8 +2265,8 @@
       currentJoke: '',
       currentCategory: 'random',
       currentLang: 'en',
-      history: [],
-      historyIndex: -1,
+      jokeList: [],
+      currentIndex: -1,
       voices: [],
       recorder: null,
       voiceChunks: [],
@@ -2320,10 +2322,11 @@
       settings.language = lang;
       saveSettings();
       applyTranslations();
-      resetHistory();
       renderJokeOfDay();
       if (!options.skipFetch) {
-        fetchJoke({ withSound: false });
+        setJokeList();
+      } else {
+        updateNavButtons();
       }
     }
 
@@ -2646,6 +2649,7 @@
           dom.category.value = entry.category;
           state.currentCategory = entry.category;
           showJoke(entry.joke);
+          setJokeList();
         };
 
         const deleteButton = document.createElement('button');
@@ -2662,15 +2666,10 @@
       });
     }
 
-    function updateHistoryButtons() {
-      dom.previous.disabled = state.historyIndex <= 0;
-      dom.forward.disabled = state.historyIndex === -1 || state.historyIndex >= state.history.length - 1;
-    }
-
-    function resetHistory() {
-      state.history = [];
-      state.historyIndex = -1;
-      updateHistoryButtons();
+    function updateNavButtons() {
+      const hasList = state.jokeList.length > 0;
+      dom.previous.disabled = !hasList || state.currentIndex <= 0;
+      dom.next.disabled = !hasList || state.currentIndex >= state.jokeList.length - 1;
     }
 
     function showJoke(joke) {
@@ -2682,32 +2681,69 @@
       updateReactionUI();
     }
 
-    function recordHistory(joke) {
-      if (!joke) {
-        return;
-      }
-      if (state.historyIndex < state.history.length - 1) {
-        state.history.splice(state.historyIndex + 1);
-      }
-      state.history.push(joke);
-      state.historyIndex = state.history.length - 1;
-      updateHistoryButtons();
+    function buildOrderedList(lang, category) {
+      const list = getLocalJokes(lang, category);
+      const unique = [];
+      const seen = new Set();
+      list.forEach((joke) => {
+        if (!joke || seen.has(joke)) {
+          return;
+        }
+        seen.add(joke);
+        unique.push(joke);
+      });
+      return unique;
     }
 
-    function applyNewJoke(joke) {
-      showJoke(joke);
-      recordHistory(joke);
-      rememberSeenJoke(joke, state.currentLang, state.currentCategory);
-    }
-
-    function showHistoryJoke(index) {
-      const joke = state.history[index];
-      if (!joke) {
+    function setJokeList() {
+      const ordered = buildOrderedList(state.currentLang, state.currentCategory);
+      if (state.currentJoke && !ordered.includes(state.currentJoke)) {
+        ordered.unshift(state.currentJoke);
+      }
+      state.jokeList = ordered;
+      if (!state.jokeList.length) {
+        state.currentIndex = -1;
+        showJoke(t('feedback.fallback'));
+        updateNavButtons();
         return;
       }
-      state.historyIndex = index;
-      showJoke(joke);
-      updateHistoryButtons();
+      const currentIndex = state.jokeList.indexOf(state.currentJoke);
+      state.currentIndex = currentIndex >= 0 ? currentIndex : 0;
+      showJoke(state.jokeList[state.currentIndex]);
+      updateNavButtons();
+    }
+
+    function showJokeAt(index) {
+      if (index < 0 || index >= state.jokeList.length) {
+        return;
+      }
+      state.currentIndex = index;
+      showJoke(state.jokeList[index]);
+      updateNavButtons();
+    }
+
+    function navigateJoke(direction) {
+      if (!state.jokeList.length) {
+        return;
+      }
+      setLoading(true);
+      dom.jokeText.textContent = getLoadingMessage();
+      setTimeout(() => {
+        if (direction === 'next') {
+          if (state.currentIndex < state.jokeList.length - 1) {
+            showJokeAt(state.currentIndex + 1);
+          } else {
+            setFeedback('feedback.noNext');
+          }
+        } else {
+          if (state.currentIndex > 0) {
+            showJokeAt(state.currentIndex - 1);
+          } else {
+            setFeedback('feedback.noPrevious');
+          }
+        }
+        setLoading(false);
+      }, 120);
     }
 
     function getSeenKey(lang, category) {
@@ -2811,26 +2847,11 @@
       return { joke: localPick.joke, source: 'local', wasRepeat: localPick.wasRepeat };
     }
 
-    async function fetchJoke({ withSound = true } = {}) {
-      setLoading(true);
-      dom.jokeText.textContent = getLoadingMessage();
+    function fetchJoke({ withSound = false } = {}) {
       if (withSound) {
         playSound('loading');
       }
-      const result = await getJokeFromSources(state.currentLang, state.currentCategory);
-      if (result.joke) {
-        applyNewJoke(result.joke);
-        if (result.source === 'api') {
-          setFeedback('feedback.loaded');
-        } else if (result.wasRepeat) {
-          setFeedback('feedback.repeat');
-        } else {
-          setFeedback('feedback.fallback');
-        }
-      } else {
-        setFeedback('feedback.fallback');
-      }
-      setLoading(false);
+      navigateJoke('next');
     }
 
     function renderJokeOfDay() {
@@ -3343,13 +3364,11 @@
 
     dom.category.onchange = () => {
       state.currentCategory = dom.category.value;
-      resetHistory();
-      fetchJoke({ withSound: false });
+      setJokeList();
     };
 
     dom.play.onclick = () => speakJoke(state.currentJoke);
     dom.replay.onclick = () => speakJoke(state.currentJoke);
-    dom.random.onclick = () => fetchJoke({ withSound: true });
     dom.copyJoke.onclick = () => {
       if (!state.currentJoke) {
         setFeedback('feedback.noJoke');
@@ -3357,24 +3376,22 @@
       }
       copyToClipboard(state.currentJoke);
     };
-    dom.heroRandom.onclick = () => fetchJoke({ withSound: true });
-    dom.heroScroll.onclick = () => document.getElementById('listen').scrollIntoView({ behavior: 'smooth' });
+    dom.heroStart.onclick = () => {
+      if (location.hash !== '#/jokes') {
+        location.hash = '#/jokes';
+      }
+      handleRouteChange();
+      setJokeList();
+    };
+    dom.heroScroll.onclick = () => {
+      location.hash = '#/jokes';
+      handleRouteChange();
+      document.getElementById('listen').scrollIntoView({ behavior: 'smooth' });
+    };
     dom.jotdPlay.onclick = () => speakJoke(dom.jotdText.textContent);
     dom.jotdCopy.onclick = () => copyToClipboard(dom.jotdText.textContent);
-    dom.previous.onclick = () => {
-      if (state.historyIndex > 0) {
-        showHistoryJoke(state.historyIndex - 1);
-      } else {
-        setFeedback('feedback.noPrevious');
-      }
-    };
-    dom.forward.onclick = () => {
-      if (state.historyIndex < state.history.length - 1) {
-        showHistoryJoke(state.historyIndex + 1);
-      } else {
-        setFeedback('feedback.noNext');
-      }
-    };
+    dom.previous.onclick = () => navigateJoke('previous');
+    dom.next.onclick = () => navigateJoke('next');
     dom.save.onclick = () => saveCurrentJoke();
     dom.unsave.onclick = () => removeCurrentSavedJoke();
     if (dom.savedSearch) {
@@ -3448,7 +3465,7 @@
       setTimeout(warmUpVoices, 300);
     }
     applyLanguage(settings.language);
-    updateHistoryButtons();
+    updateNavButtons();
     window.addEventListener('hashchange', handleRouteChange);
     handleRouteChange();
   </script>
