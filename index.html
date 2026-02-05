@@ -179,6 +179,12 @@
       align-items: center;
       gap: 0.6rem;
     }
+    .auth-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      align-items: center;
+    }
     .inline-label {
       font-weight: 600;
     }
@@ -343,9 +349,10 @@
       animation: pulse 1.2s infinite;
     }
     .joke-text {
-      font-size: 1.4rem;
+      font-size: 1.6rem;
       line-height: 1.5;
       min-height: 96px;
+      text-align: center;
     }
     .joke-meta {
       display: flex;
@@ -402,6 +409,47 @@
       display: flex;
       flex-wrap: wrap;
       gap: 0.6rem;
+    }
+    .comment-section {
+      margin-top: 1.2rem;
+      display: grid;
+      gap: 0.8rem;
+    }
+    .comment-list {
+      display: grid;
+      gap: 0.6rem;
+    }
+    .comment-item {
+      background: var(--bg-soft);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 0.6rem 0.8rem;
+      display: grid;
+      gap: 0.4rem;
+    }
+    .comment-meta {
+      font-size: 0.8rem;
+      color: var(--muted);
+      display: flex;
+      gap: 0.6rem;
+      flex-wrap: wrap;
+    }
+    .comment-actions {
+      display: flex;
+      gap: 0.4rem;
+      flex-wrap: wrap;
+    }
+    .comment-replies {
+      margin-left: 1rem;
+      display: grid;
+      gap: 0.5rem;
+    }
+    .comment-form {
+      display: grid;
+      gap: 0.6rem;
+    }
+    .search-input {
+      width: 100%;
     }
     .feedback {
       margin-top: 0.6rem;
@@ -735,6 +783,12 @@
           <option value="pt" data-i18n="languages.pt">Portuguese</option>
         </select>
         <button id="dark-toggle" class="ghost" data-i18n="buttons.dark">Dark Mode</button>
+        <div class="auth-actions">
+          <span id="user-greeting" class="badge" hidden></span>
+          <button id="login-open" class="ghost" data-i18n="auth.login">Login</button>
+          <button id="signup-open" class="ghost" data-i18n="auth.signup">Sign Up</button>
+          <button id="logout" class="ghost" data-i18n="auth.logout" hidden>Logout</button>
+        </div>
       </div>
     </div>
     <div class="top-bar-row tabs-row">
@@ -810,6 +864,10 @@
           </select>
         </div>
         <div class="control-group">
+          <label for="search-input" data-i18n="controls.search">Search</label>
+          <input id="search-input" class="search-input" type="text" data-i18n-placeholder="controls.searchPlaceholder" />
+        </div>
+        <div class="control-group">
           <label for="voice-speed" data-i18n="controls.voiceSpeed">Voice Speed</label>
           <input id="voice-speed" type="range" min="0.8" max="1.3" step="0.05" value="1.05" />
         </div>
@@ -839,6 +897,8 @@
             <button id="save-joke" data-i18n="buttons.save">Save Joke</button>
             <button id="unsave-joke" data-i18n="buttons.unsave">Remove Saved</button>
             <span id="saved-count" class="badge saved-count">0 saved</span>
+            <button data-reaction="funny" data-i18n="buttons.like">Like</button>
+            <button data-reaction="notFunny" data-i18n="buttons.dislike">Dislike</button>
           </div>
         </div>
         <div class="reactions">
@@ -856,6 +916,18 @@
           <button data-share="tiktok" data-i18n="share.tiktok">TikTok</button>
           <button data-share="instagram" data-i18n="share.instagram">Instagram</button>
           <button data-share="copy" data-i18n="share.copy">Copy Link</button>
+        </div>
+        <div class="comment-section">
+          <span class="section-label" data-i18n="comments.title">Comments</span>
+          <div id="comment-list" class="comment-list"></div>
+          <form id="comment-form" class="comment-form">
+            <textarea id="comment-text" maxlength="200" data-i18n-placeholder="comments.placeholder"></textarea>
+            <div class="form-actions">
+              <button type="submit" data-i18n="comments.add">Add Comment</button>
+              <button type="button" id="cancel-reply" class="ghost" data-i18n="comments.cancel" hidden>Cancel Reply</button>
+            </div>
+            <div id="comment-feedback" class="feedback" aria-live="polite"></div>
+          </form>
         </div>
         <div id="feedback" class="feedback" aria-live="polite"></div>
       </div>
@@ -887,6 +959,10 @@
         <div class="card">
           <h3 data-i18n="community.leaderboard">Leaderboard</h3>
           <div id="leaderboard-list" class="list"></div>
+        </div>
+        <div class="card">
+          <h3 data-i18n="community.trending">Trending Jokes</h3>
+          <div id="trending-list" class="list"></div>
         </div>
       </div>
     </section>
@@ -986,6 +1062,17 @@
             <a href="https://www.instagram.com/" target="_blank" rel="noreferrer">Instagram</a>
           </div>
         </div>
+        <div class="card">
+          <h3 data-i18n="contact.notifications">Daily Joke Notifications</h3>
+          <p data-i18n="contact.notificationsText">
+            Enable browser notifications to receive a daily joke while this page is open.
+          </p>
+          <div class="form-actions">
+            <button id="notify-enable" data-i18n="contact.enable">Enable</button>
+            <button id="notify-disable" class="ghost" data-i18n="contact.disable">Disable</button>
+          </div>
+          <div id="notify-feedback" class="feedback" aria-live="polite"></div>
+        </div>
       </div>
     </section>
 
@@ -1014,6 +1101,40 @@
           This project is part of my learning journey in web development, and I plan to keep improving the website with
           better features, design, and interactive experiences for users worldwide. Send feedback or suggestions anytime.
         </p>
+      </div>
+    </div>
+
+    <div id="login-modal" class="modal" hidden role="dialog" aria-modal="true" aria-labelledby="login-modal-title">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 id="login-modal-title" data-i18n="auth.loginTitle">Login</h3>
+          <button id="login-close" class="ghost" data-i18n="buttons.close">Close</button>
+        </div>
+        <form id="login-form" class="form-card">
+          <label for="login-username" data-i18n="auth.username">Username</label>
+          <input id="login-username" type="text" autocomplete="username" />
+          <label for="login-password" data-i18n="auth.password">Password</label>
+          <input id="login-password" type="password" autocomplete="current-password" />
+          <button type="submit" data-i18n="auth.login">Login</button>
+          <div id="login-feedback" class="feedback" aria-live="polite"></div>
+        </form>
+      </div>
+    </div>
+
+    <div id="signup-modal" class="modal" hidden role="dialog" aria-modal="true" aria-labelledby="signup-modal-title">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 id="signup-modal-title" data-i18n="auth.signupTitle">Sign Up</h3>
+          <button id="signup-close" class="ghost" data-i18n="buttons.close">Close</button>
+        </div>
+        <form id="signup-form" class="form-card">
+          <label for="signup-username" data-i18n="auth.username">Username</label>
+          <input id="signup-username" type="text" autocomplete="username" />
+          <label for="signup-password" data-i18n="auth.password">Password</label>
+          <input id="signup-password" type="password" autocomplete="new-password" />
+          <button type="submit" data-i18n="auth.signup">Sign Up</button>
+          <div id="signup-feedback" class="feedback" aria-live="polite"></div>
+        </form>
       </div>
     </div>
 
@@ -1056,6 +1177,7 @@
       play: document.getElementById('play'),
       replay: document.getElementById('replay'),
       copyJoke: document.getElementById('copy-joke'),
+      searchInput: document.getElementById('search-input'),
       heroStart: document.getElementById('hero-start'),
       heroScroll: document.getElementById('hero-scroll'),
       jotdText: document.getElementById('jotd-text'),
@@ -1073,15 +1195,40 @@
       creatorModal: document.getElementById('creator-modal'),
       creatorModalOpen: document.getElementById('creator-modal-open'),
       creatorModalClose: document.getElementById('creator-modal-close'),
+      loginModal: document.getElementById('login-modal'),
+      loginClose: document.getElementById('login-close'),
+      loginForm: document.getElementById('login-form'),
+      loginUsername: document.getElementById('login-username'),
+      loginPassword: document.getElementById('login-password'),
+      loginFeedback: document.getElementById('login-feedback'),
+      signupModal: document.getElementById('signup-modal'),
+      signupClose: document.getElementById('signup-close'),
+      signupForm: document.getElementById('signup-form'),
+      signupUsername: document.getElementById('signup-username'),
+      signupPassword: document.getElementById('signup-password'),
+      signupFeedback: document.getElementById('signup-feedback'),
+      loginOpen: document.getElementById('login-open'),
+      signupOpen: document.getElementById('signup-open'),
+      logout: document.getElementById('logout'),
+      userGreeting: document.getElementById('user-greeting'),
       reactionCounts: document.getElementById('reaction-counts'),
       topRatedList: document.getElementById('top-rated-list'),
       leaderboardList: document.getElementById('leaderboard-list'),
+      trendingList: document.getElementById('trending-list'),
+      notifyEnable: document.getElementById('notify-enable'),
+      notifyDisable: document.getElementById('notify-disable'),
+      notifyFeedback: document.getElementById('notify-feedback'),
       submissionForm: document.getElementById('submission-form'),
       submissionText: document.getElementById('submission-text'),
       submissionCategory: document.getElementById('submission-category'),
       submissionName: document.getElementById('submission-name'),
       submissionWebsite: document.getElementById('submission-website'),
       submissionFeedback: document.getElementById('submission-feedback'),
+      commentList: document.getElementById('comment-list'),
+      commentForm: document.getElementById('comment-form'),
+      commentText: document.getElementById('comment-text'),
+      commentFeedback: document.getElementById('comment-feedback'),
+      cancelReply: document.getElementById('cancel-reply'),
       recordVoice: document.getElementById('record-voice'),
       stopVoice: document.getElementById('stop-voice'),
       playVoice: document.getElementById('play-voice'),
@@ -1094,14 +1241,18 @@
     };
 
     const STORAGE_KEYS = {
-      saved: 'savedJokesV2',
+      saved: 'savedJokesV3',
       seen: 'seenJokesV2',
       reactions: 'reactionStoreV1',
       userReactions: 'userReactionsV1',
       submissions: 'submissionsV1',
       approved: 'approvedJokesV1',
       settings: 'jokeSettingsV1',
-      stats: 'jokeStatsV1'
+      stats: 'jokeStatsV1',
+      accounts: 'userAccountsV1',
+      session: 'userSessionV1',
+      comments: 'commentStoreV1',
+      notifications: 'notificationPrefsV1'
     };
 
     const languageMeta = {
@@ -1145,6 +1296,8 @@
         'controls.category': 'Category',
         'controls.language': 'Language',
         'controls.voiceSpeed': 'Voice Speed',
+        'controls.search': 'Search',
+        'controls.searchPlaceholder': 'Search jokes...',
         'categories.random': 'Random',
         'categories.school': 'School',
         'categories.relationship': 'Relationship',
@@ -1179,6 +1332,14 @@
         'reactions.funny': 'Funny',
         'reactions.veryFunny': 'Very Funny',
         'reactions.notFunny': 'Not Funny',
+        'comments.title': 'Comments',
+        'comments.placeholder': 'Write a comment...',
+        'comments.add': 'Add Comment',
+        'comments.reply': 'Reply',
+        'comments.cancel': 'Cancel Reply',
+        'comments.like': 'Like',
+        'comments.dislike': 'Dislike',
+        'comments.empty': 'No comments yet.',
         'share.title': 'Share',
         'share.whatsapp': 'WhatsApp',
         'share.tiktok': 'TikTok',
@@ -1187,6 +1348,7 @@
         'community.title': 'Community Highlights',
         'community.topRated': 'Top Rated Jokes',
         'community.leaderboard': 'Leaderboard',
+        'community.trending': 'Trending Jokes',
         'community.empty': 'No reactions yet. Be the first to react!',
         'saved.title': 'Saved Jokes',
         'saved.subtitle': 'Search, review, and manage the jokes you saved.',
@@ -1209,6 +1371,10 @@
         'contact.text': 'Have feedback or suggestions? Email anytime and I will read it.',
         'contact.emailLabel': 'Email',
         'contact.socialLabel': 'Social',
+        'contact.notifications': 'Daily Joke Notifications',
+        'contact.notificationsText': 'Enable browser notifications to receive a daily joke while this page is open.',
+        'contact.enable': 'Enable',
+        'contact.disable': 'Disable',
         'submit.title': 'Submit a Joke',
         'submit.subtitle': 'Share your jokes with the community. Approved jokes appear in the jokes list.',
         'submit.jokeLabel': 'Your joke',
@@ -1237,6 +1403,24 @@
         'footer.copyright': '© 2026 Voice Joke Club',
         'footer.rights': 'All rights reserved.',
         'footer.social': 'Follow',
+        'auth.login': 'Login',
+        'auth.signup': 'Sign Up',
+        'auth.logout': 'Logout',
+        'auth.loginTitle': 'Login',
+        'auth.signupTitle': 'Sign Up',
+        'auth.username': 'Username',
+        'auth.password': 'Password',
+        'auth.welcome': 'Hi, {name}',
+        'auth.guest': 'Guest',
+        'auth.error': 'Please check your details.',
+        'auth.exists': 'Username already exists.',
+        'auth.created': 'Account created. You are logged in.',
+        'auth.loggedOut': 'Logged out.',
+        'auth.short': 'Use at least 4 characters for username and 6 for password.',
+        'contact.enabled': 'Notifications enabled.',
+        'contact.disabled': 'Notifications disabled.',
+        'contact.denied': 'Permission denied.',
+        'contact.unsupported': 'Notifications not supported here.',
         'languages.en': 'English',
         'languages.ar': 'Arabic',
         'languages.fr': 'French',
@@ -1265,6 +1449,7 @@
         'feedback.submissionOk': 'Submission received! It is now pending review.',
         'feedback.submissionCooldown': 'Please wait a bit before submitting again.',
         'feedback.submissionInvalid': 'Please enter a friendly joke without links.',
+        'feedback.noResults': 'No jokes found for that search.',
         'feedback.voiceUnsupported': 'Voice recording is not supported in this browser.',
         'feedback.voiceTooLarge': 'Voice clip is too large. Try a shorter recording.',
         'feedback.moderationApproved': 'Submission approved.',
@@ -1306,6 +1491,8 @@
         'controls.category': 'Categorie',
         'controls.language': 'Langue',
         'controls.voiceSpeed': 'Vitesse voix',
+        'controls.search': 'Recherche',
+        'controls.searchPlaceholder': 'Chercher des blagues...',
         'categories.random': 'Aleatoire',
         'categories.school': 'Ecole',
         'categories.relationship': 'Relations',
@@ -1340,6 +1527,14 @@
         'reactions.funny': 'Drole',
         'reactions.veryFunny': 'Tres Drole',
         'reactions.notFunny': 'Pas Drole',
+        'comments.title': 'Commentaires',
+        'comments.placeholder': 'Ecrire un commentaire...',
+        'comments.add': 'Ajouter',
+        'comments.reply': 'Repondre',
+        'comments.cancel': 'Annuler',
+        'comments.like': 'J aime',
+        'comments.dislike': 'Je n aime pas',
+        'comments.empty': 'Pas de commentaires.',
         'share.title': 'Partager',
         'share.whatsapp': 'WhatsApp',
         'share.tiktok': 'TikTok',
@@ -1348,6 +1543,7 @@
         'community.title': 'Moments forts',
         'community.topRated': 'Top blagues',
         'community.leaderboard': 'Classement',
+        'community.trending': 'Blagues tendances',
         'community.empty': 'Pas de reactions pour le moment.',
         'saved.title': 'Blagues sauvegardees',
         'saved.subtitle': 'Recherchez et gerez vos blagues sauvegardees.',
@@ -1370,6 +1566,14 @@
         'contact.text': 'Des idees ou suggestions? Envoyez un email quand vous voulez.',
         'contact.emailLabel': 'Email',
         'contact.socialLabel': 'Social',
+        'contact.notifications': 'Notifications quotidiennes',
+        'contact.notificationsText': 'Activez les notifications pour recevoir une blague quotidienne.',
+        'contact.enable': 'Activer',
+        'contact.disable': 'Desactiver',
+        'contact.enabled': 'Notifications activees.',
+        'contact.disabled': 'Notifications desactivees.',
+        'contact.denied': 'Permission refusee.',
+        'contact.unsupported': 'Notifications non prises en charge.',
         'submit.title': 'Envoyer une blague',
         'submit.subtitle': 'Partagez vos blagues. Les blagues approuvees apparaissent dans la liste.',
         'submit.jokeLabel': 'Votre blague',
@@ -1398,6 +1602,20 @@
         'footer.copyright': '© 2026 Voice Joke Club',
         'footer.rights': 'Tous droits reserves.',
         'footer.social': 'Suivre',
+        'auth.login': 'Connexion',
+        'auth.signup': 'Inscription',
+        'auth.logout': 'Deconnexion',
+        'auth.loginTitle': 'Connexion',
+        'auth.signupTitle': 'Inscription',
+        'auth.username': 'Nom utilisateur',
+        'auth.password': 'Mot de passe',
+        'auth.welcome': 'Salut, {name}',
+        'auth.error': 'Verifiez vos informations.',
+        'auth.exists': 'Nom deja utilise.',
+        'auth.created': 'Compte cree. Connecte.',
+        'auth.loggedOut': 'Deconnecte.',
+        'auth.short': 'Au moins 4 caracteres pour le nom et 6 pour le mot de passe.',
+        'auth.guest': 'Invite',
         'languages.en': 'Anglais',
         'languages.ar': 'Arabe',
         'languages.fr': 'Francais',
@@ -1426,6 +1644,7 @@
         'feedback.submissionOk': 'Soumission recue. En attente de validation.',
         'feedback.submissionCooldown': 'Veuillez patienter avant une nouvelle soumission.',
         'feedback.submissionInvalid': 'Entrez une blague amicale sans liens.',
+        'feedback.noResults': 'Aucune blague trouvee.',
         'feedback.voiceUnsupported': 'Enregistrement vocal non pris en charge.',
         'feedback.voiceTooLarge': 'Clip vocal trop grand. Essayez plus court.',
         'feedback.moderationApproved': 'Soumission approuvee.',
@@ -1466,6 +1685,8 @@
         'controls.category': 'Categoria',
         'controls.language': 'Idioma',
         'controls.voiceSpeed': 'Velocidad de voz',
+        'controls.search': 'Buscar',
+        'controls.searchPlaceholder': 'Buscar chistes...',
         'categories.random': 'Aleatorio',
         'categories.school': 'Escuela',
         'categories.relationship': 'Relaciones',
@@ -1500,6 +1721,14 @@
         'reactions.funny': 'Divertido',
         'reactions.veryFunny': 'Muy divertido',
         'reactions.notFunny': 'No divertido',
+        'comments.title': 'Comentarios',
+        'comments.placeholder': 'Escribe un comentario...',
+        'comments.add': 'Agregar',
+        'comments.reply': 'Responder',
+        'comments.cancel': 'Cancelar',
+        'comments.like': 'Me gusta',
+        'comments.dislike': 'No me gusta',
+        'comments.empty': 'Sin comentarios.',
         'share.title': 'Compartir',
         'share.whatsapp': 'WhatsApp',
         'share.tiktok': 'TikTok',
@@ -1508,6 +1737,7 @@
         'community.title': 'Momentos de la comunidad',
         'community.topRated': 'Mejores chistes',
         'community.leaderboard': 'Clasificacion',
+        'community.trending': 'Chistes en tendencia',
         'community.empty': 'Sin reacciones todavia.',
         'saved.title': 'Chistes guardados',
         'saved.subtitle': 'Busca y administra tus chistes guardados.',
@@ -1530,6 +1760,14 @@
         'contact.text': 'Tienes sugerencias? Envia un correo cuando quieras.',
         'contact.emailLabel': 'Email',
         'contact.socialLabel': 'Social',
+        'contact.notifications': 'Notificaciones diarias',
+        'contact.notificationsText': 'Activa notificaciones para un chiste diario.',
+        'contact.enable': 'Activar',
+        'contact.disable': 'Desactivar',
+        'contact.enabled': 'Notificaciones activadas.',
+        'contact.disabled': 'Notificaciones desactivadas.',
+        'contact.denied': 'Permiso denegado.',
+        'contact.unsupported': 'Notificaciones no compatibles.',
         'submit.title': 'Enviar un chiste',
         'submit.subtitle': 'Comparte tus chistes. Los aprobados aparecen en la lista de chistes.',
         'submit.jokeLabel': 'Tu chiste',
@@ -1558,6 +1796,20 @@
         'footer.copyright': '© 2026 Voice Joke Club',
         'footer.rights': 'Todos los derechos reservados.',
         'footer.social': 'Seguir',
+        'auth.login': 'Iniciar sesion',
+        'auth.signup': 'Registrarse',
+        'auth.logout': 'Salir',
+        'auth.loginTitle': 'Iniciar sesion',
+        'auth.signupTitle': 'Registrarse',
+        'auth.username': 'Usuario',
+        'auth.password': 'Contrasena',
+        'auth.welcome': 'Hola, {name}',
+        'auth.error': 'Revisa tus datos.',
+        'auth.exists': 'El usuario ya existe.',
+        'auth.created': 'Cuenta creada. Sesion iniciada.',
+        'auth.loggedOut': 'Sesion cerrada.',
+        'auth.short': 'Minimo 4 caracteres para usuario y 6 para clave.',
+        'auth.guest': 'Invitado',
         'languages.en': 'Ingles',
         'languages.ar': 'Arabe',
         'languages.fr': 'Frances',
@@ -1586,6 +1838,7 @@
         'feedback.submissionOk': 'Envio recibido. En revision.',
         'feedback.submissionCooldown': 'Espera un poco antes de enviar otro.',
         'feedback.submissionInvalid': 'Escribe un chiste amable sin enlaces.',
+        'feedback.noResults': 'No se encontraron chistes.',
         'feedback.voiceUnsupported': 'Grabacion de voz no disponible.',
         'feedback.voiceTooLarge': 'Audio demasiado grande. Prueba mas corto.',
         'feedback.moderationApproved': 'Envio aprobado.',
@@ -1626,6 +1879,8 @@
         'controls.category': 'الفئة',
         'controls.language': 'اللغة',
         'controls.voiceSpeed': 'سرعة الصوت',
+        'controls.search': 'بحث',
+        'controls.searchPlaceholder': 'ابحث عن نكات...',
         'categories.random': 'عشوائي',
         'categories.school': 'المدرسة',
         'categories.relationship': 'العلاقات',
@@ -1660,6 +1915,14 @@
         'reactions.funny': 'مضحك',
         'reactions.veryFunny': 'مضحك جدا',
         'reactions.notFunny': 'غير مضحك',
+        'comments.title': 'التعليقات',
+        'comments.placeholder': 'اكتب تعليقا...',
+        'comments.add': 'اضافة',
+        'comments.reply': 'رد',
+        'comments.cancel': 'الغاء',
+        'comments.like': 'اعجبني',
+        'comments.dislike': 'لم يعجبني',
+        'comments.empty': 'لا توجد تعليقات.',
         'share.title': 'مشاركة',
         'share.whatsapp': 'واتساب',
         'share.tiktok': 'تيك توك',
@@ -1668,6 +1931,7 @@
         'community.title': 'ابرز المجتمع',
         'community.topRated': 'الافضل تقييما',
         'community.leaderboard': 'لوحة الصدارة',
+        'community.trending': 'النكات الرائجة',
         'community.empty': 'لا توجد تفاعلات بعد.',
         'saved.title': 'النكات المحفوظة',
         'saved.subtitle': 'ابحث وادار النكات المحفوظة.',
@@ -1690,6 +1954,14 @@
         'contact.text': 'هل لديك ملاحظات او اقتراحات؟ ارسل بريدا في اي وقت.',
         'contact.emailLabel': 'البريد',
         'contact.socialLabel': 'اجتماعي',
+        'contact.notifications': 'اشعارات يومية',
+        'contact.notificationsText': 'فعّل الاشعارات لتصلك نكتة يومية.',
+        'contact.enable': 'تفعيل',
+        'contact.disable': 'ايقاف',
+        'contact.enabled': 'تم تفعيل الاشعارات.',
+        'contact.disabled': 'تم ايقاف الاشعارات.',
+        'contact.denied': 'تم رفض الصلاحية.',
+        'contact.unsupported': 'الاشعارات غير مدعومة.',
         'submit.title': 'ارسل نكتة',
         'submit.subtitle': 'شارك نكاتك. المعتمدة تظهر في قائمة النكات.',
         'submit.jokeLabel': 'نكتتك',
@@ -1718,6 +1990,20 @@
         'footer.copyright': '© 2026 Voice Joke Club',
         'footer.rights': 'كل الحقوق محفوظة.',
         'footer.social': 'تابعنا',
+        'auth.login': 'تسجيل الدخول',
+        'auth.signup': 'انشاء حساب',
+        'auth.logout': 'تسجيل الخروج',
+        'auth.loginTitle': 'تسجيل الدخول',
+        'auth.signupTitle': 'انشاء حساب',
+        'auth.username': 'اسم المستخدم',
+        'auth.password': 'كلمة المرور',
+        'auth.welcome': 'مرحبا، {name}',
+        'auth.error': 'تحقق من البيانات.',
+        'auth.exists': 'اسم المستخدم موجود.',
+        'auth.created': 'تم انشاء الحساب.',
+        'auth.loggedOut': 'تم تسجيل الخروج.',
+        'auth.short': 'الاسم 4 احرف على الاقل وكلمة المرور 6 احرف.',
+        'auth.guest': 'زائر',
         'languages.en': 'الانجليزية',
         'languages.ar': 'العربية',
         'languages.fr': 'الفرنسية',
@@ -1746,6 +2032,7 @@
         'feedback.submissionOk': 'تم استلام النكتة. بانتظار المراجعة.',
         'feedback.submissionCooldown': 'انتظر قليلا قبل ارسال جديد.',
         'feedback.submissionInvalid': 'اكتب نكتة لطيفة بدون روابط.',
+        'feedback.noResults': 'لم يتم العثور على نكات.',
         'feedback.voiceUnsupported': 'تسجيل الصوت غير مدعوم.',
         'feedback.voiceTooLarge': 'التسجيل كبير جدا.',
         'feedback.moderationApproved': 'تمت الموافقة.',
@@ -1786,6 +2073,8 @@
         'controls.category': 'Rukuni',
         'controls.language': 'Harshe',
         'controls.voiceSpeed': 'Gudun murya',
+        'controls.search': 'Bincike',
+        'controls.searchPlaceholder': 'Nemo barkwanci...',
         'categories.random': 'Bazata',
         'categories.school': 'Makaranta',
         'categories.relationship': 'Alaka',
@@ -1820,6 +2109,14 @@
         'reactions.funny': 'Mai dariya',
         'reactions.veryFunny': 'Dariya sosai',
         'reactions.notFunny': 'Ba dariya',
+        'comments.title': 'Sharhi',
+        'comments.placeholder': 'Rubuta sharhi...',
+        'comments.add': 'Kara',
+        'comments.reply': 'Amsa',
+        'comments.cancel': 'Soke',
+        'comments.like': 'Na so',
+        'comments.dislike': 'Ban so ba',
+        'comments.empty': 'Babu sharhi.',
         'share.title': 'Raba',
         'share.whatsapp': 'WhatsApp',
         'share.tiktok': 'TikTok',
@@ -1828,6 +2125,7 @@
         'community.title': 'Abubuwan al umma',
         'community.topRated': 'Mafi so',
         'community.leaderboard': 'Tebur',
+        'community.trending': 'Barkwanci masu tashe',
         'community.empty': 'Babu martani tukuna.',
         'saved.title': 'Ajiyayyun barkwanci',
         'saved.subtitle': 'Nemo ka sarrafa ajiyayyun barkwanci.',
@@ -1850,6 +2148,14 @@
         'contact.text': 'Kana da ra ayi ko shawara? Aika imel a kowane lokaci.',
         'contact.emailLabel': 'Email',
         'contact.socialLabel': 'Sadaukarwa',
+        'contact.notifications': 'Sanarwar yau da kullum',
+        'contact.notificationsText': 'Kunna sanarwa don samun barkwanci na yau.',
+        'contact.enable': 'Kunna',
+        'contact.disable': 'Kashe',
+        'contact.enabled': 'An kunna sanarwa.',
+        'contact.disabled': 'An kashe sanarwa.',
+        'contact.denied': 'Ba a amince ba.',
+        'contact.unsupported': 'Sanarwa ba ta aiki.',
         'submit.title': 'Aika barkwanci',
         'submit.subtitle': 'Raba barkwanci. Wanda aka amince ya shiga jerin barkwanci.',
         'submit.jokeLabel': 'Barkwancinka',
@@ -1878,6 +2184,20 @@
         'footer.copyright': '© 2026 Voice Joke Club',
         'footer.rights': 'Dukkan hakki ajiye.',
         'footer.social': 'Biyo mu',
+        'auth.login': 'Shiga',
+        'auth.signup': 'Yi rijista',
+        'auth.logout': 'Fita',
+        'auth.loginTitle': 'Shiga',
+        'auth.signupTitle': 'Yi rijista',
+        'auth.username': 'Sunan mai amfani',
+        'auth.password': 'Kalmar sirri',
+        'auth.welcome': 'Sannu, {name}',
+        'auth.error': 'Duba bayanai.',
+        'auth.exists': 'Sunan ya riga yana.',
+        'auth.created': 'An kirkiri asusu.',
+        'auth.loggedOut': 'An fita.',
+        'auth.short': 'Suna aƙalla 4, kalmar sirri aƙalla 6.',
+        'auth.guest': 'Bako',
         'languages.en': 'Ingilishi',
         'languages.ar': 'Larabci',
         'languages.fr': 'Faransanci',
@@ -1906,6 +2226,7 @@
         'feedback.submissionOk': 'An karba. Yana jiran dubawa.',
         'feedback.submissionCooldown': 'Ka jira kadan kafin aika.',
         'feedback.submissionInvalid': 'Rubuta barkwanci mai kyau ba tare da link ba.',
+        'feedback.noResults': 'Babu barkwanci da aka samu.',
         'feedback.voiceUnsupported': 'Ba a goyon bayan murya.',
         'feedback.voiceTooLarge': 'Murya ta yi girma.',
         'feedback.moderationApproved': 'An amince.',
@@ -1946,6 +2267,8 @@
         'controls.category': 'Categoria',
         'controls.language': 'Idioma',
         'controls.voiceSpeed': 'Velocidade da voz',
+        'controls.search': 'Buscar',
+        'controls.searchPlaceholder': 'Buscar piadas...',
         'categories.random': 'Aleatorio',
         'categories.school': 'Escola',
         'categories.relationship': 'Relacionamento',
@@ -1980,6 +2303,14 @@
         'reactions.funny': 'Engracado',
         'reactions.veryFunny': 'Muito engracado',
         'reactions.notFunny': 'Nao engracado',
+        'comments.title': 'Comentarios',
+        'comments.placeholder': 'Escreva um comentario...',
+        'comments.add': 'Adicionar',
+        'comments.reply': 'Responder',
+        'comments.cancel': 'Cancelar',
+        'comments.like': 'Gostei',
+        'comments.dislike': 'Nao gostei',
+        'comments.empty': 'Sem comentarios.',
         'share.title': 'Compartilhar',
         'share.whatsapp': 'WhatsApp',
         'share.tiktok': 'TikTok',
@@ -1988,6 +2319,7 @@
         'community.title': 'Destaques da comunidade',
         'community.topRated': 'Melhores piadas',
         'community.leaderboard': 'Ranking',
+        'community.trending': 'Piadas em alta',
         'community.empty': 'Sem reacoes ainda.',
         'saved.title': 'Piadas salvas',
         'saved.subtitle': 'Busque e gerencie suas piadas salvas.',
@@ -2010,6 +2342,14 @@
         'contact.text': 'Tem sugestoes? Envie um email quando quiser.',
         'contact.emailLabel': 'Email',
         'contact.socialLabel': 'Social',
+        'contact.notifications': 'Notificacoes diarias',
+        'contact.notificationsText': 'Ative notificacoes para receber uma piada diaria.',
+        'contact.enable': 'Ativar',
+        'contact.disable': 'Desativar',
+        'contact.enabled': 'Notificacoes ativadas.',
+        'contact.disabled': 'Notificacoes desativadas.',
+        'contact.denied': 'Permissao negada.',
+        'contact.unsupported': 'Notificacoes nao suportadas.',
         'submit.title': 'Enviar uma piada',
         'submit.subtitle': 'Compartilhe sua piada. As aprovadas aparecem na lista de piadas.',
         'submit.jokeLabel': 'Sua piada',
@@ -2038,6 +2378,20 @@
         'footer.copyright': '© 2026 Voice Joke Club',
         'footer.rights': 'Todos os direitos reservados.',
         'footer.social': 'Siga',
+        'auth.login': 'Entrar',
+        'auth.signup': 'Cadastrar',
+        'auth.logout': 'Sair',
+        'auth.loginTitle': 'Entrar',
+        'auth.signupTitle': 'Cadastrar',
+        'auth.username': 'Usuario',
+        'auth.password': 'Senha',
+        'auth.welcome': 'Oi, {name}',
+        'auth.error': 'Verifique seus dados.',
+        'auth.exists': 'Usuario ja existe.',
+        'auth.created': 'Conta criada.',
+        'auth.loggedOut': 'Saiu da conta.',
+        'auth.short': 'Minimo 4 caracteres no usuario e 6 na senha.',
+        'auth.guest': 'Convidado',
         'languages.en': 'Ingles',
         'languages.ar': 'Arabe',
         'languages.fr': 'Frances',
@@ -2066,6 +2420,7 @@
         'feedback.submissionOk': 'Envio recebido. Em revisao.',
         'feedback.submissionCooldown': 'Espere um pouco antes de enviar.',
         'feedback.submissionInvalid': 'Escreva uma piada gentil sem links.',
+        'feedback.noResults': 'Nenhuma piada encontrada.',
         'feedback.voiceUnsupported': 'Gravacao de voz nao suportada.',
         'feedback.voiceTooLarge': 'Audio muito grande.',
         'feedback.moderationApproved': 'Envio aprovado.',
@@ -2267,6 +2622,10 @@
       currentLang: 'en',
       jokeList: [],
       currentIndex: -1,
+      searchQuery: '',
+      replyTo: null,
+      currentUserId: null,
+      notificationInterval: null,
       voices: [],
       recorder: null,
       voiceChunks: [],
@@ -2275,12 +2634,17 @@
 
     const settings = loadSettings();
     const stats = loadStats();
-    const savedJokes = loadSavedJokes();
+    const savedStore = loadSavedStore();
+    const accounts = loadAccounts();
+    const session = loadSession();
+    state.currentUserId = accounts.some((item) => item.id === session.userId) ? session.userId : null;
     const seenStore = loadSeenStore();
     const reactionStore = loadReactions();
     const userReactions = loadUserReactions();
     const submissions = loadSubmissions();
     const approvedJokes = loadApprovedJokes();
+    const commentStore = loadComments();
+    const notificationPrefs = loadNotifications();
 
     function t(key, params = {}) {
       const dict = translations[state.currentLang] || translations.en;
@@ -2305,11 +2669,14 @@
       renderSavedSection();
       renderTopRated();
       renderLeaderboard();
+      renderTrending();
       renderAchievements();
       renderModeration();
+      renderComments();
       applyTheme(settings.theme);
       updateNavActive(getRouteFromHash());
       initCollapsibles();
+      updateAuthUI();
     }
 
     function applyLanguage(lang, options = {}) {
@@ -2369,6 +2736,251 @@
           toast.remove();
         }, 300);
       }, 2200);
+    }
+
+    function hashPassword(value) {
+      let hash = 0;
+      for (let i = 0; i < value.length; i += 1) {
+        hash = (hash << 5) - hash + value.charCodeAt(i);
+        hash |= 0;
+      }
+      return `h${Math.abs(hash)}`;
+    }
+
+    function getCurrentUserName() {
+      if (!state.currentUserId) {
+        return t('auth.guest');
+      }
+      const user = accounts.find((item) => item.id === state.currentUserId);
+      return user ? user.username : t('auth.guest');
+    }
+
+    function updateAuthUI() {
+      const isLoggedIn = Boolean(state.currentUserId);
+      if (dom.userGreeting) {
+        dom.userGreeting.textContent = t('auth.welcome', { name: getCurrentUserName() });
+        dom.userGreeting.hidden = !isLoggedIn;
+      }
+      if (dom.loginOpen) {
+        dom.loginOpen.hidden = isLoggedIn;
+      }
+      if (dom.signupOpen) {
+        dom.signupOpen.hidden = isLoggedIn;
+      }
+      if (dom.logout) {
+        dom.logout.hidden = !isLoggedIn;
+      }
+      updateSavedControls();
+      renderSavedSection();
+      renderComments();
+    }
+
+    function setCurrentUser(userId) {
+      state.currentUserId = userId;
+      saveSession();
+      updateAuthUI();
+    }
+
+    function handleSignup(username, password) {
+      const clean = username.trim();
+      if (clean.length < 4 || password.length < 6) {
+        dom.signupFeedback.textContent = t('auth.short');
+        return;
+      }
+      if (accounts.some((item) => item.username.toLowerCase() === clean.toLowerCase())) {
+        dom.signupFeedback.textContent = t('auth.exists');
+        return;
+      }
+      const id = `u_${Date.now().toString(36)}`;
+      accounts.push({ id, username: clean, password: hashPassword(password) });
+      saveAccounts();
+      setCurrentUser(id);
+      dom.signupFeedback.textContent = t('auth.created');
+      dom.signupModal.hidden = true;
+      showToast(t('auth.created'));
+    }
+
+    function handleLogin(username, password) {
+      const clean = username.trim();
+      const user = accounts.find((item) => item.username.toLowerCase() === clean.toLowerCase());
+      if (!user || user.password !== hashPassword(password)) {
+        dom.loginFeedback.textContent = t('auth.error');
+        return;
+      }
+      setCurrentUser(user.id);
+      dom.loginFeedback.textContent = '';
+      dom.loginModal.hidden = true;
+      showToast(t('auth.welcome', { name: user.username }));
+    }
+
+    function logout() {
+      setCurrentUser(null);
+      showToast(t('auth.loggedOut'));
+    }
+
+    function getCommentKey() {
+      if (!state.currentJoke) {
+        return null;
+      }
+      return buildJokeId(state.currentJoke, state.currentLang, state.currentCategory);
+    }
+
+    function getCommentsForJoke() {
+      const key = getCommentKey();
+      if (!key) {
+        return [];
+      }
+      return commentStore[key] || [];
+    }
+
+    function saveCommentsForJoke(list) {
+      const key = getCommentKey();
+      if (!key) {
+        return;
+      }
+      commentStore[key] = list;
+      saveComments();
+    }
+
+    function renderComments() {
+      if (!dom.commentList) {
+        return;
+      }
+      dom.commentList.innerHTML = '';
+      const list = getCommentsForJoke();
+      if (!list.length) {
+        const empty = document.createElement('div');
+        empty.className = 'comment-item';
+        empty.textContent = t('comments.empty');
+        dom.commentList.appendChild(empty);
+        return;
+      }
+      const rootComments = list.filter((item) => !item.parentId);
+      const replies = list.filter((item) => item.parentId);
+
+      const renderItem = (item, isReply = false) => {
+        const card = document.createElement('div');
+        card.className = 'comment-item';
+        if (isReply) {
+          card.classList.add('comment-reply');
+        }
+        const meta = document.createElement('div');
+        meta.className = 'comment-meta';
+        meta.textContent = `${item.author} · ${new Date(item.createdAt).toLocaleDateString()}`;
+
+        const text = document.createElement('div');
+        text.textContent = item.text;
+
+        const actions = document.createElement('div');
+        actions.className = 'comment-actions';
+        const like = document.createElement('button');
+        like.type = 'button';
+        like.textContent = `${t('comments.like')} · ${item.likes || 0}`;
+        like.onclick = () => reactToComment(item.id, 'likes');
+        const dislike = document.createElement('button');
+        dislike.type = 'button';
+        dislike.textContent = `${t('comments.dislike')} · ${item.dislikes || 0}`;
+        dislike.onclick = () => reactToComment(item.id, 'dislikes');
+        const reply = document.createElement('button');
+        reply.type = 'button';
+        reply.textContent = t('comments.reply');
+        reply.onclick = () => {
+          state.replyTo = item.id;
+          dom.cancelReply.hidden = false;
+          dom.commentText.focus();
+        };
+        actions.appendChild(like);
+        actions.appendChild(dislike);
+        actions.appendChild(reply);
+        card.appendChild(meta);
+        card.appendChild(text);
+        card.appendChild(actions);
+        return card;
+      };
+
+      rootComments.forEach((item) => {
+        const container = document.createElement('div');
+        container.appendChild(renderItem(item));
+        const replyContainer = document.createElement('div');
+        replyContainer.className = 'comment-replies';
+        replies.filter((reply) => reply.parentId === item.id).forEach((reply) => {
+          replyContainer.appendChild(renderItem(reply, true));
+        });
+        if (replyContainer.children.length) {
+          container.appendChild(replyContainer);
+        }
+        dom.commentList.appendChild(container);
+      });
+    }
+
+    function addComment(text) {
+      if (!state.currentJoke) {
+        dom.commentFeedback.textContent = t('feedback.noJoke');
+        return;
+      }
+      const trimmed = text.trim();
+      if (trimmed.length < 2) {
+        dom.commentFeedback.textContent = t('comments.placeholder');
+        return;
+      }
+      const list = getCommentsForJoke();
+      list.push({
+        id: `c_${Date.now().toString(36)}`,
+        text: trimmed,
+        author: getCurrentUserName(),
+        createdAt: new Date().toISOString(),
+        parentId: state.replyTo || null,
+        likes: 0,
+        dislikes: 0
+      });
+      saveCommentsForJoke(list);
+      state.replyTo = null;
+      dom.cancelReply.hidden = true;
+      dom.commentText.value = '';
+      dom.commentFeedback.textContent = '';
+      renderComments();
+      renderTrending();
+    }
+
+    function reactToComment(commentId, type) {
+      const list = getCommentsForJoke();
+      const item = list.find((comment) => comment.id === commentId);
+      if (!item) {
+        return;
+      }
+      item[type] = (item[type] || 0) + 1;
+      saveCommentsForJoke(list);
+      renderComments();
+      renderTrending();
+    }
+
+    function updateNotificationStatus(messageKey) {
+      if (dom.notifyFeedback) {
+        dom.notifyFeedback.textContent = messageKey ? t(messageKey) : '';
+      }
+    }
+
+    function scheduleNotification() {
+      if (!notificationPrefs.enabled) {
+        return;
+      }
+      if (!('Notification' in window)) {
+        updateNotificationStatus('contact.unsupported');
+        return;
+      }
+      if (Notification.permission !== 'granted') {
+        return;
+      }
+      const now = new Date();
+      const today = now.toISOString().slice(0, 10);
+      if (notificationPrefs.lastSent === today) {
+        return;
+      }
+      const list = getLocalJokes(state.currentLang, state.currentCategory);
+      const joke = list[0] || t('feedback.fallback');
+      new Notification(t('brand.name'), { body: joke });
+      notificationPrefs.lastSent = today;
+      saveNotifications();
     }
 
     function getLoadingMessage() {
@@ -2516,9 +3128,10 @@
     }
 
     function updateSavedControls() {
-      dom.savedCount.textContent = t('saved.count', { count: savedJokes.length });
+      const list = getSavedJokesList();
+      dom.savedCount.textContent = t('saved.count', { count: list.length });
       if (dom.savedTotal) {
-        dom.savedTotal.textContent = String(savedJokes.length);
+        dom.savedTotal.textContent = String(list.length);
       }
       const hasJoke = Boolean(state.currentJoke);
       dom.save.disabled = !hasJoke || isJokeSaved(state.currentJoke, state.currentLang, state.currentCategory);
@@ -2538,7 +3151,7 @@
 
     function isJokeSaved(joke, lang, category) {
       const id = buildJokeId(joke, lang, category);
-      return savedJokes.some((entry) => entry.id === id);
+      return getSavedJokesList().some((entry) => entry.id === id);
     }
 
     function saveCurrentJoke() {
@@ -2547,29 +3160,31 @@
         return;
       }
       const id = buildJokeId(state.currentJoke, state.currentLang, state.currentCategory);
-      if (savedJokes.some((entry) => entry.id === id)) {
+      const list = getSavedJokesList();
+      if (list.some((entry) => entry.id === id)) {
         setFeedback('feedback.alreadySaved');
         return;
       }
-      savedJokes.push({
+      list.push({
         id,
         joke: state.currentJoke,
         lang: state.currentLang,
         category: state.currentCategory,
         savedAt: new Date().toISOString()
       });
-      saveSavedJokes();
+      setSavedJokesList(list);
       updateSavedControls();
       renderSavedSection();
       showToast(t('toast.saved'));
     }
 
     function removeSavedJokeByIndex(index, options = {}) {
-      if (index < 0 || index >= savedJokes.length) {
+      const list = getSavedJokesList();
+      if (index < 0 || index >= list.length) {
         return;
       }
-      savedJokes.splice(index, 1);
-      saveSavedJokes();
+      list.splice(index, 1);
+      setSavedJokesList(list);
       updateSavedControls();
       renderSavedSection();
       if (!options.silent) {
@@ -2583,7 +3198,8 @@
         return;
       }
       const id = buildJokeId(state.currentJoke, state.currentLang, state.currentCategory);
-      const index = savedJokes.findIndex((entry) => entry.id === id);
+      const list = getSavedJokesList();
+      const index = list.findIndex((entry) => entry.id === id);
       if (index === -1) {
         setFeedback('feedback.notSaved');
         return;
@@ -2597,16 +3213,16 @@
       }
       dom.savedSectionList.innerHTML = '';
       const query = (dom.savedSearch?.value || '').trim().toLowerCase();
-      let items = savedJokes;
+      let items = getSavedJokesList();
       if (query) {
-        items = savedJokes.filter((entry) => {
+        items = getSavedJokesList().filter((entry) => {
           const text = entry.joke.toLowerCase();
           const categoryLabel = t(`categories.${entry.category}`).toLowerCase();
           const langLabel = t(`languages.${entry.lang}`).toLowerCase();
           return text.includes(query) || categoryLabel.includes(query) || langLabel.includes(query);
         });
       }
-      if (!savedJokes.length) {
+      if (!getSavedJokesList().length) {
         const empty = document.createElement('div');
         empty.className = 'list-item';
         empty.textContent = t('saved.none');
@@ -2621,7 +3237,7 @@
         return;
       }
       items.forEach((entry) => {
-        const entryIndex = savedJokes.findIndex((item) => item.id === entry.id);
+        const entryIndex = getSavedJokesList().findIndex((item) => item.id === entry.id);
         const row = document.createElement('div');
         row.className = 'list-item';
 
@@ -2679,14 +3295,19 @@
       dom.jokeLanguage.textContent = t(`languages.${state.currentLang}`);
       updateSavedControls();
       updateReactionUI();
+      renderComments();
     }
 
     function buildOrderedList(lang, category) {
       const list = getLocalJokes(lang, category);
+      const query = state.searchQuery.trim().toLowerCase();
       const unique = [];
       const seen = new Set();
       list.forEach((joke) => {
         if (!joke || seen.has(joke)) {
+          return;
+        }
+        if (query && !joke.toLowerCase().includes(query)) {
           return;
         }
         seen.add(joke);
@@ -2703,7 +3324,7 @@
       state.jokeList = ordered;
       if (!state.jokeList.length) {
         state.currentIndex = -1;
-        showJoke(t('feedback.fallback'));
+        showJoke(state.searchQuery ? t('feedback.noResults') : t('feedback.fallback'));
         updateNavButtons();
         return;
       }
@@ -2886,6 +3507,10 @@
       }
       const url = window.location.href.split('#')[0];
       const text = `${state.currentJoke} - ${t('brand.name')}`;
+      if (navigator.share && type !== 'copy') {
+        navigator.share({ title: t('brand.name'), text, url }).catch(() => {});
+        return;
+      }
       if (type === 'whatsapp') {
         window.open(`https://wa.me/?text=${encodeURIComponent(`${text} ${url}`)}`, '_blank');
         return;
@@ -2993,6 +3618,7 @@
       saveUserReactions();
       renderTopRated();
       renderLeaderboard();
+      renderTrending();
       updateReactionUI();
       setFeedback('feedback.reactionThanks');
     }
@@ -3047,6 +3673,45 @@
         row.appendChild(text);
         row.appendChild(score);
         dom.leaderboardList.appendChild(row);
+      });
+    }
+
+    function getCommentCountForJokeId(jokeId) {
+      const list = commentStore[jokeId] || [];
+      return list.length;
+    }
+
+    function renderTrending() {
+      if (!dom.trendingList) {
+        return;
+      }
+      dom.trendingList.innerHTML = '';
+      const items = Object.values(reactionStore)
+        .map((item) => {
+          const jokeId = buildJokeId(item.joke, item.lang, item.category);
+          const comments = getCommentCountForJokeId(jokeId);
+          const interactions = item.funny + item.veryFunny + item.notFunny + comments;
+          return { ...item, interactions };
+        })
+        .sort((a, b) => b.interactions - a.interactions)
+        .slice(0, 5);
+      if (!items.length) {
+        const empty = document.createElement('div');
+        empty.className = 'list-item';
+        empty.textContent = t('community.empty');
+        dom.trendingList.appendChild(empty);
+        return;
+      }
+      items.forEach((item) => {
+        const row = document.createElement('div');
+        row.className = 'list-item';
+        const text = document.createElement('span');
+        text.textContent = item.joke;
+        const score = document.createElement('span');
+        score.textContent = `${item.interactions} ✨`;
+        row.appendChild(text);
+        row.appendChild(score);
+        dom.trendingList.appendChild(row);
       });
     }
 
@@ -3106,7 +3771,8 @@
       submissions.push({
         id: Date.now().toString(36),
         joke,
-        name,
+        name: name || getCurrentUserName(),
+        userId: state.currentUserId,
         category,
         lang: state.currentLang,
         voiceDataUrl,
@@ -3260,42 +3926,115 @@
       localStorage.setItem(STORAGE_KEYS.stats, JSON.stringify(stats));
     }
 
-    function loadSavedJokes() {
-      const stored = JSON.parse(localStorage.getItem(STORAGE_KEYS.saved) || '[]');
-      const normalize = (entry) => {
-        if (!entry) {
-          return null;
-        }
-        const joke = entry.joke || entry.text || '';
-        if (!joke) {
-          return null;
-        }
-        const lang = entry.lang || entry.language || 'en';
-        const category = entry.category || 'random';
-        const savedAt = entry.savedAt || entry.timestamp || new Date().toISOString();
-        const id = entry.id || buildJokeId(joke, lang, category);
-        return { id, joke, lang, category, savedAt };
-      };
-      const uniqueById = (list) => {
-        const map = new Map();
-        list.forEach((entry) => {
-          if (entry && entry.id) {
-            map.set(entry.id, entry);
-          }
-        });
-        return Array.from(map.values());
-      };
-      if (Array.isArray(stored)) {
-        return uniqueById(stored.map(normalize).filter(Boolean));
+    function normalizeSavedEntry(entry) {
+      if (!entry) {
+        return null;
       }
-      const legacy = JSON.parse(localStorage.getItem('savedJokes') || '[]');
-      return Array.isArray(legacy)
-        ? uniqueById(legacy.map(normalize).filter(Boolean))
-        : [];
+      const joke = entry.joke || entry.text || '';
+      if (!joke) {
+        return null;
+      }
+      const lang = entry.lang || entry.language || 'en';
+      const category = entry.category || 'random';
+      const savedAt = entry.savedAt || entry.timestamp || new Date().toISOString();
+      const id = entry.id || buildJokeId(joke, lang, category);
+      return { id, joke, lang, category, savedAt };
     }
 
-    function saveSavedJokes() {
-      localStorage.setItem(STORAGE_KEYS.saved, JSON.stringify(savedJokes));
+    function uniqueById(list) {
+      const map = new Map();
+      list.forEach((entry) => {
+        if (entry && entry.id) {
+          map.set(entry.id, entry);
+        }
+      });
+      return Array.from(map.values());
+    }
+
+    function loadSavedStore() {
+      const stored = JSON.parse(localStorage.getItem(STORAGE_KEYS.saved) || '{}');
+      if (stored && typeof stored === 'object' && !Array.isArray(stored)) {
+        const users = stored.users && typeof stored.users === 'object'
+          ? Object.keys(stored.users).reduce((acc, key) => {
+              const list = Array.isArray(stored.users[key]) ? stored.users[key] : [];
+              acc[key] = uniqueById(list.map(normalizeSavedEntry).filter(Boolean));
+              return acc;
+            }, {})
+          : {};
+        return {
+          guest: Array.isArray(stored.guest)
+            ? uniqueById(stored.guest.map(normalizeSavedEntry).filter(Boolean))
+            : [],
+          users
+        };
+      }
+      const legacyList = Array.isArray(stored) ? stored : JSON.parse(localStorage.getItem('savedJokes') || '[]');
+      const guest = Array.isArray(legacyList) ? uniqueById(legacyList.map(normalizeSavedEntry).filter(Boolean)) : [];
+      return { guest, users: {} };
+    }
+
+    function saveSavedStore() {
+      localStorage.setItem(STORAGE_KEYS.saved, JSON.stringify(savedStore));
+    }
+
+    function getSavedJokesList() {
+      if (state.currentUserId) {
+        if (!savedStore.users[state.currentUserId]) {
+          savedStore.users[state.currentUserId] = [];
+        }
+        return savedStore.users[state.currentUserId];
+      }
+      return savedStore.guest;
+    }
+
+    function setSavedJokesList(list) {
+      if (state.currentUserId) {
+        savedStore.users[state.currentUserId] = uniqueById(list);
+      } else {
+        savedStore.guest = uniqueById(list);
+      }
+      saveSavedStore();
+    }
+
+    function loadAccounts() {
+      const stored = JSON.parse(localStorage.getItem(STORAGE_KEYS.accounts) || '[]');
+      return Array.isArray(stored) ? stored : [];
+    }
+
+    function saveAccounts() {
+      localStorage.setItem(STORAGE_KEYS.accounts, JSON.stringify(accounts));
+    }
+
+    function loadSession() {
+      return JSON.parse(localStorage.getItem(STORAGE_KEYS.session) || '{}');
+    }
+
+    function saveSession() {
+      localStorage.setItem(
+        STORAGE_KEYS.session,
+        JSON.stringify({ userId: state.currentUserId })
+      );
+    }
+
+    function loadComments() {
+      const stored = JSON.parse(localStorage.getItem(STORAGE_KEYS.comments) || '{}');
+      return stored && typeof stored === 'object' ? stored : {};
+    }
+
+    function saveComments() {
+      localStorage.setItem(STORAGE_KEYS.comments, JSON.stringify(commentStore));
+    }
+
+    function loadNotifications() {
+      const stored = JSON.parse(localStorage.getItem(STORAGE_KEYS.notifications) || '{}');
+      return {
+        enabled: Boolean(stored.enabled),
+        lastSent: stored.lastSent || ''
+      };
+    }
+
+    function saveNotifications() {
+      localStorage.setItem(STORAGE_KEYS.notifications, JSON.stringify(notificationPrefs));
     }
 
     function loadSeenStore() {
@@ -3366,6 +4105,12 @@
       state.currentCategory = dom.category.value;
       setJokeList();
     };
+    if (dom.searchInput) {
+      dom.searchInput.oninput = (event) => {
+        state.searchQuery = event.target.value;
+        setJokeList();
+      };
+    }
 
     dom.play.onclick = () => speakJoke(state.currentJoke);
     dom.replay.onclick = () => speakJoke(state.currentJoke);
@@ -3397,6 +4142,21 @@
     if (dom.savedSearch) {
       dom.savedSearch.oninput = () => renderSavedSection();
     }
+    if (dom.commentForm) {
+      dom.commentForm.onsubmit = (event) => {
+        event.preventDefault();
+        addComment(dom.commentText.value);
+      };
+    }
+    if (dom.cancelReply) {
+      dom.cancelReply.onclick = () => {
+        state.replyTo = null;
+        dom.cancelReply.hidden = true;
+        if (dom.commentFeedback) {
+          dom.commentFeedback.textContent = '';
+        }
+      };
+    }
     if (dom.creatorModalOpen && dom.creatorModal) {
       dom.creatorModalOpen.onclick = () => {
         dom.creatorModal.hidden = false;
@@ -3411,6 +4171,88 @@
       dom.creatorModal.onclick = (event) => {
         if (event.target === dom.creatorModal) {
           dom.creatorModal.hidden = true;
+        }
+      };
+    }
+    if (dom.loginModal) {
+      dom.loginModal.onclick = (event) => {
+        if (event.target === dom.loginModal) {
+          dom.loginModal.hidden = true;
+        }
+      };
+    }
+    if (dom.signupModal) {
+      dom.signupModal.onclick = (event) => {
+        if (event.target === dom.signupModal) {
+          dom.signupModal.hidden = true;
+        }
+      };
+    }
+    if (dom.loginOpen && dom.loginModal) {
+      dom.loginOpen.onclick = () => {
+        dom.loginModal.hidden = false;
+        dom.loginFeedback.textContent = '';
+      };
+    }
+    if (dom.loginClose && dom.loginModal) {
+      dom.loginClose.onclick = () => {
+        dom.loginModal.hidden = true;
+      };
+    }
+    if (dom.signupOpen && dom.signupModal) {
+      dom.signupOpen.onclick = () => {
+        dom.signupModal.hidden = false;
+        dom.signupFeedback.textContent = '';
+      };
+    }
+    if (dom.signupClose && dom.signupModal) {
+      dom.signupClose.onclick = () => {
+        dom.signupModal.hidden = true;
+      };
+    }
+    if (dom.loginForm) {
+      dom.loginForm.onsubmit = (event) => {
+        event.preventDefault();
+        handleLogin(dom.loginUsername.value, dom.loginPassword.value);
+      };
+    }
+    if (dom.signupForm) {
+      dom.signupForm.onsubmit = (event) => {
+        event.preventDefault();
+        handleSignup(dom.signupUsername.value, dom.signupPassword.value);
+      };
+    }
+    if (dom.logout) {
+      dom.logout.onclick = () => logout();
+    }
+    if (dom.notifyEnable) {
+      dom.notifyEnable.onclick = async () => {
+        if (!('Notification' in window)) {
+          updateNotificationStatus('contact.unsupported');
+          return;
+        }
+        const permission = await Notification.requestPermission();
+        if (permission === 'granted') {
+          notificationPrefs.enabled = true;
+          saveNotifications();
+          updateNotificationStatus('contact.enabled');
+          scheduleNotification();
+          if (!state.notificationInterval) {
+            state.notificationInterval = setInterval(scheduleNotification, 60 * 60 * 1000);
+          }
+        } else {
+          updateNotificationStatus('contact.denied');
+        }
+      };
+    }
+    if (dom.notifyDisable) {
+      dom.notifyDisable.onclick = () => {
+        notificationPrefs.enabled = false;
+        saveNotifications();
+        updateNotificationStatus('contact.disabled');
+        if (state.notificationInterval) {
+          clearInterval(state.notificationInterval);
+          state.notificationInterval = null;
         }
       };
     }
@@ -3465,7 +4307,13 @@
       setTimeout(warmUpVoices, 300);
     }
     applyLanguage(settings.language);
+    updateAuthUI();
     updateNavButtons();
+    if (notificationPrefs.enabled) {
+      scheduleNotification();
+      state.notificationInterval = setInterval(scheduleNotification, 60 * 60 * 1000);
+      updateNotificationStatus('contact.enabled');
+    }
     window.addEventListener('hashchange', handleRouteChange);
     handleRouteChange();
   </script>
