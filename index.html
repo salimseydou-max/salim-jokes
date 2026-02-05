@@ -179,12 +179,6 @@
       align-items: center;
       gap: 0.6rem;
     }
-    .auth-actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.4rem;
-      align-items: center;
-    }
     .inline-label {
       font-weight: 600;
     }
@@ -783,12 +777,6 @@
           <option value="pt" data-i18n="languages.pt">Portuguese</option>
         </select>
         <button id="dark-toggle" class="ghost" data-i18n="buttons.dark">Dark Mode</button>
-        <div class="auth-actions">
-          <span id="user-greeting" class="badge" hidden></span>
-          <button id="login-open" class="ghost" data-i18n="auth.login">Login</button>
-          <button id="signup-open" class="ghost" data-i18n="auth.signup">Sign Up</button>
-          <button id="logout" class="ghost" data-i18n="auth.logout" hidden>Logout</button>
-        </div>
       </div>
     </div>
     <div class="top-bar-row tabs-row">
@@ -1104,40 +1092,6 @@
       </div>
     </div>
 
-    <div id="login-modal" class="modal" hidden role="dialog" aria-modal="true" aria-labelledby="login-modal-title">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h3 id="login-modal-title" data-i18n="auth.loginTitle">Login</h3>
-          <button id="login-close" class="ghost" data-i18n="buttons.close">Close</button>
-        </div>
-        <form id="login-form" class="form-card">
-          <label for="login-username" data-i18n="auth.username">Username</label>
-          <input id="login-username" type="text" autocomplete="username" />
-          <label for="login-password" data-i18n="auth.password">Password</label>
-          <input id="login-password" type="password" autocomplete="current-password" />
-          <button type="submit" data-i18n="auth.login">Login</button>
-          <div id="login-feedback" class="feedback" aria-live="polite"></div>
-        </form>
-      </div>
-    </div>
-
-    <div id="signup-modal" class="modal" hidden role="dialog" aria-modal="true" aria-labelledby="signup-modal-title">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h3 id="signup-modal-title" data-i18n="auth.signupTitle">Sign Up</h3>
-          <button id="signup-close" class="ghost" data-i18n="buttons.close">Close</button>
-        </div>
-        <form id="signup-form" class="form-card">
-          <label for="signup-username" data-i18n="auth.username">Username</label>
-          <input id="signup-username" type="text" autocomplete="username" />
-          <label for="signup-password" data-i18n="auth.password">Password</label>
-          <input id="signup-password" type="password" autocomplete="new-password" />
-          <button type="submit" data-i18n="auth.signup">Sign Up</button>
-          <div id="signup-feedback" class="feedback" aria-live="polite"></div>
-        </form>
-      </div>
-    </div>
-
     <div id="toast-container" class="toast-container" aria-live="polite"></div>
     <div id="page-transition" class="page-transition" aria-hidden="true">
       <div class="skeleton">
@@ -1195,22 +1149,6 @@
       creatorModal: document.getElementById('creator-modal'),
       creatorModalOpen: document.getElementById('creator-modal-open'),
       creatorModalClose: document.getElementById('creator-modal-close'),
-      loginModal: document.getElementById('login-modal'),
-      loginClose: document.getElementById('login-close'),
-      loginForm: document.getElementById('login-form'),
-      loginUsername: document.getElementById('login-username'),
-      loginPassword: document.getElementById('login-password'),
-      loginFeedback: document.getElementById('login-feedback'),
-      signupModal: document.getElementById('signup-modal'),
-      signupClose: document.getElementById('signup-close'),
-      signupForm: document.getElementById('signup-form'),
-      signupUsername: document.getElementById('signup-username'),
-      signupPassword: document.getElementById('signup-password'),
-      signupFeedback: document.getElementById('signup-feedback'),
-      loginOpen: document.getElementById('login-open'),
-      signupOpen: document.getElementById('signup-open'),
-      logout: document.getElementById('logout'),
-      userGreeting: document.getElementById('user-greeting'),
       reactionCounts: document.getElementById('reaction-counts'),
       topRatedList: document.getElementById('top-rated-list'),
       leaderboardList: document.getElementById('leaderboard-list'),
@@ -1249,8 +1187,6 @@
       approved: 'approvedJokesV1',
       settings: 'jokeSettingsV1',
       stats: 'jokeStatsV1',
-      accounts: 'userAccountsV1',
-      session: 'userSessionV1',
       comments: 'commentStoreV1',
       notifications: 'notificationPrefsV1'
     };
@@ -2635,9 +2571,7 @@
     const settings = loadSettings();
     const stats = loadStats();
     const savedStore = loadSavedStore();
-    const accounts = loadAccounts();
-    const session = loadSession();
-    state.currentUserId = accounts.some((item) => item.id === session.userId) ? session.userId : null;
+    state.currentUserId = null;
     const seenStore = loadSeenStore();
     const reactionStore = loadReactions();
     const userReactions = loadUserReactions();
@@ -2676,7 +2610,6 @@
       applyTheme(settings.theme);
       updateNavActive(getRouteFromHash());
       initCollapsibles();
-      updateAuthUI();
     }
 
     function applyLanguage(lang, options = {}) {
@@ -2738,84 +2671,8 @@
       }, 2200);
     }
 
-    function hashPassword(value) {
-      let hash = 0;
-      for (let i = 0; i < value.length; i += 1) {
-        hash = (hash << 5) - hash + value.charCodeAt(i);
-        hash |= 0;
-      }
-      return `h${Math.abs(hash)}`;
-    }
-
     function getCurrentUserName() {
-      if (!state.currentUserId) {
-        return t('auth.guest');
-      }
-      const user = accounts.find((item) => item.id === state.currentUserId);
-      return user ? user.username : t('auth.guest');
-    }
-
-    function updateAuthUI() {
-      const isLoggedIn = Boolean(state.currentUserId);
-      if (dom.userGreeting) {
-        dom.userGreeting.textContent = t('auth.welcome', { name: getCurrentUserName() });
-        dom.userGreeting.hidden = !isLoggedIn;
-      }
-      if (dom.loginOpen) {
-        dom.loginOpen.hidden = isLoggedIn;
-      }
-      if (dom.signupOpen) {
-        dom.signupOpen.hidden = isLoggedIn;
-      }
-      if (dom.logout) {
-        dom.logout.hidden = !isLoggedIn;
-      }
-      updateSavedControls();
-      renderSavedSection();
-      renderComments();
-    }
-
-    function setCurrentUser(userId) {
-      state.currentUserId = userId;
-      saveSession();
-      updateAuthUI();
-    }
-
-    function handleSignup(username, password) {
-      const clean = username.trim();
-      if (clean.length < 4 || password.length < 6) {
-        dom.signupFeedback.textContent = t('auth.short');
-        return;
-      }
-      if (accounts.some((item) => item.username.toLowerCase() === clean.toLowerCase())) {
-        dom.signupFeedback.textContent = t('auth.exists');
-        return;
-      }
-      const id = `u_${Date.now().toString(36)}`;
-      accounts.push({ id, username: clean, password: hashPassword(password) });
-      saveAccounts();
-      setCurrentUser(id);
-      dom.signupFeedback.textContent = t('auth.created');
-      dom.signupModal.hidden = true;
-      showToast(t('auth.created'));
-    }
-
-    function handleLogin(username, password) {
-      const clean = username.trim();
-      const user = accounts.find((item) => item.username.toLowerCase() === clean.toLowerCase());
-      if (!user || user.password !== hashPassword(password)) {
-        dom.loginFeedback.textContent = t('auth.error');
-        return;
-      }
-      setCurrentUser(user.id);
-      dom.loginFeedback.textContent = '';
-      dom.loginModal.hidden = true;
-      showToast(t('auth.welcome', { name: user.username }));
-    }
-
-    function logout() {
-      setCurrentUser(null);
-      showToast(t('auth.loggedOut'));
+      return t('auth.guest');
     }
 
     function getCommentKey() {
@@ -3996,26 +3853,6 @@
       saveSavedStore();
     }
 
-    function loadAccounts() {
-      const stored = JSON.parse(localStorage.getItem(STORAGE_KEYS.accounts) || '[]');
-      return Array.isArray(stored) ? stored : [];
-    }
-
-    function saveAccounts() {
-      localStorage.setItem(STORAGE_KEYS.accounts, JSON.stringify(accounts));
-    }
-
-    function loadSession() {
-      return JSON.parse(localStorage.getItem(STORAGE_KEYS.session) || '{}');
-    }
-
-    function saveSession() {
-      localStorage.setItem(
-        STORAGE_KEYS.session,
-        JSON.stringify({ userId: state.currentUserId })
-      );
-    }
-
     function loadComments() {
       const stored = JSON.parse(localStorage.getItem(STORAGE_KEYS.comments) || '{}');
       return stored && typeof stored === 'object' ? stored : {};
@@ -4174,57 +4011,6 @@
         }
       };
     }
-    if (dom.loginModal) {
-      dom.loginModal.onclick = (event) => {
-        if (event.target === dom.loginModal) {
-          dom.loginModal.hidden = true;
-        }
-      };
-    }
-    if (dom.signupModal) {
-      dom.signupModal.onclick = (event) => {
-        if (event.target === dom.signupModal) {
-          dom.signupModal.hidden = true;
-        }
-      };
-    }
-    if (dom.loginOpen && dom.loginModal) {
-      dom.loginOpen.onclick = () => {
-        dom.loginModal.hidden = false;
-        dom.loginFeedback.textContent = '';
-      };
-    }
-    if (dom.loginClose && dom.loginModal) {
-      dom.loginClose.onclick = () => {
-        dom.loginModal.hidden = true;
-      };
-    }
-    if (dom.signupOpen && dom.signupModal) {
-      dom.signupOpen.onclick = () => {
-        dom.signupModal.hidden = false;
-        dom.signupFeedback.textContent = '';
-      };
-    }
-    if (dom.signupClose && dom.signupModal) {
-      dom.signupClose.onclick = () => {
-        dom.signupModal.hidden = true;
-      };
-    }
-    if (dom.loginForm) {
-      dom.loginForm.onsubmit = (event) => {
-        event.preventDefault();
-        handleLogin(dom.loginUsername.value, dom.loginPassword.value);
-      };
-    }
-    if (dom.signupForm) {
-      dom.signupForm.onsubmit = (event) => {
-        event.preventDefault();
-        handleSignup(dom.signupUsername.value, dom.signupPassword.value);
-      };
-    }
-    if (dom.logout) {
-      dom.logout.onclick = () => logout();
-    }
     if (dom.notifyEnable) {
       dom.notifyEnable.onclick = async () => {
         if (!('Notification' in window)) {
@@ -4307,7 +4093,6 @@
       setTimeout(warmUpVoices, 300);
     }
     applyLanguage(settings.language);
-    updateAuthUI();
     updateNavButtons();
     if (notificationPrefs.enabled) {
       scheduleNotification();
