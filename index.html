@@ -21,7 +21,7 @@
   <link rel="preconnect" href="https://www.highperformanceformat.com" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&display=swap" rel="stylesheet" />
   <style>
     :root {
       --bg: #ffeaa7;
@@ -53,7 +53,7 @@
       margin: 0;
       padding: 0;
       min-height: 100%;
-      font-family: 'Poppins', 'Comic Sans MS', 'Comic Sans', cursive, sans-serif;
+      font-family: 'Comic Neue', 'Comic Sans MS', 'Comic Sans', 'Chalkboard SE', cursive, sans-serif;
       color: var(--text);
     }
     body {
@@ -243,6 +243,33 @@
     .section {
       padding: 2.5rem 0;
     }
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 0.6rem 0.9rem;
+      border-radius: 14px;
+      background: var(--bg-soft);
+      border: 1px dashed var(--border);
+      margin-bottom: 0.8rem;
+    }
+    .section-header h2 {
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .section-emoji {
+      font-size: 1.2rem;
+    }
+    .section-toggle {
+      padding: 0.4rem 1rem;
+      min-height: 36px;
+    }
+    .section-body[hidden] {
+      display: none;
+    }
     .section h2 {
       font-size: 2rem;
       margin-bottom: 0.6rem;
@@ -344,6 +371,16 @@
     .section-label {
       font-weight: 700;
       font-size: 0.95rem;
+    }
+    .quick-actions {
+      margin-top: 1rem;
+      display: grid;
+      gap: 0.6rem;
+    }
+    .quick-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
     }
     .feedback {
       margin-top: 0.6rem;
@@ -571,6 +608,7 @@
       border-radius: 30px;
       padding: 0.7rem 1.6rem;
       font-size: 1rem;
+      font-family: inherit;
       cursor: pointer;
       box-shadow: var(--shadow);
       transition: transform 0.1s ease, background 0.2s ease;
@@ -714,7 +752,7 @@
       </div>
     </header>
 
-    <section id="about" class="section view-section active" data-view="home">
+    <section id="about" class="section view-section active" data-view="home" data-emoji="📘">
       <h2 data-i18n="about.title">About</h2>
       <p data-i18n="about.text">
         Voice Joke Club is a friendly space for quick laughs, community sharing, and gentle humor in multiple languages.
@@ -735,8 +773,8 @@
       </div>
     </section>
 
-    <section id="listen" class="section view-section active" data-view="home">
-      <h2 data-i18n="listen.title">Listen & Laugh</h2>
+    <section id="listen" class="section view-section active" data-view="home" data-emoji="🎧">
+      <h2 data-i18n="listen.title">Jokes</h2>
       <p data-i18n="listen.subtitle">Choose a category, hit random, and enjoy a smooth voice experience.</p>
       <div class="controls">
         <div class="control-group">
@@ -772,6 +810,14 @@
           <button id="replay" data-i18n="buttons.replay">Replay</button>
           <button id="forward" data-i18n="buttons.forward">Forward</button>
           <button id="random" data-i18n="buttons.random">Random Joke</button>
+          <button id="copy-joke" data-i18n="buttons.copyJoke">Copy Joke</button>
+        </div>
+        <div class="quick-actions">
+          <span class="section-label" data-i18n="actions.title">Quick Actions</span>
+          <div class="quick-buttons">
+            <button data-reaction="funny" data-i18n="buttons.like">Like</button>
+            <button data-reaction="notFunny" data-i18n="buttons.dislike">Dislike</button>
+          </div>
         </div>
         <div class="reactions">
           <span class="section-label" data-i18n="reactions.title">Reactions</span>
@@ -793,7 +839,7 @@
       </div>
     </section>
 
-    <section id="saved" class="section view-section" data-view="saved" hidden>
+    <section id="saved" class="section view-section" data-view="saved" data-emoji="💾" hidden>
       <h2 data-i18n="saved.title">Saved Jokes</h2>
       <p data-i18n="saved.subtitle">Search, review, and manage the jokes you saved.</p>
       <div class="controls">
@@ -809,7 +855,7 @@
       <div id="saved-section-list" class="list"></div>
     </section>
 
-    <section id="community" class="section view-section active" data-view="home">
+    <section id="community" class="section view-section active" data-view="home" data-emoji="🤝">
       <h2 data-i18n="community.title">Community Highlights</h2>
       <div class="grid-2">
         <div class="card">
@@ -823,7 +869,7 @@
       </div>
     </section>
 
-    <section id="submit" class="section view-section active" data-view="home">
+    <section id="submit" class="section view-section active" data-view="home" data-emoji="✍️">
       <h2 data-i18n="submit.title">Submit a Joke</h2>
       <p data-i18n="submit.subtitle">Share your jokes with the community. Approved jokes appear in the random feed.</p>
       <form id="submission-form" class="card form-card">
@@ -864,7 +910,7 @@
       </div>
     </section>
 
-    <section id="creator" class="section view-section" data-view="creator" hidden>
+    <section id="creator" class="section view-section" data-view="creator" data-emoji="🧑‍💻" hidden>
       <h2 data-i18n="creator.title">About the Creator</h2>
       <div class="card">
         <p data-i18n="creator.text">
@@ -885,7 +931,7 @@
       </div>
     </section>
 
-    <section id="achievements" class="section view-section active" data-view="home">
+    <section id="achievements" class="section view-section active" data-view="home" data-emoji="🏆">
       <h2 data-i18n="achievements.title">Achievements</h2>
       <div class="grid-2">
         <div class="card">
@@ -902,7 +948,7 @@
       </div>
     </section>
 
-    <section id="contact" class="section view-section" data-view="contact" hidden>
+    <section id="contact" class="section view-section" data-view="contact" data-emoji="📬" hidden>
       <h2 data-i18n="contact.title">Contact</h2>
       <p data-i18n="contact.text">Have feedback or suggestions? Email anytime and I will read it.</p>
       <div class="grid-2">
@@ -988,6 +1034,7 @@
       replay: document.getElementById('replay'),
       forward: document.getElementById('forward'),
       random: document.getElementById('random'),
+      copyJoke: document.getElementById('copy-joke'),
       heroRandom: document.getElementById('hero-random'),
       heroScroll: document.getElementById('hero-scroll'),
       jotdText: document.getElementById('jotd-text'),
@@ -1071,7 +1118,7 @@
         'about.missionText': 'Make jokes easy to discover, safe to share, and delightful to hear with voice playback.',
         'about.creatorTitle': 'Creator',
         'about.creatorText': 'Built by Salim to bring calm, positive humor to everyone.',
-        'listen.title': 'Listen & Laugh',
+        'listen.title': 'Jokes',
         'listen.subtitle': 'Choose a category, hit random, and enjoy a smooth voice experience.',
         'controls.category': 'Category',
         'controls.language': 'Language',
@@ -1086,6 +1133,12 @@
         'buttons.replay': 'Replay',
         'buttons.forward': 'Forward',
         'buttons.random': 'Random Joke',
+        'buttons.copyJoke': 'Copy Joke',
+        'buttons.like': 'Like',
+        'buttons.dislike': 'Dislike',
+        'buttons.expand': 'Expand',
+        'buttons.collapse': 'Collapse',
+        'actions.title': 'Quick Actions',
         'buttons.save': 'Save Joke',
         'buttons.unsave': 'Remove Saved',
         'buttons.showSaved': 'Show Saved',
@@ -1224,7 +1277,7 @@
         'about.missionText': 'Rendre les blagues faciles a trouver, sures a partager, et agreables a ecouter.',
         'about.creatorTitle': 'Createur',
         'about.creatorText': 'Cree par Salim pour un humour positif.',
-        'listen.title': 'Ecouter et rire',
+        'listen.title': 'Blagues',
         'listen.subtitle': 'Choisissez une categorie et profitez de la lecture vocale.',
         'controls.category': 'Categorie',
         'controls.language': 'Langue',
@@ -1239,6 +1292,12 @@
         'buttons.replay': 'Rejouer',
         'buttons.forward': 'Suivant',
         'buttons.random': 'Blague Aleatoire',
+        'buttons.copyJoke': 'Copier la blague',
+        'buttons.like': 'J aime',
+        'buttons.dislike': 'Je n aime pas',
+        'buttons.expand': 'Afficher',
+        'buttons.collapse': 'Masquer',
+        'actions.title': 'Actions rapides',
         'buttons.save': 'Sauvegarder',
         'buttons.unsave': 'Retirer',
         'buttons.showSaved': 'Voir',
@@ -1376,7 +1435,7 @@
         'about.missionText': 'Hacer las bromas faciles de encontrar y agradables de escuchar.',
         'about.creatorTitle': 'Creador',
         'about.creatorText': 'Creado por Salim para un humor positivo.',
-        'listen.title': 'Escuchar y reir',
+        'listen.title': 'Chistes',
         'listen.subtitle': 'Elige una categoria y disfruta la voz.',
         'controls.category': 'Categoria',
         'controls.language': 'Idioma',
@@ -1391,6 +1450,12 @@
         'buttons.replay': 'Repetir',
         'buttons.forward': 'Siguiente',
         'buttons.random': 'Chiste Aleatorio',
+        'buttons.copyJoke': 'Copiar chiste',
+        'buttons.like': 'Me gusta',
+        'buttons.dislike': 'No me gusta',
+        'buttons.expand': 'Mostrar',
+        'buttons.collapse': 'Ocultar',
+        'actions.title': 'Acciones rapidas',
         'buttons.save': 'Guardar',
         'buttons.unsave': 'Quitar',
         'buttons.showSaved': 'Ver guardados',
@@ -1528,7 +1593,7 @@
         'about.missionText': 'نكات سهلة الاكتشاف وممتعة للاستماع.',
         'about.creatorTitle': 'المبدع',
         'about.creatorText': 'انشأه سليم لنشر حس فكاهي ايجابي.',
-        'listen.title': 'استمع واضحك',
+        'listen.title': 'النكات',
         'listen.subtitle': 'اختر الفئة واستمتع بالصوت.',
         'controls.category': 'الفئة',
         'controls.language': 'اللغة',
@@ -1543,6 +1608,12 @@
         'buttons.replay': 'اعادة',
         'buttons.forward': 'التالي',
         'buttons.random': 'نكتة عشوائية',
+        'buttons.copyJoke': 'نسخ النكتة',
+        'buttons.like': 'اعجبني',
+        'buttons.dislike': 'لم يعجبني',
+        'buttons.expand': 'عرض',
+        'buttons.collapse': 'اخفاء',
+        'actions.title': 'اجراءات سريعة',
         'buttons.save': 'حفظ النكتة',
         'buttons.unsave': 'ازالة',
         'buttons.showSaved': 'عرض المحفوظ',
@@ -1680,7 +1751,7 @@
         'about.missionText': 'Saukin samun barkwanci mai dadi da sauraro.',
         'about.creatorTitle': 'Mai kirkira',
         'about.creatorText': 'Salim ya kirkiro don dariya mai kyau.',
-        'listen.title': 'Saurara ka yi dariya',
+        'listen.title': 'Barkwanci',
         'listen.subtitle': 'Zabi rukuni ka more murya.',
         'controls.category': 'Rukuni',
         'controls.language': 'Harshe',
@@ -1695,6 +1766,12 @@
         'buttons.replay': 'Sake kunnawa',
         'buttons.forward': 'Gaba',
         'buttons.random': 'Barkwanci Bazata',
+        'buttons.copyJoke': 'Kwafi barkwanci',
+        'buttons.like': 'Na so',
+        'buttons.dislike': 'Ban so ba',
+        'buttons.expand': 'Nuna',
+        'buttons.collapse': 'Boye',
+        'actions.title': 'Ayyuka masu sauri',
         'buttons.save': 'Ajiye',
         'buttons.unsave': 'Cire',
         'buttons.showSaved': 'Duba ajiyayyu',
@@ -1832,7 +1909,7 @@
         'about.missionText': 'Piadas faceis de encontrar e agradaveis de ouvir.',
         'about.creatorTitle': 'Criador',
         'about.creatorText': 'Criado por Salim para humor positivo.',
-        'listen.title': 'Ouvir e rir',
+        'listen.title': 'Piadas',
         'listen.subtitle': 'Escolha a categoria e aproveite a voz.',
         'controls.category': 'Categoria',
         'controls.language': 'Idioma',
@@ -1847,6 +1924,12 @@
         'buttons.replay': 'Repetir',
         'buttons.forward': 'Proximo',
         'buttons.random': 'Piada Aleatoria',
+        'buttons.copyJoke': 'Copiar piada',
+        'buttons.like': 'Gostei',
+        'buttons.dislike': 'Nao gostei',
+        'buttons.expand': 'Mostrar',
+        'buttons.collapse': 'Ocultar',
+        'actions.title': 'Acoes rapidas',
         'buttons.save': 'Salvar',
         'buttons.unsave': 'Remover',
         'buttons.showSaved': 'Mostrar salvos',
@@ -2193,6 +2276,7 @@
       renderModeration();
       applyTheme(settings.theme);
       updateNavActive(getRouteFromHash());
+      initCollapsibles();
     }
 
     function applyLanguage(lang, options = {}) {
@@ -2322,6 +2406,62 @@
       showPageTransition();
       showView(route);
       window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function initCollapsibles() {
+      document.querySelectorAll('.section').forEach((section) => {
+        if (section.dataset.collapsible === 'false') {
+          return;
+        }
+        let header = section.querySelector('.section-header');
+        let toggle = section.querySelector('.section-toggle');
+        let body = section.querySelector('.section-body');
+        const heading = section.querySelector('h2');
+        if (!heading) {
+          return;
+        }
+        if (!header) {
+          header = document.createElement('div');
+          header.className = 'section-header';
+          toggle = document.createElement('button');
+          toggle.type = 'button';
+          toggle.className = 'section-toggle ghost';
+          header.appendChild(heading);
+          header.appendChild(toggle);
+          section.insertBefore(header, section.firstChild);
+
+          if (section.dataset.emoji && !heading.querySelector('.section-emoji')) {
+            const emoji = document.createElement('span');
+            emoji.className = 'section-emoji';
+            emoji.textContent = section.dataset.emoji;
+            heading.prepend(emoji);
+          }
+
+          body = document.createElement('div');
+          body.className = 'section-body';
+          let node = header.nextSibling;
+          while (node) {
+            const next = node.nextSibling;
+            body.appendChild(node);
+            node = next;
+          }
+          section.appendChild(body);
+        }
+        if (!body.id) {
+          body.id = section.id ? `${section.id}-body` : `section-${Math.random().toString(36).slice(2)}`;
+        }
+        toggle.setAttribute('aria-controls', body.id);
+        const isExpanded = !body.hidden;
+        toggle.setAttribute('aria-expanded', String(isExpanded));
+        toggle.textContent = isExpanded ? t('buttons.collapse') : t('buttons.expand');
+        toggle.onclick = () => {
+          const expanded = toggle.getAttribute('aria-expanded') === 'true';
+          const next = !expanded;
+          toggle.setAttribute('aria-expanded', String(next));
+          body.hidden = !next;
+          toggle.textContent = next ? t('buttons.collapse') : t('buttons.expand');
+        };
+      });
     }
 
     function updateSavedControls() {
@@ -3162,6 +3302,13 @@
     dom.play.onclick = () => speakJoke(state.currentJoke);
     dom.replay.onclick = () => speakJoke(state.currentJoke);
     dom.random.onclick = () => fetchJoke({ withSound: true });
+    dom.copyJoke.onclick = () => {
+      if (!state.currentJoke) {
+        setFeedback('feedback.noJoke');
+        return;
+      }
+      copyToClipboard(state.currentJoke);
+    };
     dom.heroRandom.onclick = () => fetchJoke({ withSound: true });
     dom.heroScroll.onclick = () => document.getElementById('listen').scrollIntoView({ behavior: 'smooth' });
     dom.jotdPlay.onclick = () => speakJoke(dom.jotdText.textContent);
