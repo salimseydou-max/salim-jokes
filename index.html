@@ -57,7 +57,7 @@
       color: var(--text);
     }
     body {
-      padding-top: 170px;
+      padding-top: 190px;
       background-color: var(--bg);
       background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Crect width='160' height='160' fill='none'/%3E%3Ctext x='12' y='42' font-size='28' opacity='0.16'%3E%F0%9F%98%82%3C/text%3E%3Ctext x='92' y='88' font-size='28' opacity='0.16'%3E%F0%9F%A4%A3%3C/text%3E%3Ctext x='40' y='132' font-size='28' opacity='0.16'%3E%F0%9F%98%9C%3C/text%3E%3C/svg%3E");
       background-repeat: repeat;
@@ -125,6 +125,9 @@
       justify-content: space-between;
       gap: 0.8rem;
     }
+    .top-bar-row.tabs-row {
+      justify-content: center;
+    }
     .brand {
       display: flex;
       align-items: center;
@@ -141,10 +144,28 @@
       gap: 0.9rem;
       font-weight: 600;
     }
+    .nav.tabs {
+      flex-wrap: nowrap;
+      gap: 0.4rem;
+      padding: 0.3rem;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .nav.tabs::-webkit-scrollbar {
+      display: none;
+    }
     .nav a {
       padding: 0.3rem 0.6rem;
       border-radius: 999px;
       transition: background 0.2s ease;
+    }
+    .nav.tabs a {
+      padding: 0.3rem 0.8rem;
+      font-size: 0.85rem;
+      white-space: nowrap;
     }
     .nav a:hover {
       background: var(--bg-soft);
@@ -657,7 +678,7 @@
       100% { transform: scale(1); }
     }
     @media (max-width: 900px) {
-      body { padding-top: 200px; }
+      body { padding-top: 230px; }
       .top-bar-row {
         justify-content: center;
       }
@@ -666,12 +687,12 @@
       }
     }
     @media (max-width: 600px) {
-      body { padding-top: 240px; }
+      body { padding-top: 270px; }
       .hero {
         text-align: center;
       }
-      .nav {
-        justify-content: center;
+      .nav.tabs {
+        justify-content: flex-start;
       }
       .top-actions select {
         min-width: 120px;
@@ -703,12 +724,6 @@
         <span class="brand-logo">😂</span>
         <span class="brand-name" data-i18n="brand.name">Voice Joke Club</span>
       </div>
-      <nav class="nav">
-        <a href="#/home" data-route="home" data-i18n="nav.home">Home</a>
-        <a href="#/saved" data-route="saved" data-i18n="nav.saved">Saved Jokes</a>
-        <a href="#/creator" data-route="creator" data-i18n="nav.creator">About Creator</a>
-        <a href="#/contact" data-route="contact" data-i18n="nav.contact">Contact</a>
-      </nav>
       <div class="top-actions">
         <label class="inline-label" for="language" data-i18n="controls.language">Language</label>
         <select id="language">
@@ -722,14 +737,21 @@
         <button id="dark-toggle" class="ghost" data-i18n="buttons.dark">Dark Mode</button>
       </div>
     </div>
-    <div class="top-bar-row">
-      <button id="save-joke" data-i18n="buttons.save">Save Joke</button>
-      <button id="unsave-joke" data-i18n="buttons.unsave">Remove Saved</button>
-      <span id="saved-count" class="saved-count">0 saved</span>
+    <div class="top-bar-row tabs-row">
+      <nav class="nav tabs" aria-label="Sections">
+        <a href="#/jokes" data-route="jokes" data-i18n="nav.jokes">Jokes</a>
+        <a href="#/saved" data-route="saved" data-i18n="nav.saved">Saved Jokes</a>
+        <a href="#/submit" data-route="submit" data-i18n="nav.submit">Submit a Joke</a>
+        <a href="#/community" data-route="community" data-i18n="nav.community">Community</a>
+        <a href="#/achievements" data-route="achievements" data-i18n="nav.achievements">Achievements</a>
+        <a href="#/about" data-route="about" data-i18n="nav.about">About</a>
+        <a href="#/creator" data-route="creator" data-i18n="nav.creator">About Creator</a>
+        <a href="#/contact" data-route="contact" data-i18n="nav.contact">Contact</a>
+      </nav>
     </div>
   </div>
   <main class="page">
-    <header id="home" class="hero view-section active" data-view="home">
+    <header id="home" class="hero view-section active" data-view="jokes">
       <div class="hero-content">
         <div class="hero-badge" data-i18n="hero.badge">Welcome</div>
         <h1 data-i18n="hero.title">Welcome to Voice Joke Club</h1>
@@ -752,7 +774,7 @@
       </div>
     </header>
 
-    <section id="about" class="section view-section active" data-view="home" data-emoji="📘">
+    <section id="about" class="section view-section" data-view="about" data-emoji="📘" hidden>
       <h2 data-i18n="about.title">About</h2>
       <p data-i18n="about.text">
         Voice Joke Club is a friendly space for quick laughs, community sharing, and gentle humor in multiple languages.
@@ -773,7 +795,7 @@
       </div>
     </section>
 
-    <section id="listen" class="section view-section active" data-view="home" data-emoji="🎧">
+    <section id="listen" class="section view-section active" data-view="jokes" data-emoji="🎧">
       <h2 data-i18n="listen.title">Jokes</h2>
       <p data-i18n="listen.subtitle">Choose a category, hit random, and enjoy a smooth voice experience.</p>
       <div class="controls">
@@ -815,6 +837,9 @@
         <div class="quick-actions">
           <span class="section-label" data-i18n="actions.title">Quick Actions</span>
           <div class="quick-buttons">
+            <button id="save-joke" data-i18n="buttons.save">Save Joke</button>
+            <button id="unsave-joke" data-i18n="buttons.unsave">Remove Saved</button>
+            <span id="saved-count" class="badge saved-count">0 saved</span>
             <button data-reaction="funny" data-i18n="buttons.like">Like</button>
             <button data-reaction="notFunny" data-i18n="buttons.dislike">Dislike</button>
           </div>
@@ -855,7 +880,7 @@
       <div id="saved-section-list" class="list"></div>
     </section>
 
-    <section id="community" class="section view-section active" data-view="home" data-emoji="🤝">
+    <section id="community" class="section view-section" data-view="community" data-emoji="🤝" hidden>
       <h2 data-i18n="community.title">Community Highlights</h2>
       <div class="grid-2">
         <div class="card">
@@ -869,7 +894,7 @@
       </div>
     </section>
 
-    <section id="submit" class="section view-section active" data-view="home" data-emoji="✍️">
+    <section id="submit" class="section view-section" data-view="submit" data-emoji="✍️" hidden>
       <h2 data-i18n="submit.title">Submit a Joke</h2>
       <p data-i18n="submit.subtitle">Share your jokes with the community. Approved jokes appear in the random feed.</p>
       <form id="submission-form" class="card form-card">
@@ -931,7 +956,7 @@
       </div>
     </section>
 
-    <section id="achievements" class="section view-section active" data-view="home" data-emoji="🏆">
+    <section id="achievements" class="section view-section" data-view="achievements" data-emoji="🏆" hidden>
       <h2 data-i18n="achievements.title">Achievements</h2>
       <div class="grid-2">
         <div class="card">
@@ -1004,7 +1029,7 @@
       </div>
     </div>
 
-    <div class="ad-unit view-section active" data-view="home" aria-label="Advertisement">
+    <div class="ad-unit view-section active" data-view="jokes" aria-label="Advertisement">
       <script>
         atOptions = {
           'key' : '44737517597e4d4fd2582ae54ae399b2',
@@ -1099,10 +1124,11 @@
       en: {
         'brand.name': 'Voice Joke Club',
         'nav.home': 'Home',
+        'nav.jokes': 'Jokes',
         'nav.about': 'About',
         'nav.listen': 'Listen',
         'nav.community': 'Community',
-        'nav.submit': 'Submit',
+        'nav.submit': 'Submit a Joke',
         'nav.achievements': 'Achievements',
         'nav.saved': 'Saved Jokes',
         'nav.creator': 'About Creator',
@@ -1258,10 +1284,11 @@
       fr: {
         'brand.name': 'Club des Blagues',
         'nav.home': 'Accueil',
+        'nav.jokes': 'Blagues',
         'nav.about': 'A propos',
         'nav.listen': 'Ecouter',
         'nav.community': 'Communaute',
-        'nav.submit': 'Envoyer',
+        'nav.submit': 'Envoyer une blague',
         'nav.achievements': 'Succes',
         'nav.saved': 'Blagues sauvegardees',
         'nav.creator': 'Createur',
@@ -1416,10 +1443,11 @@
       es: {
         'brand.name': 'Club de Chistes',
         'nav.home': 'Inicio',
+        'nav.jokes': 'Chistes',
         'nav.about': 'Sobre',
         'nav.listen': 'Escuchar',
         'nav.community': 'Comunidad',
-        'nav.submit': 'Enviar',
+        'nav.submit': 'Enviar un chiste',
         'nav.achievements': 'Logros',
         'nav.saved': 'Guardados',
         'nav.creator': 'Creador',
@@ -1574,10 +1602,11 @@
       ar: {
         'brand.name': 'نادي النكات الصوتية',
         'nav.home': 'الرئيسية',
+        'nav.jokes': 'النكات',
         'nav.about': 'حول',
         'nav.listen': 'استمع',
         'nav.community': 'المجتمع',
-        'nav.submit': 'ارسل',
+        'nav.submit': 'ارسل نكتة',
         'nav.achievements': 'الانجازات',
         'nav.saved': 'المحفوظات',
         'nav.creator': 'عن المبدع',
@@ -1732,10 +1761,11 @@
       ha: {
         'brand.name': 'Gidan Dariya',
         'nav.home': 'Gida',
+        'nav.jokes': 'Barkwanci',
         'nav.about': 'Bayani',
         'nav.listen': 'Saurara',
         'nav.community': 'Al umma',
-        'nav.submit': 'Aika',
+        'nav.submit': 'Aika barkwanci',
         'nav.achievements': 'Nasarori',
         'nav.saved': 'Ajiyayyu',
         'nav.creator': 'Mai kirkira',
@@ -1890,10 +1920,11 @@
       pt: {
         'brand.name': 'Clube de Piadas',
         'nav.home': 'Inicio',
+        'nav.jokes': 'Piadas',
         'nav.about': 'Sobre',
         'nav.listen': 'Ouvir',
         'nav.community': 'Comunidade',
-        'nav.submit': 'Enviar',
+        'nav.submit': 'Enviar uma piada',
         'nav.achievements': 'Conquistas',
         'nav.saved': 'Salvos',
         'nav.creator': 'Criador',
@@ -2354,12 +2385,21 @@
       dom.jokeText.style.opacity = isLoading ? '0.35' : '1';
     }
 
-    const ROUTES = ['home', 'saved', 'creator', 'contact'];
+    const ROUTES = [
+      'jokes',
+      'saved',
+      'submit',
+      'community',
+      'achievements',
+      'about',
+      'creator',
+      'contact'
+    ];
 
     function getRouteFromHash() {
       const raw = location.hash.replace('#', '');
       const route = raw.startsWith('/') ? raw.slice(1) : raw;
-      return route || 'home';
+      return route || 'jokes';
     }
 
     function updateNavActive(route) {
@@ -2398,9 +2438,13 @@
     }
 
     function handleRouteChange() {
+      if (!location.hash) {
+        location.hash = '#/jokes';
+        return;
+      }
       const route = getRouteFromHash();
       if (!ROUTES.includes(route)) {
-        location.hash = '#/home';
+        location.hash = '#/jokes';
         return;
       }
       showPageTransition();
@@ -2429,14 +2473,6 @@
           header.appendChild(heading);
           header.appendChild(toggle);
           section.insertBefore(header, section.firstChild);
-
-          if (section.dataset.emoji && !heading.querySelector('.section-emoji')) {
-            const emoji = document.createElement('span');
-            emoji.className = 'section-emoji';
-            emoji.textContent = section.dataset.emoji;
-            heading.prepend(emoji);
-          }
-
           body = document.createElement('div');
           body.className = 'section-body';
           let node = header.nextSibling;
@@ -2446,6 +2482,18 @@
             node = next;
           }
           section.appendChild(body);
+        }
+        if (!toggle) {
+          toggle = document.createElement('button');
+          toggle.type = 'button';
+          toggle.className = 'section-toggle ghost';
+          header.appendChild(toggle);
+        }
+        if (section.dataset.emoji && !heading.querySelector('.section-emoji')) {
+          const emoji = document.createElement('span');
+          emoji.className = 'section-emoji';
+          emoji.textContent = section.dataset.emoji;
+          heading.prepend(emoji);
         }
         if (!body.id) {
           body.id = section.id ? `${section.id}-body` : `section-${Math.random().toString(36).slice(2)}`;
