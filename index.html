@@ -19,6 +19,9 @@
   <meta name="twitter:image" content="https://dummyimage.com/1200x630/ffeaa7/222.png&text=Voice+Joke+Club" />
   <link rel="preconnect" href="https://v2.jokeapi.dev" />
   <link rel="preconnect" href="https://www.highperformanceformat.com" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet" />
   <style>
     :root {
       --bg: #ffeaa7;
@@ -50,11 +53,11 @@
       margin: 0;
       padding: 0;
       min-height: 100%;
-      font-family: 'Comic Sans MS', 'Comic Sans', cursive, sans-serif;
+      font-family: 'Poppins', 'Comic Sans MS', 'Comic Sans', cursive, sans-serif;
       color: var(--text);
     }
     body {
-      padding-top: 140px;
+      padding-top: 170px;
       background-color: var(--bg);
       background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Crect width='160' height='160' fill='none'/%3E%3Ctext x='12' y='42' font-size='28' opacity='0.16'%3E%F0%9F%98%82%3C/text%3E%3Ctext x='92' y='88' font-size='28' opacity='0.16'%3E%F0%9F%A4%A3%3C/text%3E%3Ctext x='40' y='132' font-size='28' opacity='0.16'%3E%F0%9F%98%9C%3C/text%3E%3C/svg%3E");
       background-repeat: repeat;
@@ -166,6 +169,20 @@
       text-align: center;
       color: var(--muted);
       font-size: 0.95rem;
+    }
+    .saved-search {
+      width: 100%;
+    }
+    .saved-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      margin-top: 0.4rem;
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+    .saved-meta .badge {
+      font-size: 0.75rem;
     }
     .hero {
       display: grid;
@@ -362,6 +379,58 @@
       background: var(--accent-strong);
       font-weight: 700;
     }
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.45);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
+      padding: 1.5rem;
+    }
+    .modal[hidden] {
+      display: none;
+    }
+    .modal-content {
+      max-width: 640px;
+      width: 100%;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      box-shadow: var(--shadow);
+      display: grid;
+      gap: 0.8rem;
+    }
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.8rem;
+    }
+    .skeleton {
+      display: grid;
+      gap: 0.6rem;
+      margin: 0.4rem 0 0.8rem;
+    }
+    .skeleton-line {
+      height: 14px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--bg-soft), var(--card), var(--bg-soft));
+      background-size: 200% 100%;
+      animation: shimmer 1.4s infinite;
+    }
+    .skeleton-line.short {
+      width: 60%;
+    }
+    .skeleton-line.medium {
+      width: 80%;
+    }
+    @keyframes shimmer {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
     .form-card {
       display: grid;
       gap: 0.8rem;
@@ -410,6 +479,18 @@
       text-align: center;
       padding: 2rem 0 1rem;
       color: var(--muted);
+    }
+    .footer-content {
+      display: grid;
+      gap: 0.6rem;
+      justify-items: center;
+    }
+    .footer-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.8rem;
+      justify-content: center;
+      font-weight: 600;
     }
     .ad-unit {
       margin: 2rem auto 0;
@@ -478,7 +559,7 @@
       100% { transform: scale(1); }
     }
     @media (max-width: 900px) {
-      body { padding-top: 170px; }
+      body { padding-top: 200px; }
       .top-bar-row {
         justify-content: center;
       }
@@ -487,7 +568,7 @@
       }
     }
     @media (max-width: 600px) {
-      body { padding-top: 210px; }
+      body { padding-top: 240px; }
       .hero {
         text-align: center;
       }
@@ -521,11 +602,10 @@
       </div>
       <nav class="nav">
         <a href="#home" data-i18n="nav.home">Home</a>
-        <a href="#about" data-i18n="nav.about">About</a>
+        <a href="#saved" data-i18n="nav.saved">Saved Jokes</a>
         <a href="#listen" data-i18n="nav.listen">Listen</a>
-        <a href="#community" data-i18n="nav.community">Community</a>
-        <a href="#submit" data-i18n="nav.submit">Submit</a>
-        <a href="#achievements" data-i18n="nav.achievements">Achievements</a>
+        <a href="#creator" data-i18n="nav.creator">About Creator</a>
+        <a href="#contact" data-i18n="nav.contact">Contact</a>
       </nav>
       <div class="top-actions">
         <label class="inline-label" for="language" data-i18n="controls.language">Language</label>
@@ -614,6 +694,11 @@
       </div>
 
       <div id="joke-card" class="joke-card card">
+        <div id="joke-skeleton" class="skeleton" hidden>
+          <div class="skeleton-line medium"></div>
+          <div class="skeleton-line"></div>
+          <div class="skeleton-line short"></div>
+        </div>
         <div id="joke" class="joke-text">Loading joke...</div>
         <div class="joke-meta">
           <span id="joke-category" class="badge"></span>
@@ -644,6 +729,22 @@
         </div>
         <div id="feedback" class="feedback" aria-live="polite"></div>
       </div>
+    </section>
+
+    <section id="saved" class="section">
+      <h2 data-i18n="saved.title">Saved Jokes</h2>
+      <p data-i18n="saved.subtitle">Search, review, and manage the jokes you saved.</p>
+      <div class="controls">
+        <div class="control-group">
+          <label for="saved-search" data-i18n="saved.searchLabel">Search saved jokes</label>
+          <input id="saved-search" class="saved-search" type="text" data-i18n-placeholder="saved.searchPlaceholder" />
+        </div>
+        <div class="control-group">
+          <label data-i18n="saved.totalLabel">Total saved</label>
+          <div id="saved-total" class="badge">0</div>
+        </div>
+      </div>
+      <div id="saved-section-list" class="list"></div>
     </section>
 
     <section id="community" class="section">
@@ -701,6 +802,19 @@
       </div>
     </section>
 
+    <section id="creator" class="section">
+      <h2 data-i18n="creator.title">About the Creator</h2>
+      <div class="card">
+        <p data-i18n="creator.text">
+          Created by Salim to spread calm, positive humor with voice-first experiences.
+        </p>
+        <div class="card-actions">
+          <button id="creator-modal-open" class="ghost" data-i18n="creator.more">Read Story</button>
+          <a id="creator-contact" href="mailto:hello@voicejoke.club" data-i18n="creator.contactLabel">Contact</a>
+        </div>
+      </div>
+    </section>
+
     <section id="achievements" class="section">
       <h2 data-i18n="achievements.title">Achievements</h2>
       <div class="grid-2">
@@ -718,9 +832,52 @@
       </div>
     </section>
 
+    <section id="contact" class="section">
+      <h2 data-i18n="contact.title">Contact</h2>
+      <p data-i18n="contact.text">Have feedback or want to collaborate? Reach out anytime.</p>
+      <div class="grid-2">
+        <div class="card">
+          <h3 data-i18n="contact.emailLabel">Email</h3>
+          <p><a href="mailto:hello@voicejoke.club">hello@voicejoke.club</a></p>
+        </div>
+        <div class="card">
+          <h3 data-i18n="contact.socialLabel">Social</h3>
+          <div class="footer-links">
+            <a href="https://wa.me/" target="_blank" rel="noreferrer">WhatsApp</a>
+            <a href="https://www.tiktok.com/" target="_blank" rel="noreferrer">TikTok</a>
+            <a href="https://www.instagram.com/" target="_blank" rel="noreferrer">Instagram</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <footer class="footer">
-      <p data-i18n="footer.text">Created with love for daily laughs.</p>
+      <div class="footer-content">
+        <div data-i18n="footer.creator">Creator: Salim</div>
+        <div data-i18n="footer.text">Created with love for daily laughs.</div>
+        <div data-i18n="footer.copyright">© 2026 Voice Joke Club</div>
+        <div data-i18n="footer.rights">All rights reserved.</div>
+        <div class="footer-links">
+          <span data-i18n="footer.social">Follow</span>
+          <a href="https://wa.me/" target="_blank" rel="noreferrer">WhatsApp</a>
+          <a href="https://www.tiktok.com/" target="_blank" rel="noreferrer">TikTok</a>
+          <a href="https://www.instagram.com/" target="_blank" rel="noreferrer">Instagram</a>
+        </div>
+      </div>
     </footer>
+
+    <div id="creator-modal" class="modal" hidden role="dialog" aria-modal="true" aria-labelledby="creator-modal-title">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 id="creator-modal-title" data-i18n="creator.modalTitle">Creator Story</h3>
+          <button id="creator-modal-close" class="ghost" data-i18n="buttons.close">Close</button>
+        </div>
+        <p data-i18n="creator.modalText">
+          Hi, I'm Salim. I built Voice Joke Club to make gentle humor accessible in multiple languages with voice-first
+          experiences. Thanks for listening and sharing!
+        </p>
+      </div>
+    </div>
 
     <div class="ad-unit" aria-label="Advertisement">
       <script>
@@ -743,6 +900,7 @@
       voiceSpeed: document.getElementById('voice-speed'),
       jokeCard: document.getElementById('joke-card'),
       jokeText: document.getElementById('joke'),
+      jokeSkeleton: document.getElementById('joke-skeleton'),
       jokeCategory: document.getElementById('joke-category'),
       jokeLanguage: document.getElementById('joke-language'),
       feedback: document.getElementById('feedback'),
@@ -762,6 +920,12 @@
       toggleSaved: document.getElementById('toggle-saved'),
       savedCount: document.getElementById('saved-count'),
       savedList: document.getElementById('saved-list'),
+      savedSearch: document.getElementById('saved-search'),
+      savedTotal: document.getElementById('saved-total'),
+      savedSectionList: document.getElementById('saved-section-list'),
+      creatorModal: document.getElementById('creator-modal'),
+      creatorModalOpen: document.getElementById('creator-modal-open'),
+      creatorModalClose: document.getElementById('creator-modal-close'),
       reactionCounts: document.getElementById('reaction-counts'),
       topRatedList: document.getElementById('top-rated-list'),
       leaderboardList: document.getElementById('leaderboard-list'),
@@ -814,6 +978,9 @@
         'nav.community': 'Community',
         'nav.submit': 'Submit',
         'nav.achievements': 'Achievements',
+        'nav.saved': 'Saved Jokes',
+        'nav.creator': 'About Creator',
+        'nav.contact': 'Contact',
         'hero.badge': 'Welcome',
         'hero.title': 'Welcome to Voice Joke Club',
         'hero.subtitle': 'Discover calm laughs, community favorites, and daily smiles with voice playback.',
@@ -852,6 +1019,7 @@
         'buttons.stop': 'Stop',
         'buttons.preview': 'Preview',
         'buttons.submit': 'Submit',
+        'buttons.close': 'Close',
         'reactions.title': 'Reactions',
         'reactions.funny': 'Funny',
         'reactions.veryFunny': 'Very Funny',
@@ -865,6 +1033,25 @@
         'community.topRated': 'Top Rated Jokes',
         'community.leaderboard': 'Leaderboard',
         'community.empty': 'No reactions yet. Be the first to react!',
+        'saved.title': 'Saved Jokes',
+        'saved.subtitle': 'Search, review, and manage the jokes you saved.',
+        'saved.searchLabel': 'Search saved jokes',
+        'saved.searchPlaceholder': 'Type a keyword...',
+        'saved.totalLabel': 'Total saved',
+        'saved.none': 'No saved jokes yet.',
+        'saved.searchEmpty': 'No saved jokes match your search.',
+        'saved.delete': 'Delete',
+        'saved.savedOn': 'Saved on {date}',
+        'creator.title': 'About the Creator',
+        'creator.text': 'Created by Salim to spread calm, positive humor with voice-first experiences.',
+        'creator.more': 'Read Story',
+        'creator.modalTitle': 'Creator Story',
+        'creator.modalText': 'Hi, I am Salim. I built Voice Joke Club to make gentle humor accessible in multiple languages with voice-first experiences.',
+        'creator.contactLabel': 'Contact',
+        'contact.title': 'Contact',
+        'contact.text': 'Have feedback or want to collaborate? Reach out anytime.',
+        'contact.emailLabel': 'Email',
+        'contact.socialLabel': 'Social',
         'submit.title': 'Submit a Joke',
         'submit.subtitle': 'Share your jokes with the community. Approved jokes appear in the random feed.',
         'submit.jokeLabel': 'Your joke',
@@ -889,6 +1076,10 @@
         'achievements.progressText': '{count} listens · Next badge: {next}',
         'achievements.allBadges': '{count} listens · All badges unlocked',
         'footer.text': 'Created with love for daily laughs.',
+        'footer.creator': 'Creator: Salim',
+        'footer.copyright': '© 2026 Voice Joke Club',
+        'footer.rights': 'All rights reserved.',
+        'footer.social': 'Follow',
         'languages.en': 'English',
         'languages.ar': 'Arabic',
         'languages.fr': 'French',
@@ -936,6 +1127,9 @@
         'nav.community': 'Communaute',
         'nav.submit': 'Envoyer',
         'nav.achievements': 'Succes',
+        'nav.saved': 'Blagues sauvegardees',
+        'nav.creator': 'Createur',
+        'nav.contact': 'Contact',
         'hero.badge': 'Bienvenue',
         'hero.title': 'Bienvenue au Club des Blagues',
         'hero.subtitle': 'Des rires calmes, des favoris communautaires et une lecture vocale douce.',
@@ -974,6 +1168,7 @@
         'buttons.stop': 'Arreter',
         'buttons.preview': 'Apercu',
         'buttons.submit': 'Envoyer',
+        'buttons.close': 'Fermer',
         'reactions.title': 'Reactions',
         'reactions.funny': 'Drole',
         'reactions.veryFunny': 'Tres Drole',
@@ -987,6 +1182,25 @@
         'community.topRated': 'Top blagues',
         'community.leaderboard': 'Classement',
         'community.empty': 'Pas de reactions pour le moment.',
+        'saved.title': 'Blagues sauvegardees',
+        'saved.subtitle': 'Recherchez et gerez vos blagues sauvegardees.',
+        'saved.searchLabel': 'Rechercher',
+        'saved.searchPlaceholder': 'Tapez un mot...',
+        'saved.totalLabel': 'Total sauvegarde',
+        'saved.none': 'Aucune blague sauvegardee.',
+        'saved.searchEmpty': 'Aucune blague ne correspond.',
+        'saved.delete': 'Supprimer',
+        'saved.savedOn': 'Sauvegardee le {date}',
+        'creator.title': 'A propos du createur',
+        'creator.text': 'Cree par Salim pour partager un humour positif.',
+        'creator.more': 'Lire l histoire',
+        'creator.modalTitle': 'Histoire du createur',
+        'creator.modalText': 'Bonjour, je suis Salim. J ai cree Voice Joke Club pour un humour doux et multilingue.',
+        'creator.contactLabel': 'Contact',
+        'contact.title': 'Contact',
+        'contact.text': 'Vous avez une idee? Contactez nous.',
+        'contact.emailLabel': 'Email',
+        'contact.socialLabel': 'Social',
         'submit.title': 'Envoyer une blague',
         'submit.subtitle': 'Partagez vos blagues. Les blagues approuvees apparaissent en aleatoire.',
         'submit.jokeLabel': 'Votre blague',
@@ -1011,6 +1225,10 @@
         'achievements.progressText': '{count} ecoutes · Prochain badge: {next}',
         'achievements.allBadges': '{count} ecoutes · Tous les badges obtenus',
         'footer.text': 'Cree avec amour pour des rires quotidiens.',
+        'footer.creator': 'Createur: Salim',
+        'footer.copyright': '© 2026 Voice Joke Club',
+        'footer.rights': 'Tous droits reserves.',
+        'footer.social': 'Suivre',
         'languages.en': 'Anglais',
         'languages.ar': 'Arabe',
         'languages.fr': 'Francais',
@@ -1057,6 +1275,9 @@
         'nav.community': 'Comunidad',
         'nav.submit': 'Enviar',
         'nav.achievements': 'Logros',
+        'nav.saved': 'Guardados',
+        'nav.creator': 'Creador',
+        'nav.contact': 'Contacto',
         'hero.badge': 'Bienvenido',
         'hero.title': 'Bienvenido al Club de Chistes',
         'hero.subtitle': 'Risas calmadas, favoritos de la comunidad y voz suave.',
@@ -1095,6 +1316,7 @@
         'buttons.stop': 'Detener',
         'buttons.preview': 'Vista previa',
         'buttons.submit': 'Enviar',
+        'buttons.close': 'Cerrar',
         'reactions.title': 'Reacciones',
         'reactions.funny': 'Divertido',
         'reactions.veryFunny': 'Muy divertido',
@@ -1108,6 +1330,25 @@
         'community.topRated': 'Mejores chistes',
         'community.leaderboard': 'Clasificacion',
         'community.empty': 'Sin reacciones todavia.',
+        'saved.title': 'Chistes guardados',
+        'saved.subtitle': 'Busca y administra tus chistes guardados.',
+        'saved.searchLabel': 'Buscar',
+        'saved.searchPlaceholder': 'Escribe una palabra...',
+        'saved.totalLabel': 'Total guardados',
+        'saved.none': 'No hay chistes guardados.',
+        'saved.searchEmpty': 'Ningun chiste coincide.',
+        'saved.delete': 'Eliminar',
+        'saved.savedOn': 'Guardado el {date}',
+        'creator.title': 'Sobre el creador',
+        'creator.text': 'Creado por Salim para compartir humor positivo.',
+        'creator.more': 'Leer historia',
+        'creator.modalTitle': 'Historia del creador',
+        'creator.modalText': 'Hola, soy Salim. Cree Voice Joke Club para humor suave y multilingue.',
+        'creator.contactLabel': 'Contacto',
+        'contact.title': 'Contacto',
+        'contact.text': 'Tienes ideas? Escribenos.',
+        'contact.emailLabel': 'Email',
+        'contact.socialLabel': 'Social',
         'submit.title': 'Enviar un chiste',
         'submit.subtitle': 'Comparte tus chistes. Los aprobados aparecen en aleatorio.',
         'submit.jokeLabel': 'Tu chiste',
@@ -1132,6 +1373,10 @@
         'achievements.progressText': '{count} escuchas · Siguiente insignia: {next}',
         'achievements.allBadges': '{count} escuchas · Todas las insignias',
         'footer.text': 'Creado con amor para risas diarias.',
+        'footer.creator': 'Creador: Salim',
+        'footer.copyright': '© 2026 Voice Joke Club',
+        'footer.rights': 'Todos los derechos reservados.',
+        'footer.social': 'Seguir',
         'languages.en': 'Ingles',
         'languages.ar': 'Arabe',
         'languages.fr': 'Frances',
@@ -1178,6 +1423,9 @@
         'nav.community': 'المجتمع',
         'nav.submit': 'ارسل',
         'nav.achievements': 'الانجازات',
+        'nav.saved': 'المحفوظات',
+        'nav.creator': 'عن المبدع',
+        'nav.contact': 'تواصل',
         'hero.badge': 'اهلا',
         'hero.title': 'اهلا بك في نادي النكات الصوتية',
         'hero.subtitle': 'ضحكات لطيفة ومحتوى مجتمعي وقراءة صوتية سلسة.',
@@ -1216,6 +1464,7 @@
         'buttons.stop': 'ايقاف',
         'buttons.preview': 'معاينة',
         'buttons.submit': 'ارسال',
+        'buttons.close': 'اغلاق',
         'reactions.title': 'التقييمات',
         'reactions.funny': 'مضحك',
         'reactions.veryFunny': 'مضحك جدا',
@@ -1229,6 +1478,25 @@
         'community.topRated': 'الافضل تقييما',
         'community.leaderboard': 'لوحة الصدارة',
         'community.empty': 'لا توجد تفاعلات بعد.',
+        'saved.title': 'النكات المحفوظة',
+        'saved.subtitle': 'ابحث وادار النكات المحفوظة.',
+        'saved.searchLabel': 'ابحث',
+        'saved.searchPlaceholder': 'اكتب كلمة...',
+        'saved.totalLabel': 'اجمالي المحفوظ',
+        'saved.none': 'لا توجد نكات محفوظة.',
+        'saved.searchEmpty': 'لا توجد نتائج.',
+        'saved.delete': 'حذف',
+        'saved.savedOn': 'تم الحفظ في {date}',
+        'creator.title': 'عن المبدع',
+        'creator.text': 'انشأه سليم لنشر حس فكاهي ايجابي.',
+        'creator.more': 'اقرأ القصة',
+        'creator.modalTitle': 'قصة المبدع',
+        'creator.modalText': 'مرحبا، انا سليم. بنيت Voice Joke Club لتقديم مرح لطيف بلغات متعددة.',
+        'creator.contactLabel': 'تواصل',
+        'contact.title': 'تواصل',
+        'contact.text': 'هل لديك ملاحظات؟ تواصل معنا.',
+        'contact.emailLabel': 'البريد',
+        'contact.socialLabel': 'اجتماعي',
         'submit.title': 'ارسل نكتة',
         'submit.subtitle': 'شارك نكاتك. المعتمدة تظهر في العشوائي.',
         'submit.jokeLabel': 'نكتتك',
@@ -1253,6 +1521,10 @@
         'achievements.progressText': '{count} استماع · الشارة القادمة: {next}',
         'achievements.allBadges': '{count} استماع · كل الشارات مفتوحة',
         'footer.text': 'صنع بحب للضحك اليومي.',
+        'footer.creator': 'المبدع: سليم',
+        'footer.copyright': '© 2026 Voice Joke Club',
+        'footer.rights': 'كل الحقوق محفوظة.',
+        'footer.social': 'تابعنا',
         'languages.en': 'الانجليزية',
         'languages.ar': 'العربية',
         'languages.fr': 'الفرنسية',
@@ -1299,6 +1571,9 @@
         'nav.community': 'Al umma',
         'nav.submit': 'Aika',
         'nav.achievements': 'Nasarori',
+        'nav.saved': 'Ajiyayyu',
+        'nav.creator': 'Mai kirkira',
+        'nav.contact': 'Tuntuza',
         'hero.badge': 'Barka',
         'hero.title': 'Barka da zuwa Gidan Dariya',
         'hero.subtitle': 'Dariya mai laushi, abubuwan al umma, da karatu da murya.',
@@ -1337,6 +1612,7 @@
         'buttons.stop': 'Tsaya',
         'buttons.preview': 'Duba',
         'buttons.submit': 'Aika',
+        'buttons.close': 'Rufe',
         'reactions.title': 'Martani',
         'reactions.funny': 'Mai dariya',
         'reactions.veryFunny': 'Dariya sosai',
@@ -1350,6 +1626,25 @@
         'community.topRated': 'Mafi so',
         'community.leaderboard': 'Tebur',
         'community.empty': 'Babu martani tukuna.',
+        'saved.title': 'Ajiyayyun barkwanci',
+        'saved.subtitle': 'Nemo ka sarrafa ajiyayyun barkwanci.',
+        'saved.searchLabel': 'Nemo',
+        'saved.searchPlaceholder': 'Rubuta kalma...',
+        'saved.totalLabel': 'Adadin ajiyayyu',
+        'saved.none': 'Babu ajiyayyu.',
+        'saved.searchEmpty': 'Ba a samu daidai ba.',
+        'saved.delete': 'Goge',
+        'saved.savedOn': 'An ajiye {date}',
+        'creator.title': 'Game da mai kirkira',
+        'creator.text': 'Salim ya kirkiro domin barkwanci mai kyau.',
+        'creator.more': 'Karanta labari',
+        'creator.modalTitle': 'Labarin mai kirkira',
+        'creator.modalText': 'Sannu, ni Salim. Na gina Voice Joke Club don barkwanci mai laushi a harsuna daban.',
+        'creator.contactLabel': 'Tuntuza',
+        'contact.title': 'Tuntuza',
+        'contact.text': 'Kana da ra ayi? Tuntu ba mu.',
+        'contact.emailLabel': 'Email',
+        'contact.socialLabel': 'Sadaukarwa',
         'submit.title': 'Aika barkwanci',
         'submit.subtitle': 'Raba barkwanci. Wanda aka amince ya shiga bazata.',
         'submit.jokeLabel': 'Barkwancinka',
@@ -1374,6 +1669,10 @@
         'achievements.progressText': '{count} sauraro · Badge na gaba: {next}',
         'achievements.allBadges': '{count} sauraro · An kammala duk badges',
         'footer.text': 'An kirkira da kauna domin dariya.',
+        'footer.creator': 'Mai kirkira: Salim',
+        'footer.copyright': '© 2026 Voice Joke Club',
+        'footer.rights': 'Dukkan hakki ajiye.',
+        'footer.social': 'Biyo mu',
         'languages.en': 'Ingilishi',
         'languages.ar': 'Larabci',
         'languages.fr': 'Faransanci',
@@ -1420,6 +1719,9 @@
         'nav.community': 'Comunidade',
         'nav.submit': 'Enviar',
         'nav.achievements': 'Conquistas',
+        'nav.saved': 'Salvos',
+        'nav.creator': 'Criador',
+        'nav.contact': 'Contato',
         'hero.badge': 'Bem vindo',
         'hero.title': 'Bem vindo ao Clube de Piadas',
         'hero.subtitle': 'Risadas calmas, favoritos da comunidade e voz suave.',
@@ -1458,6 +1760,7 @@
         'buttons.stop': 'Parar',
         'buttons.preview': 'Previa',
         'buttons.submit': 'Enviar',
+        'buttons.close': 'Fechar',
         'reactions.title': 'Reacoes',
         'reactions.funny': 'Engracado',
         'reactions.veryFunny': 'Muito engracado',
@@ -1471,6 +1774,25 @@
         'community.topRated': 'Melhores piadas',
         'community.leaderboard': 'Ranking',
         'community.empty': 'Sem reacoes ainda.',
+        'saved.title': 'Piadas salvas',
+        'saved.subtitle': 'Busque e gerencie suas piadas salvas.',
+        'saved.searchLabel': 'Buscar',
+        'saved.searchPlaceholder': 'Digite uma palavra...',
+        'saved.totalLabel': 'Total salvo',
+        'saved.none': 'Sem piadas salvas.',
+        'saved.searchEmpty': 'Nenhuma piada encontrada.',
+        'saved.delete': 'Excluir',
+        'saved.savedOn': 'Salvo em {date}',
+        'creator.title': 'Sobre o criador',
+        'creator.text': 'Criado por Salim para humor positivo.',
+        'creator.more': 'Ler historia',
+        'creator.modalTitle': 'Historia do criador',
+        'creator.modalText': 'Oi, sou Salim. Criei o Voice Joke Club para humor suave e multilingue.',
+        'creator.contactLabel': 'Contato',
+        'contact.title': 'Contato',
+        'contact.text': 'Tem ideias? Fale com a gente.',
+        'contact.emailLabel': 'Email',
+        'contact.socialLabel': 'Social',
         'submit.title': 'Enviar uma piada',
         'submit.subtitle': 'Compartilhe sua piada. As aprovadas aparecem no aleatorio.',
         'submit.jokeLabel': 'Sua piada',
@@ -1495,6 +1817,10 @@
         'achievements.progressText': '{count} escutas · Proximo emblema: {next}',
         'achievements.allBadges': '{count} escutas · Todos os emblemas',
         'footer.text': 'Criado com carinho para risos diarios.',
+        'footer.creator': 'Criador: Salim',
+        'footer.copyright': '© 2026 Voice Joke Club',
+        'footer.rights': 'Todos os direitos reservados.',
+        'footer.social': 'Siga',
         'languages.en': 'Ingles',
         'languages.ar': 'Arabe',
         'languages.fr': 'Frances',
@@ -1759,6 +2085,7 @@
       updateSavedControls();
       updateSavedToggleLabel();
       renderSavedList();
+      renderSavedSection();
       renderTopRated();
       renderLeaderboard();
       renderAchievements();
@@ -1815,10 +2142,18 @@
 
     function setLoading(isLoading) {
       dom.jokeCard.classList.toggle('is-loading', isLoading);
+      dom.jokeCard.setAttribute('aria-busy', isLoading ? 'true' : 'false');
+      if (dom.jokeSkeleton) {
+        dom.jokeSkeleton.hidden = !isLoading;
+      }
+      dom.jokeText.style.opacity = isLoading ? '0.35' : '1';
     }
 
     function updateSavedControls() {
       dom.savedCount.textContent = t('saved.count', { count: savedJokes.length });
+      if (dom.savedTotal) {
+        dom.savedTotal.textContent = String(savedJokes.length);
+      }
       const hasJoke = Boolean(state.currentJoke);
       dom.save.disabled = !hasJoke || isJokeSaved(state.currentJoke, state.currentLang, state.currentCategory);
       dom.unsave.disabled = !hasJoke || !isJokeSaved(state.currentJoke, state.currentLang, state.currentCategory);
@@ -1829,8 +2164,20 @@
       dom.toggleSaved.textContent = isHidden ? t('buttons.showSaved') : t('buttons.hideSaved');
     }
 
+    function formatSavedDate(value) {
+      if (!value) {
+        return '';
+      }
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) {
+        return '';
+      }
+      return date.toLocaleDateString(state.currentLang);
+    }
+
     function isJokeSaved(joke, lang, category) {
-      return savedJokes.some((entry) => entry.joke === joke && entry.lang === lang && entry.category === category);
+      const id = buildJokeId(joke, lang, category);
+      return savedJokes.some((entry) => entry.id === id);
     }
 
     function saveCurrentJoke() {
@@ -1838,22 +2185,26 @@
         setFeedback('feedback.noJoke');
         return;
       }
-      if (isJokeSaved(state.currentJoke, state.currentLang, state.currentCategory)) {
+      const id = buildJokeId(state.currentJoke, state.currentLang, state.currentCategory);
+      if (savedJokes.some((entry) => entry.id === id)) {
         setFeedback('feedback.alreadySaved');
         return;
       }
       savedJokes.push({
+        id,
         joke: state.currentJoke,
         lang: state.currentLang,
-        category: state.currentCategory
+        category: state.currentCategory,
+        savedAt: new Date().toISOString()
       });
       saveSavedJokes();
       updateSavedControls();
       renderSavedList();
+      renderSavedSection();
       setFeedback('feedback.saved');
     }
 
-    function removeSavedJokeByIndex(index) {
+    function removeSavedJokeByIndex(index, options = {}) {
       if (index < 0 || index >= savedJokes.length) {
         return;
       }
@@ -1861,6 +2212,10 @@
       saveSavedJokes();
       updateSavedControls();
       renderSavedList();
+      renderSavedSection();
+      if (!options.silent) {
+        setFeedback('feedback.unsaved');
+      }
     }
 
     function removeCurrentSavedJoke() {
@@ -1868,18 +2223,13 @@
         setFeedback('feedback.noJoke');
         return;
       }
-      const index = savedJokes.findIndex(
-        (entry) =>
-          entry.joke === state.currentJoke &&
-          entry.lang === state.currentLang &&
-          entry.category === state.currentCategory
-      );
+      const id = buildJokeId(state.currentJoke, state.currentLang, state.currentCategory);
+      const index = savedJokes.findIndex((entry) => entry.id === id);
       if (index === -1) {
         setFeedback('feedback.notSaved');
         return;
       }
-      removeSavedJokeByIndex(index);
-      setFeedback('feedback.unsaved');
+      removeSavedJokeByIndex(index, { silent: false });
     }
 
     function renderSavedList() {
@@ -1903,6 +2253,12 @@
         tag.className = 'saved-tag';
         tag.textContent = `${t(`categories.${entry.category}`)} · ${t(`languages.${entry.lang}`)}`;
 
+        const meta = document.createElement('div');
+        meta.className = 'saved-meta';
+        if (entry.savedAt) {
+          meta.textContent = t('saved.savedOn', { date: formatSavedDate(entry.savedAt) });
+        }
+
         const actions = document.createElement('div');
         actions.className = 'saved-actions';
 
@@ -1922,8 +2278,83 @@
         actions.appendChild(removeButton);
         item.appendChild(text);
         item.appendChild(tag);
+        item.appendChild(meta);
         item.appendChild(actions);
         dom.savedList.appendChild(item);
+      });
+    }
+
+    function renderSavedSection() {
+      if (!dom.savedSectionList) {
+        return;
+      }
+      dom.savedSectionList.innerHTML = '';
+      const query = (dom.savedSearch?.value || '').trim().toLowerCase();
+      let items = savedJokes;
+      if (query) {
+        items = savedJokes.filter((entry) => {
+          const text = entry.joke.toLowerCase();
+          const categoryLabel = t(`categories.${entry.category}`).toLowerCase();
+          const langLabel = t(`languages.${entry.lang}`).toLowerCase();
+          return text.includes(query) || categoryLabel.includes(query) || langLabel.includes(query);
+        });
+      }
+      if (!savedJokes.length) {
+        const empty = document.createElement('div');
+        empty.className = 'list-item';
+        empty.textContent = t('saved.none');
+        dom.savedSectionList.appendChild(empty);
+        return;
+      }
+      if (query && !items.length) {
+        const empty = document.createElement('div');
+        empty.className = 'list-item';
+        empty.textContent = t('saved.searchEmpty');
+        dom.savedSectionList.appendChild(empty);
+        return;
+      }
+      items.forEach((entry) => {
+        const entryIndex = savedJokes.findIndex((item) => item.id === entry.id);
+        const row = document.createElement('div');
+        row.className = 'list-item';
+
+        const text = document.createElement('div');
+        text.textContent = entry.joke;
+
+        const meta = document.createElement('div');
+        meta.className = 'saved-meta';
+        const metaText = `${t(`categories.${entry.category}`)} · ${t(`languages.${entry.lang}`)}`;
+        const date = entry.savedAt ? t('saved.savedOn', { date: formatSavedDate(entry.savedAt) }) : '';
+        meta.textContent = date ? `${metaText} · ${date}` : metaText;
+
+        const metaWrap = document.createElement('div');
+        metaWrap.appendChild(text);
+        metaWrap.appendChild(meta);
+
+        const actions = document.createElement('div');
+        actions.className = 'saved-actions';
+
+        const showButton = document.createElement('button');
+        showButton.type = 'button';
+        showButton.textContent = t('saved.show');
+        showButton.onclick = () => {
+          applyLanguage(entry.lang, { skipFetch: true });
+          dom.category.value = entry.category;
+          state.currentCategory = entry.category;
+          showJoke(entry.joke);
+        };
+
+        const deleteButton = document.createElement('button');
+        deleteButton.type = 'button';
+        deleteButton.textContent = t('saved.delete');
+        deleteButton.onclick = () => removeSavedJokeByIndex(entryIndex);
+
+        actions.appendChild(showButton);
+        actions.appendChild(deleteButton);
+
+        row.appendChild(metaWrap);
+        row.appendChild(actions);
+        dom.savedSectionList.appendChild(row);
       });
     }
 
@@ -2506,12 +2937,35 @@
 
     function loadSavedJokes() {
       const stored = JSON.parse(localStorage.getItem(STORAGE_KEYS.saved) || '[]');
+      const normalize = (entry) => {
+        if (!entry) {
+          return null;
+        }
+        const joke = entry.joke || entry.text || '';
+        if (!joke) {
+          return null;
+        }
+        const lang = entry.lang || entry.language || 'en';
+        const category = entry.category || 'random';
+        const savedAt = entry.savedAt || entry.timestamp || new Date().toISOString();
+        const id = entry.id || buildJokeId(joke, lang, category);
+        return { id, joke, lang, category, savedAt };
+      };
+      const uniqueById = (list) => {
+        const map = new Map();
+        list.forEach((entry) => {
+          if (entry && entry.id) {
+            map.set(entry.id, entry);
+          }
+        });
+        return Array.from(map.values());
+      };
       if (Array.isArray(stored)) {
-        return stored;
+        return uniqueById(stored.map(normalize).filter(Boolean));
       }
       const legacy = JSON.parse(localStorage.getItem('savedJokes') || '[]');
       return Array.isArray(legacy)
-        ? legacy.map((entry) => ({ joke: entry.joke, lang: entry.lang, category: 'random' }))
+        ? uniqueById(legacy.map(normalize).filter(Boolean))
         : [];
     }
 
@@ -2642,6 +3096,26 @@
         removeSavedJokeByIndex(index);
       }
     };
+    if (dom.savedSearch) {
+      dom.savedSearch.oninput = () => renderSavedSection();
+    }
+    if (dom.creatorModalOpen && dom.creatorModal) {
+      dom.creatorModalOpen.onclick = () => {
+        dom.creatorModal.hidden = false;
+      };
+    }
+    if (dom.creatorModalClose && dom.creatorModal) {
+      dom.creatorModalClose.onclick = () => {
+        dom.creatorModal.hidden = true;
+      };
+    }
+    if (dom.creatorModal) {
+      dom.creatorModal.onclick = (event) => {
+        if (event.target === dom.creatorModal) {
+          dom.creatorModal.hidden = true;
+        }
+      };
+    }
     dom.darkToggle.onclick = () => toggleTheme();
     dom.jokeCard.addEventListener('click', (event) => {
       const reactionButton = event.target.closest('button[data-reaction]');
