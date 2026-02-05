@@ -1,29 +1,74 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" dir="ltr">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Voice Joke Webpage</title>
+  <title>Voice Joke Club</title>
+  <meta name="description" content="A community-driven voice joke platform with daily laughs, categories, reactions, and submissions." />
+  <meta name="keywords" content="jokes, voice jokes, funny, community, daily joke, humor" />
+  <meta name="theme-color" content="#ffeaa7" />
+  <meta name="color-scheme" content="light dark" />
+  <meta property="og:title" content="Voice Joke Club" />
+  <meta property="og:description" content="Listen, react, and share jokes in multiple languages. Submit your own and climb the leaderboard." />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="https://dummyimage.com/1200x630/ffeaa7/222.png&text=Voice+Joke+Club" />
+  <meta property="og:locale" content="en_US" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Voice Joke Club" />
+  <meta name="twitter:description" content="Listen, react, and share jokes in multiple languages." />
+  <meta name="twitter:image" content="https://dummyimage.com/1200x630/ffeaa7/222.png&text=Voice+Joke+Club" />
+  <link rel="preconnect" href="https://v2.jokeapi.dev" />
+  <link rel="preconnect" href="https://www.highperformanceformat.com" />
   <style>
+    :root {
+      --bg: #ffeaa7;
+      --bg-soft: #fff5c3;
+      --card: #fffde7;
+      --text: #1f1f1f;
+      --muted: #5c5c5c;
+      --accent: #ffbe76;
+      --accent-strong: #f6e58d;
+      --border: #222;
+      --shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+      --radius: 18px;
+    }
+    [data-theme="dark"] {
+      --bg: #141414;
+      --bg-soft: #1f1f1f;
+      --card: #1f1b14;
+      --text: #f5f5f5;
+      --muted: #c5c5c5;
+      --accent: #ffbe76;
+      --accent-strong: #e4c46a;
+      --border: #3a3a3a;
+      --shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+    }
+    * {
+      box-sizing: border-box;
+    }
     html, body {
-      height: 100%;
       margin: 0;
       padding: 0;
-      padding-top: 84px;
+      min-height: 100%;
       font-family: 'Comic Sans MS', 'Comic Sans', cursive, sans-serif;
-      background-color: #ffeaa7;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Crect width='160' height='160' fill='none'/%3E%3Ctext x='12' y='42' font-size='28' opacity='0.18'%3E%F0%9F%98%82%3C/text%3E%3Ctext x='92' y='88' font-size='28' opacity='0.18'%3E%F0%9F%A4%A3%3C/text%3E%3Ctext x='40' y='132' font-size='28' opacity='0.18'%3E%F0%9F%98%9C%3C/text%3E%3C/svg%3E");
+      color: var(--text);
+    }
+    body {
+      padding-top: 140px;
+      background-color: var(--bg);
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Crect width='160' height='160' fill='none'/%3E%3Ctext x='12' y='42' font-size='28' opacity='0.16'%3E%F0%9F%98%82%3C/text%3E%3Ctext x='92' y='88' font-size='28' opacity='0.16'%3E%F0%9F%A4%A3%3C/text%3E%3Ctext x='40' y='132' font-size='28' opacity='0.16'%3E%F0%9F%98%9C%3C/text%3E%3C/svg%3E");
       background-repeat: repeat;
       background-size: 160px 160px;
       background-attachment: fixed;
-      color: #222;
     }
-    .centered {
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+    .page {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 1.5rem;
     }
     .top-bar {
       position: fixed;
@@ -32,180 +77,651 @@
       right: 0;
       z-index: 10;
       background: rgba(255, 253, 231, 0.96);
-      border-bottom: 2px solid #222;
-      padding: 0.6em 1em;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-      backdrop-filter: blur(4px);
+      border-bottom: 2px solid var(--border);
+      padding: 0.6rem 1.2rem;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(6px);
+    }
+    [data-theme="dark"] .top-bar {
+      background: rgba(20, 20, 20, 0.95);
     }
     .top-bar-row {
       display: flex;
       flex-wrap: wrap;
       align-items: center;
-      justify-content: center;
-      gap: 0.6em;
+      justify-content: space-between;
+      gap: 0.8rem;
     }
-    .top-bar button {
-      padding: 0.5em 1.2em;
-      font-size: 0.95em;
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-weight: 700;
+      font-size: 1.05rem;
+    }
+    .brand-logo {
+      font-size: 1.4rem;
+    }
+    .nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.9rem;
+      font-weight: 600;
+    }
+    .nav a {
+      padding: 0.3rem 0.6rem;
+      border-radius: 999px;
+      transition: background 0.2s ease;
+    }
+    .nav a:hover {
+      background: var(--bg-soft);
+    }
+    .top-actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.6rem;
+    }
+    .inline-label {
+      font-weight: 600;
+    }
+    .top-actions select {
+      min-width: 150px;
     }
     .saved-count {
       font-weight: 600;
     }
     .saved-list {
-      margin-top: 0.6em;
-      max-height: 200px;
+      margin-top: 0.6rem;
+      max-height: 240px;
       overflow: auto;
       display: grid;
-      gap: 0.6em;
+      gap: 0.6rem;
     }
     .saved-item {
       display: flex;
       align-items: center;
-      gap: 0.6em;
-      background: #fff;
-      padding: 0.5em 0.8em;
+      gap: 0.6rem;
+      background: var(--card);
+      padding: 0.5rem 0.8rem;
       border-radius: 12px;
-      border: 1px solid #f0d877;
+      border: 1px solid var(--border);
     }
     .saved-text {
       flex: 1;
-      font-size: 0.95em;
+      font-size: 0.95rem;
     }
     .saved-actions {
       display: flex;
-      gap: 0.4em;
+      gap: 0.4rem;
       flex-wrap: wrap;
     }
     .saved-tag {
-      font-size: 0.8em;
-      background: #f6e58d;
+      font-size: 0.8rem;
+      background: var(--accent-strong);
       border-radius: 999px;
-      padding: 0.2em 0.6em;
+      padding: 0.2rem 0.6rem;
     }
     .saved-empty {
       text-align: center;
-      color: #666;
-      font-size: 0.95em;
+      color: var(--muted);
+      font-size: 0.95rem;
     }
-    .joke {
-      background: #fffde7;
-      border-radius: 20px;
-      padding: 2em 2em;
-      font-size: 1.5em;
-      margin: 1.5em 0;
-      min-width: 320px;
-      min-height: 80px;
-      text-align: center;
-      box-shadow: 0 6px 24px rgba(0,0,0,0.1);
-      max-width: 90vw;
+    .hero {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 2rem;
+      align-items: center;
+      padding: 2rem 0 1rem;
+    }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.3rem 0.9rem;
+      border-radius: 999px;
+      background: var(--accent-strong);
+      font-weight: 700;
+      margin-bottom: 0.8rem;
+    }
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.8rem;
+      margin-top: 1.2rem;
+    }
+    .section {
+      padding: 2.5rem 0;
+    }
+    .section h2 {
+      font-size: 2rem;
+      margin-bottom: 0.6rem;
+    }
+    .section p {
+      color: var(--muted);
+      margin-top: 0;
+    }
+    .card {
+      background: var(--card);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      padding: 1.4rem;
+    }
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.6rem;
+      margin-bottom: 0.6rem;
+    }
+    .card-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+      margin-top: 1rem;
+    }
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      align-items: flex-end;
+      margin: 1.2rem 0;
+    }
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      min-width: 160px;
+    }
+    .control-group label {
+      font-weight: 600;
+    }
+    .joke-card {
+      position: relative;
+      overflow: hidden;
+    }
+    .joke-card.is-loading {
+      animation: pulse 1.2s infinite;
+    }
+    .joke-text {
+      font-size: 1.4rem;
+      line-height: 1.5;
+      min-height: 96px;
+    }
+    .joke-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      margin-top: 0.6rem;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      padding: 0.2rem 0.7rem;
+      border-radius: 999px;
+      background: var(--bg-soft);
+      border: 1px solid var(--border);
+      font-size: 0.85rem;
+      font-weight: 600;
     }
     .buttons {
       display: flex;
       flex-wrap: wrap;
-      justify-content: center;
-      gap: 1em;
-      margin-top: 1em;
+      gap: 0.8rem;
+      margin-top: 1rem;
     }
-    .language-controls {
+    .reactions,
+    .share-buttons {
+      margin-top: 1rem;
+      display: grid;
+      gap: 0.6rem;
+    }
+    .reaction-buttons,
+    .share-buttons {
       display: flex;
-      align-items: center;
-      gap: 0.6em;
-      margin-top: 1em;
-      padding: 0.4em 0.8em;
-      border-radius: 999px;
-      background: #fffde7;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.07);
+      flex-wrap: wrap;
+      gap: 0.6rem;
     }
-    .language-controls label {
-      font-weight: 600;
+    .reaction-counts {
+      font-size: 0.9rem;
+      color: var(--muted);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.8rem;
     }
-    .language-controls select {
-      border: 1px solid #e1b12c;
-      border-radius: 999px;
-      padding: 0.35em 0.8em;
-      font-size: 1em;
-      background: #fff;
-      cursor: pointer;
-    }
-    .language-controls select:focus {
-      outline: 2px solid #ffbe76;
-      outline-offset: 2px;
+    .section-label {
+      font-weight: 700;
+      font-size: 0.95rem;
     }
     .feedback {
-      margin-top: 0.75em;
-      min-height: 1.2em;
-      font-size: 0.95em;
-      color: #444;
+      margin-top: 0.6rem;
+      min-height: 1.2rem;
+      font-size: 0.95rem;
+      color: var(--muted);
+    }
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1.2rem;
+      margin-top: 1.2rem;
+    }
+    .list {
+      display: grid;
+      gap: 0.7rem;
+      margin-top: 0.8rem;
+    }
+    .list-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.6rem;
+      padding: 0.5rem 0.7rem;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: var(--bg-soft);
+      font-size: 0.95rem;
+    }
+    .list-item span {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .progress-bar {
+      height: 12px;
+      background: var(--bg-soft);
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      overflow: hidden;
+      margin: 0.8rem 0;
+    }
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: var(--accent);
+      transition: width 0.4s ease;
+    }
+    .badge-list {
+      display: grid;
+      gap: 0.6rem;
+    }
+    .badge-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.6rem;
+      padding: 0.6rem 0.8rem;
+      border-radius: 12px;
+      border: 1px dashed var(--border);
+      background: var(--bg-soft);
+      font-size: 0.95rem;
+    }
+    .badge-item.unlocked {
+      border-style: solid;
+      background: var(--accent-strong);
+      font-weight: 700;
+    }
+    .form-card {
+      display: grid;
+      gap: 0.8rem;
+    }
+    textarea,
+    input,
+    select {
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      padding: 0.6rem 0.8rem;
+      font-family: inherit;
+      font-size: 1rem;
+      background: var(--card);
+      color: var(--text);
+    }
+    textarea {
+      min-height: 120px;
+      resize: vertical;
+    }
+    .form-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    .form-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+      align-items: center;
+    }
+    .moderation {
+      margin-top: 1.2rem;
+      display: grid;
+      gap: 0.8rem;
+    }
+    .moderator-toggle {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-weight: 600;
+    }
+    .honeypot {
+      display: none;
+    }
+    .footer {
+      text-align: center;
+      padding: 2rem 0 1rem;
+      color: var(--muted);
     }
     .ad-unit {
-      margin-top: 1.5em;
-      border: 2px solid #222;
-      padding: 0.4em;
-      background: #fffde7;
+      margin: 2rem auto 0;
+      border: 2px solid var(--border);
+      padding: 0.4rem;
+      background: var(--card);
       width: 468px;
       max-width: 90vw;
       display: flex;
       align-items: center;
       justify-content: center;
       overflow: hidden;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.07);
+      box-shadow: var(--shadow);
     }
     button {
-      background: #f6e58d;
-      border: none;
+      background: var(--accent-strong);
+      border: 1px solid var(--border);
       border-radius: 30px;
-      padding: 0.8em 2em;
-      font-size: 1.1em;
+      padding: 0.7rem 1.6rem;
+      font-size: 1rem;
       cursor: pointer;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.07);
-      transition: background 0.2s, transform 0.1s;
+      box-shadow: var(--shadow);
+      transition: transform 0.1s ease, background 0.2s ease;
+      min-height: 44px;
     }
     button:hover {
-      background: #ffbe76;
-      transform: scale(1.06);
+      background: var(--accent);
+      transform: translateY(-1px);
     }
     button:disabled {
       opacity: 0.6;
       cursor: not-allowed;
       transform: none;
     }
-    @media (max-width: 500px) {
-      html, body { padding-top: 110px; }
-      .joke { font-size: 1em; min-width: 150px; padding: 1em; }
-      button { font-size: 0.95em; padding: 0.6em 1.2em; }
-      .language-controls { font-size: 0.95em; }
+    .ghost {
+      background: transparent;
+    }
+    .muted {
+      color: var(--muted);
+    }
+    .rtl {
+      direction: rtl;
+      text-align: right;
+    }
+    .rtl .top-bar-row {
+      flex-direction: row-reverse;
+    }
+    .rtl .nav {
+      flex-direction: row-reverse;
+    }
+    .rtl .form-row {
+      flex-direction: row-reverse;
+    }
+    .rtl .card-header {
+      flex-direction: row-reverse;
+    }
+    .rtl .buttons,
+    .rtl .reaction-buttons,
+    .rtl .share-buttons,
+    .rtl .top-actions {
+      justify-content: flex-end;
+    }
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.01); }
+      100% { transform: scale(1); }
+    }
+    @media (max-width: 900px) {
+      body { padding-top: 170px; }
+      .top-bar-row {
+        justify-content: center;
+      }
+      .top-actions {
+        justify-content: center;
+      }
+    }
+    @media (max-width: 600px) {
+      body { padding-top: 210px; }
+      .hero {
+        text-align: center;
+      }
+      .nav {
+        justify-content: center;
+      }
+      .top-actions select {
+        min-width: 120px;
+      }
+      .joke-text {
+        font-size: 1.1rem;
+      }
+      button {
+        width: 100%;
+      }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      * {
+        animation: none !important;
+        transition: none !important;
+      }
     }
   </style>
 </head>
 <body>
-  <div class="top-bar" aria-label="Saved jokes">
+  <div class="top-bar">
     <div class="top-bar-row">
-      <button id="save-joke">Save Joke</button>
-      <button id="unsave-joke">Remove Saved</button>
-      <button id="toggle-saved">Show Saved</button>
+      <div class="brand">
+        <span class="brand-logo">😂</span>
+        <span class="brand-name" data-i18n="brand.name">Voice Joke Club</span>
+      </div>
+      <nav class="nav">
+        <a href="#home" data-i18n="nav.home">Home</a>
+        <a href="#about" data-i18n="nav.about">About</a>
+        <a href="#listen" data-i18n="nav.listen">Listen</a>
+        <a href="#community" data-i18n="nav.community">Community</a>
+        <a href="#submit" data-i18n="nav.submit">Submit</a>
+        <a href="#achievements" data-i18n="nav.achievements">Achievements</a>
+      </nav>
+      <div class="top-actions">
+        <label class="inline-label" for="language" data-i18n="controls.language">Language</label>
+        <select id="language">
+          <option value="en" data-i18n="languages.en">English</option>
+          <option value="ar" data-i18n="languages.ar">Arabic</option>
+          <option value="fr" data-i18n="languages.fr">French</option>
+          <option value="es" data-i18n="languages.es">Spanish</option>
+          <option value="ha" data-i18n="languages.ha">Hausa</option>
+          <option value="pt" data-i18n="languages.pt">Portuguese</option>
+        </select>
+        <button id="dark-toggle" class="ghost" data-i18n="buttons.dark">Dark Mode</button>
+      </div>
+    </div>
+    <div class="top-bar-row">
+      <button id="save-joke" data-i18n="buttons.save">Save Joke</button>
+      <button id="unsave-joke" data-i18n="buttons.unsave">Remove Saved</button>
+      <button id="toggle-saved" data-i18n="buttons.showSaved">Show Saved</button>
       <span id="saved-count" class="saved-count">0 saved</span>
     </div>
     <div id="saved-list" class="saved-list" hidden></div>
   </div>
-  <div class="centered">
-    <h1>😂 Voice Joke Webpage</h1>
-    <div id="joke" class="joke">Loading joke...</div>
-    <div class="buttons">
-      <button id="previous">Previous</button>
-      <button id="play">Play 🔊</button>
-      <button id="replay">Replay ♻️</button>
-      <button id="forward">Forward</button>
-      <button id="new">New Joke</button>
-    </div>
-    <div class="language-controls">
-      <label for="language">Language</label>
-      <select id="language">
-        <option value="en-US" selected>English</option>
-        <option value="fr-FR">French</option>
-        <option value="es-ES">Spanish</option>
-      </select>
-    </div>
-    <div id="feedback" class="feedback" aria-live="polite"></div>
+  <main class="page">
+    <header id="home" class="hero">
+      <div class="hero-content">
+        <div class="hero-badge" data-i18n="hero.badge">Welcome</div>
+        <h1 data-i18n="hero.title">Welcome to Voice Joke Club</h1>
+        <p data-i18n="hero.subtitle">Discover calm laughs, community favorites, and daily smiles with voice playback.</p>
+        <div class="hero-actions">
+          <button id="hero-random" data-i18n="hero.primary">Random Joke</button>
+          <button id="hero-scroll" class="ghost" data-i18n="hero.secondary">Start Listening</button>
+        </div>
+      </div>
+      <div id="jotd" class="hero-card card">
+        <div class="card-header">
+          <h3 data-i18n="jotd.title">Joke of the Day</h3>
+          <span id="jotd-date" class="badge">--</span>
+        </div>
+        <p id="jotd-text" class="joke-text">...</p>
+        <div class="card-actions">
+          <button id="jotd-play" data-i18n="jotd.play">Play</button>
+          <button id="jotd-copy" class="ghost" data-i18n="jotd.copy">Copy</button>
+        </div>
+      </div>
+    </header>
+
+    <section id="about" class="section">
+      <h2 data-i18n="about.title">About</h2>
+      <p data-i18n="about.text">
+        Voice Joke Club is a friendly space for quick laughs, community sharing, and gentle humor in multiple languages.
+      </p>
+      <div class="grid-2">
+        <div class="card">
+          <h3 data-i18n="about.missionTitle">Our Mission</h3>
+          <p data-i18n="about.missionText">
+            Make jokes easy to discover, safe to share, and delightful to hear with voice playback.
+          </p>
+        </div>
+        <div class="card">
+          <h3 data-i18n="about.creatorTitle">Creator</h3>
+          <p data-i18n="about.creatorText">
+            Built by Salim to bring calm, positive humor to everyone.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section id="listen" class="section">
+      <h2 data-i18n="listen.title">Listen & Laugh</h2>
+      <p data-i18n="listen.subtitle">Choose a category, hit random, and enjoy a smooth voice experience.</p>
+      <div class="controls">
+        <div class="control-group">
+          <label for="category-select" data-i18n="controls.category">Category</label>
+          <select id="category-select">
+            <option value="random" data-i18n="categories.random">Random</option>
+            <option value="school" data-i18n="categories.school">School</option>
+            <option value="relationship" data-i18n="categories.relationship">Relationship</option>
+            <option value="dark" data-i18n="categories.dark">Dark Humor</option>
+            <option value="roast" data-i18n="categories.roast">Roasting</option>
+          </select>
+        </div>
+        <div class="control-group">
+          <label for="voice-speed" data-i18n="controls.voiceSpeed">Voice Speed</label>
+          <input id="voice-speed" type="range" min="0.8" max="1.3" step="0.05" value="1.05" />
+        </div>
+      </div>
+
+      <div id="joke-card" class="joke-card card">
+        <div id="joke" class="joke-text">Loading joke...</div>
+        <div class="joke-meta">
+          <span id="joke-category" class="badge"></span>
+          <span id="joke-language" class="badge"></span>
+        </div>
+        <div class="buttons">
+          <button id="previous" data-i18n="buttons.previous">Previous</button>
+          <button id="play" data-i18n="buttons.play">Play</button>
+          <button id="replay" data-i18n="buttons.replay">Replay</button>
+          <button id="forward" data-i18n="buttons.forward">Forward</button>
+          <button id="random" data-i18n="buttons.random">Random Joke</button>
+        </div>
+        <div class="reactions">
+          <span class="section-label" data-i18n="reactions.title">Reactions</span>
+          <div class="reaction-buttons">
+            <button data-reaction="funny" data-i18n="reactions.funny">Funny</button>
+            <button data-reaction="veryFunny" data-i18n="reactions.veryFunny">Very Funny</button>
+            <button data-reaction="notFunny" data-i18n="reactions.notFunny">Not Funny</button>
+          </div>
+          <div id="reaction-counts" class="reaction-counts"></div>
+        </div>
+        <div class="share-buttons">
+          <span class="section-label" data-i18n="share.title">Share</span>
+          <button data-share="whatsapp" data-i18n="share.whatsapp">WhatsApp</button>
+          <button data-share="tiktok" data-i18n="share.tiktok">TikTok</button>
+          <button data-share="instagram" data-i18n="share.instagram">Instagram</button>
+          <button data-share="copy" data-i18n="share.copy">Copy Link</button>
+        </div>
+        <div id="feedback" class="feedback" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <section id="community" class="section">
+      <h2 data-i18n="community.title">Community Highlights</h2>
+      <div class="grid-2">
+        <div class="card">
+          <h3 data-i18n="community.topRated">Top Rated Jokes</h3>
+          <div id="top-rated-list" class="list"></div>
+        </div>
+        <div class="card">
+          <h3 data-i18n="community.leaderboard">Leaderboard</h3>
+          <div id="leaderboard-list" class="list"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="submit" class="section">
+      <h2 data-i18n="submit.title">Submit a Joke</h2>
+      <p data-i18n="submit.subtitle">Share your jokes with the community. Approved jokes appear in the random feed.</p>
+      <form id="submission-form" class="card form-card">
+        <label for="submission-text" data-i18n="submit.jokeLabel">Your joke</label>
+        <textarea id="submission-text" maxlength="240" data-i18n-placeholder="submit.textPlaceholder"></textarea>
+        <div class="form-row">
+          <div class="control-group">
+            <label for="submission-category" data-i18n="submit.categoryLabel">Category</label>
+            <select id="submission-category">
+              <option value="random" data-i18n="categories.random">Random</option>
+              <option value="school" data-i18n="categories.school">School</option>
+              <option value="relationship" data-i18n="categories.relationship">Relationship</option>
+              <option value="dark" data-i18n="categories.dark">Dark Humor</option>
+              <option value="roast" data-i18n="categories.roast">Roasting</option>
+            </select>
+          </div>
+          <div class="control-group">
+            <label for="submission-name" data-i18n="submit.nameLabel">Name (optional)</label>
+            <input id="submission-name" type="text" data-i18n-placeholder="submit.namePlaceholder" />
+          </div>
+        </div>
+        <input id="submission-website" class="honeypot" type="text" autocomplete="off" tabindex="-1" />
+        <div class="form-actions">
+          <button type="button" id="record-voice" data-i18n="buttons.record">Record Voice</button>
+          <button type="button" id="stop-voice" data-i18n="buttons.stop" disabled>Stop</button>
+          <button type="button" id="play-voice" data-i18n="buttons.preview" disabled>Preview</button>
+          <button type="submit" data-i18n="buttons.submit">Submit</button>
+        </div>
+        <audio id="voice-preview" controls hidden></audio>
+        <div id="submission-feedback" class="feedback" aria-live="polite"></div>
+      </form>
+      <div class="card moderation">
+        <label class="moderator-toggle">
+          <input type="checkbox" id="moderator-toggle" />
+          <span data-i18n="submit.moderatorTitle">Moderator Mode</span>
+        </label>
+        <div id="moderation-list" class="list"></div>
+      </div>
+    </section>
+
+    <section id="achievements" class="section">
+      <h2 data-i18n="achievements.title">Achievements</h2>
+      <div class="grid-2">
+        <div class="card">
+          <h3 data-i18n="achievements.progress">Listening Progress</h3>
+          <div class="progress-bar">
+            <div id="progress-bar" class="progress-fill"></div>
+          </div>
+          <div id="progress-text" class="muted"></div>
+        </div>
+        <div class="card">
+          <h3 data-i18n="achievements.badges">Badges</h3>
+          <div id="badge-list" class="badge-list"></div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <p data-i18n="footer.text">Created with love for daily laughs.</p>
+    </footer>
+
     <div class="ad-unit" aria-label="Advertisement">
       <script>
         atOptions = {
@@ -218,196 +734,1123 @@
       </script>
       <script src="https://www.highperformanceformat.com/44737517597e4d4fd2582ae54ae399b2/invoke.js"></script>
     </div>
-  </div>
+  </main>
   <script>
-    let currentJoke = '';
-    const languageSelect = document.getElementById('language');
-    const feedback = document.getElementById('feedback');
-    const previousButton = document.getElementById('previous');
-    const forwardButton = document.getElementById('forward');
-    const newButton = document.getElementById('new');
-    const saveButton = document.getElementById('save-joke');
-    const unsaveButton = document.getElementById('unsave-joke');
-    const toggleSavedButton = document.getElementById('toggle-saved');
-    const savedCount = document.getElementById('saved-count');
-    const savedList = document.getElementById('saved-list');
-    const jokeHistory = [];
-    let historyIndex = -1;
-    const MAX_JOKE_LENGTH = 120;
-    const MAX_SEEN_PER_LANG = 500;
+    const dom = {
+      language: document.getElementById('language'),
+      darkToggle: document.getElementById('dark-toggle'),
+      category: document.getElementById('category-select'),
+      voiceSpeed: document.getElementById('voice-speed'),
+      jokeCard: document.getElementById('joke-card'),
+      jokeText: document.getElementById('joke'),
+      jokeCategory: document.getElementById('joke-category'),
+      jokeLanguage: document.getElementById('joke-language'),
+      feedback: document.getElementById('feedback'),
+      previous: document.getElementById('previous'),
+      play: document.getElementById('play'),
+      replay: document.getElementById('replay'),
+      forward: document.getElementById('forward'),
+      random: document.getElementById('random'),
+      heroRandom: document.getElementById('hero-random'),
+      heroScroll: document.getElementById('hero-scroll'),
+      jotdText: document.getElementById('jotd-text'),
+      jotdDate: document.getElementById('jotd-date'),
+      jotdPlay: document.getElementById('jotd-play'),
+      jotdCopy: document.getElementById('jotd-copy'),
+      save: document.getElementById('save-joke'),
+      unsave: document.getElementById('unsave-joke'),
+      toggleSaved: document.getElementById('toggle-saved'),
+      savedCount: document.getElementById('saved-count'),
+      savedList: document.getElementById('saved-list'),
+      reactionCounts: document.getElementById('reaction-counts'),
+      topRatedList: document.getElementById('top-rated-list'),
+      leaderboardList: document.getElementById('leaderboard-list'),
+      submissionForm: document.getElementById('submission-form'),
+      submissionText: document.getElementById('submission-text'),
+      submissionCategory: document.getElementById('submission-category'),
+      submissionName: document.getElementById('submission-name'),
+      submissionWebsite: document.getElementById('submission-website'),
+      submissionFeedback: document.getElementById('submission-feedback'),
+      recordVoice: document.getElementById('record-voice'),
+      stopVoice: document.getElementById('stop-voice'),
+      playVoice: document.getElementById('play-voice'),
+      voicePreview: document.getElementById('voice-preview'),
+      moderatorToggle: document.getElementById('moderator-toggle'),
+      moderationList: document.getElementById('moderation-list'),
+      progressBar: document.getElementById('progress-bar'),
+      progressText: document.getElementById('progress-text'),
+      badgeList: document.getElementById('badge-list')
+    };
+
     const STORAGE_KEYS = {
-      saved: 'savedJokes',
-      seen: 'seenJokes'
+      saved: 'savedJokesV2',
+      seen: 'seenJokesV2',
+      reactions: 'reactionStoreV1',
+      userReactions: 'userReactionsV1',
+      submissions: 'submissionsV1',
+      approved: 'approvedJokesV1',
+      settings: 'jokeSettingsV1',
+      stats: 'jokeStatsV1'
     };
-    const languageMap = {
-      'en-US': 'en',
-      'fr-FR': 'fr',
-      'es-ES': 'es'
+
+    const languageMeta = {
+      en: { voice: 'en-US', api: 'en', dir: 'ltr' },
+      ar: { voice: 'ar-SA', api: null, dir: 'rtl' },
+      fr: { voice: 'fr-FR', api: 'fr', dir: 'ltr' },
+      es: { voice: 'es-ES', api: 'es', dir: 'ltr' },
+      ha: { voice: 'ha-NG', api: null, dir: 'ltr' },
+      pt: { voice: 'pt-PT', api: null, dir: 'ltr' }
     };
+
+    const categories = ['random', 'school', 'relationship', 'dark', 'roast'];
+    const MAX_JOKE_LENGTH = 180;
+
+    const translations = {
+      en: {
+        'brand.name': 'Voice Joke Club',
+        'nav.home': 'Home',
+        'nav.about': 'About',
+        'nav.listen': 'Listen',
+        'nav.community': 'Community',
+        'nav.submit': 'Submit',
+        'nav.achievements': 'Achievements',
+        'hero.badge': 'Welcome',
+        'hero.title': 'Welcome to Voice Joke Club',
+        'hero.subtitle': 'Discover calm laughs, community favorites, and daily smiles with voice playback.',
+        'hero.primary': 'Random Joke',
+        'hero.secondary': 'Start Listening',
+        'about.title': 'About',
+        'about.text': 'Voice Joke Club is a friendly space for quick laughs, community sharing, and gentle humor in multiple languages.',
+        'about.missionTitle': 'Our Mission',
+        'about.missionText': 'Make jokes easy to discover, safe to share, and delightful to hear with voice playback.',
+        'about.creatorTitle': 'Creator',
+        'about.creatorText': 'Built by Salim to bring calm, positive humor to everyone.',
+        'listen.title': 'Listen & Laugh',
+        'listen.subtitle': 'Choose a category, hit random, and enjoy a smooth voice experience.',
+        'controls.category': 'Category',
+        'controls.language': 'Language',
+        'controls.voiceSpeed': 'Voice Speed',
+        'categories.random': 'Random',
+        'categories.school': 'School',
+        'categories.relationship': 'Relationship',
+        'categories.dark': 'Dark Humor',
+        'categories.roast': 'Roasting',
+        'buttons.previous': 'Previous',
+        'buttons.play': 'Play',
+        'buttons.replay': 'Replay',
+        'buttons.forward': 'Forward',
+        'buttons.random': 'Random Joke',
+        'buttons.save': 'Save Joke',
+        'buttons.unsave': 'Remove Saved',
+        'buttons.showSaved': 'Show Saved',
+        'buttons.hideSaved': 'Hide Saved',
+        'buttons.dark': 'Dark Mode',
+        'buttons.light': 'Light Mode',
+        'buttons.approve': 'Approve',
+        'buttons.reject': 'Reject',
+        'buttons.record': 'Record Voice',
+        'buttons.stop': 'Stop',
+        'buttons.preview': 'Preview',
+        'buttons.submit': 'Submit',
+        'reactions.title': 'Reactions',
+        'reactions.funny': 'Funny',
+        'reactions.veryFunny': 'Very Funny',
+        'reactions.notFunny': 'Not Funny',
+        'share.title': 'Share',
+        'share.whatsapp': 'WhatsApp',
+        'share.tiktok': 'TikTok',
+        'share.instagram': 'Instagram',
+        'share.copy': 'Copy Link',
+        'community.title': 'Community Highlights',
+        'community.topRated': 'Top Rated Jokes',
+        'community.leaderboard': 'Leaderboard',
+        'community.empty': 'No reactions yet. Be the first to react!',
+        'submit.title': 'Submit a Joke',
+        'submit.subtitle': 'Share your jokes with the community. Approved jokes appear in the random feed.',
+        'submit.jokeLabel': 'Your joke',
+        'submit.categoryLabel': 'Category',
+        'submit.nameLabel': 'Name (optional)',
+        'submit.namePlaceholder': 'Your name',
+        'submit.textPlaceholder': 'Write a short, friendly joke (8-240 characters).',
+        'submit.moderatorTitle': 'Moderator Mode',
+        'submit.pendingEmpty': 'No pending submissions.',
+        'jotd.title': 'Joke of the Day',
+        'jotd.play': 'Play',
+        'jotd.copy': 'Copy',
+        'achievements.title': 'Achievements',
+        'achievements.progress': 'Listening Progress',
+        'achievements.badges': 'Badges',
+        'achievements.badge1': 'First Listen',
+        'achievements.badge2': 'Five Giggles',
+        'achievements.badge3': 'Regular Listener',
+        'achievements.badge4': 'Joke Fan',
+        'achievements.badge5': 'Laugh Pro',
+        'achievements.badge6': 'Legendary Listener',
+        'achievements.progressText': '{count} listens · Next badge: {next}',
+        'achievements.allBadges': '{count} listens · All badges unlocked',
+        'footer.text': 'Created with love for daily laughs.',
+        'languages.en': 'English',
+        'languages.ar': 'Arabic',
+        'languages.fr': 'French',
+        'languages.es': 'Spanish',
+        'languages.ha': 'Hausa',
+        'languages.pt': 'Portuguese',
+        'saved.count': '{count} saved',
+        'saved.empty': 'No saved jokes yet.',
+        'saved.show': 'Show',
+        'saved.remove': 'Remove',
+        'feedback.loading': 'Loading a fresh joke...',
+        'feedback.loaded': 'Here is a new joke!',
+        'feedback.fallback': 'Loaded a joke from the local list.',
+        'feedback.repeat': 'All new jokes were used. Showing a familiar one.',
+        'feedback.languageSet': 'Language updated to {language}.',
+        'feedback.saved': 'Saved this joke.',
+        'feedback.unsaved': 'Removed saved joke.',
+        'feedback.alreadySaved': 'This joke is already saved.',
+        'feedback.notSaved': 'This joke is not saved yet.',
+        'feedback.noPrevious': 'No previous jokes yet.',
+        'feedback.noNext': 'No newer jokes yet.',
+        'feedback.noJoke': 'Load a joke first.',
+        'feedback.copy': 'Copied to clipboard.',
+        'feedback.shareTip': 'Copied. Paste it on {platform}.',
+        'feedback.reactionThanks': 'Thanks for your reaction!',
+        'feedback.submissionOk': 'Submission received! It is now pending review.',
+        'feedback.submissionCooldown': 'Please wait a bit before submitting again.',
+        'feedback.submissionInvalid': 'Please enter a friendly joke without links.',
+        'feedback.voiceUnsupported': 'Voice recording is not supported in this browser.',
+        'feedback.voiceTooLarge': 'Voice clip is too large. Try a shorter recording.',
+        'feedback.moderationApproved': 'Submission approved.',
+        'feedback.moderationRejected': 'Submission rejected.',
+        'loadingMessages': [
+          'Tickling the funny bone...',
+          'Warming up the punchline...',
+          'Polishing a tiny laugh...',
+          'Finding a gentle giggle...'
+        ]
+      },
+      fr: {
+        'brand.name': 'Club des Blagues',
+        'nav.home': 'Accueil',
+        'nav.about': 'A propos',
+        'nav.listen': 'Ecouter',
+        'nav.community': 'Communaute',
+        'nav.submit': 'Envoyer',
+        'nav.achievements': 'Succes',
+        'hero.badge': 'Bienvenue',
+        'hero.title': 'Bienvenue au Club des Blagues',
+        'hero.subtitle': 'Des rires calmes, des favoris communautaires et une lecture vocale douce.',
+        'hero.primary': 'Blague Aleatoire',
+        'hero.secondary': 'Commencer',
+        'about.title': 'A propos',
+        'about.text': 'Un espace amical pour rire vite, partager et profiter de blagues douces en plusieurs langues.',
+        'about.missionTitle': 'Notre mission',
+        'about.missionText': 'Rendre les blagues faciles a trouver, sures a partager, et agreables a ecouter.',
+        'about.creatorTitle': 'Createur',
+        'about.creatorText': 'Cree par Salim pour un humour positif.',
+        'listen.title': 'Ecouter et rire',
+        'listen.subtitle': 'Choisissez une categorie et profitez de la lecture vocale.',
+        'controls.category': 'Categorie',
+        'controls.language': 'Langue',
+        'controls.voiceSpeed': 'Vitesse voix',
+        'categories.random': 'Aleatoire',
+        'categories.school': 'Ecole',
+        'categories.relationship': 'Relations',
+        'categories.dark': 'Humour noir',
+        'categories.roast': 'Taquinerie',
+        'buttons.previous': 'Precedent',
+        'buttons.play': 'Jouer',
+        'buttons.replay': 'Rejouer',
+        'buttons.forward': 'Suivant',
+        'buttons.random': 'Blague Aleatoire',
+        'buttons.save': 'Sauvegarder',
+        'buttons.unsave': 'Retirer',
+        'buttons.showSaved': 'Voir',
+        'buttons.hideSaved': 'Masquer',
+        'buttons.dark': 'Mode Sombre',
+        'buttons.light': 'Mode Clair',
+        'buttons.approve': 'Approuver',
+        'buttons.reject': 'Refuser',
+        'buttons.record': 'Enregistrer',
+        'buttons.stop': 'Arreter',
+        'buttons.preview': 'Apercu',
+        'buttons.submit': 'Envoyer',
+        'reactions.title': 'Reactions',
+        'reactions.funny': 'Drole',
+        'reactions.veryFunny': 'Tres Drole',
+        'reactions.notFunny': 'Pas Drole',
+        'share.title': 'Partager',
+        'share.whatsapp': 'WhatsApp',
+        'share.tiktok': 'TikTok',
+        'share.instagram': 'Instagram',
+        'share.copy': 'Copier le lien',
+        'community.title': 'Moments forts',
+        'community.topRated': 'Top blagues',
+        'community.leaderboard': 'Classement',
+        'community.empty': 'Pas de reactions pour le moment.',
+        'submit.title': 'Envoyer une blague',
+        'submit.subtitle': 'Partagez vos blagues. Les blagues approuvees apparaissent en aleatoire.',
+        'submit.jokeLabel': 'Votre blague',
+        'submit.categoryLabel': 'Categorie',
+        'submit.nameLabel': 'Nom (optionnel)',
+        'submit.namePlaceholder': 'Votre nom',
+        'submit.textPlaceholder': 'Ecrivez une blague courte (8-240 caracteres).',
+        'submit.moderatorTitle': 'Mode moderateur',
+        'submit.pendingEmpty': 'Aucune soumission en attente.',
+        'jotd.title': 'Blague du jour',
+        'jotd.play': 'Jouer',
+        'jotd.copy': 'Copier',
+        'achievements.title': 'Succes',
+        'achievements.progress': 'Progression',
+        'achievements.badges': 'Badges',
+        'achievements.badge1': 'Premiere ecoute',
+        'achievements.badge2': 'Cinq rires',
+        'achievements.badge3': 'Ecouteur regulier',
+        'achievements.badge4': 'Fan de blagues',
+        'achievements.badge5': 'Pro du rire',
+        'achievements.badge6': 'Legende du rire',
+        'achievements.progressText': '{count} ecoutes · Prochain badge: {next}',
+        'achievements.allBadges': '{count} ecoutes · Tous les badges obtenus',
+        'footer.text': 'Cree avec amour pour des rires quotidiens.',
+        'languages.en': 'Anglais',
+        'languages.ar': 'Arabe',
+        'languages.fr': 'Francais',
+        'languages.es': 'Espagnol',
+        'languages.ha': 'Hausa',
+        'languages.pt': 'Portugais',
+        'saved.count': '{count} sauvegardees',
+        'saved.empty': 'Aucune blague sauvegardee.',
+        'saved.show': 'Voir',
+        'saved.remove': 'Retirer',
+        'feedback.loading': 'Chargement d une nouvelle blague...',
+        'feedback.loaded': 'Voici une nouvelle blague !',
+        'feedback.fallback': 'Blague chargee depuis la liste locale.',
+        'feedback.repeat': 'Toutes les blagues ont ete vues. Voici une connue.',
+        'feedback.languageSet': 'Langue : {language}.',
+        'feedback.saved': 'Blague sauvegardee.',
+        'feedback.unsaved': 'Blague retiree.',
+        'feedback.alreadySaved': 'Blague deja sauvegardee.',
+        'feedback.notSaved': 'Cette blague n est pas sauvegardee.',
+        'feedback.noPrevious': 'Pas de blague precedente.',
+        'feedback.noNext': 'Pas de blague suivante.',
+        'feedback.noJoke': 'Chargez une blague.',
+        'feedback.copy': 'Copie dans le presse papier.',
+        'feedback.shareTip': 'Copie. Collez sur {platform}.',
+        'feedback.reactionThanks': 'Merci pour la reaction !',
+        'feedback.submissionOk': 'Soumission recue. En attente de validation.',
+        'feedback.submissionCooldown': 'Veuillez patienter avant une nouvelle soumission.',
+        'feedback.submissionInvalid': 'Entrez une blague amicale sans liens.',
+        'feedback.voiceUnsupported': 'Enregistrement vocal non pris en charge.',
+        'feedback.voiceTooLarge': 'Clip vocal trop grand. Essayez plus court.',
+        'feedback.moderationApproved': 'Soumission approuvee.',
+        'feedback.moderationRejected': 'Soumission rejetee.',
+        'loadingMessages': [
+          'On chauffe la blague...',
+          'On polit le rire...',
+          'On trouve un petit sourire...'
+        ]
+      },
+      es: {
+        'brand.name': 'Club de Chistes',
+        'nav.home': 'Inicio',
+        'nav.about': 'Sobre',
+        'nav.listen': 'Escuchar',
+        'nav.community': 'Comunidad',
+        'nav.submit': 'Enviar',
+        'nav.achievements': 'Logros',
+        'hero.badge': 'Bienvenido',
+        'hero.title': 'Bienvenido al Club de Chistes',
+        'hero.subtitle': 'Risas calmadas, favoritos de la comunidad y voz suave.',
+        'hero.primary': 'Chiste Aleatorio',
+        'hero.secondary': 'Empezar',
+        'about.title': 'Sobre',
+        'about.text': 'Un espacio amable para risas rapidas, compartir y humor suave en varios idiomas.',
+        'about.missionTitle': 'Nuestra mision',
+        'about.missionText': 'Hacer las bromas faciles de encontrar y agradables de escuchar.',
+        'about.creatorTitle': 'Creador',
+        'about.creatorText': 'Creado por Salim para un humor positivo.',
+        'listen.title': 'Escuchar y reir',
+        'listen.subtitle': 'Elige una categoria y disfruta la voz.',
+        'controls.category': 'Categoria',
+        'controls.language': 'Idioma',
+        'controls.voiceSpeed': 'Velocidad de voz',
+        'categories.random': 'Aleatorio',
+        'categories.school': 'Escuela',
+        'categories.relationship': 'Relaciones',
+        'categories.dark': 'Humor oscuro',
+        'categories.roast': 'Bromear',
+        'buttons.previous': 'Anterior',
+        'buttons.play': 'Reproducir',
+        'buttons.replay': 'Repetir',
+        'buttons.forward': 'Siguiente',
+        'buttons.random': 'Chiste Aleatorio',
+        'buttons.save': 'Guardar',
+        'buttons.unsave': 'Quitar',
+        'buttons.showSaved': 'Ver guardados',
+        'buttons.hideSaved': 'Ocultar guardados',
+        'buttons.dark': 'Modo oscuro',
+        'buttons.light': 'Modo claro',
+        'buttons.approve': 'Aprobar',
+        'buttons.reject': 'Rechazar',
+        'buttons.record': 'Grabar voz',
+        'buttons.stop': 'Detener',
+        'buttons.preview': 'Vista previa',
+        'buttons.submit': 'Enviar',
+        'reactions.title': 'Reacciones',
+        'reactions.funny': 'Divertido',
+        'reactions.veryFunny': 'Muy divertido',
+        'reactions.notFunny': 'No divertido',
+        'share.title': 'Compartir',
+        'share.whatsapp': 'WhatsApp',
+        'share.tiktok': 'TikTok',
+        'share.instagram': 'Instagram',
+        'share.copy': 'Copiar enlace',
+        'community.title': 'Momentos de la comunidad',
+        'community.topRated': 'Mejores chistes',
+        'community.leaderboard': 'Clasificacion',
+        'community.empty': 'Sin reacciones todavia.',
+        'submit.title': 'Enviar un chiste',
+        'submit.subtitle': 'Comparte tus chistes. Los aprobados aparecen en aleatorio.',
+        'submit.jokeLabel': 'Tu chiste',
+        'submit.categoryLabel': 'Categoria',
+        'submit.nameLabel': 'Nombre (opcional)',
+        'submit.namePlaceholder': 'Tu nombre',
+        'submit.textPlaceholder': 'Escribe un chiste corto (8-240 caracteres).',
+        'submit.moderatorTitle': 'Modo moderador',
+        'submit.pendingEmpty': 'No hay envios pendientes.',
+        'jotd.title': 'Chiste del dia',
+        'jotd.play': 'Reproducir',
+        'jotd.copy': 'Copiar',
+        'achievements.title': 'Logros',
+        'achievements.progress': 'Progreso',
+        'achievements.badges': 'Insignias',
+        'achievements.badge1': 'Primera escucha',
+        'achievements.badge2': 'Cinco risas',
+        'achievements.badge3': 'Oyente regular',
+        'achievements.badge4': 'Fan de chistes',
+        'achievements.badge5': 'Pro de la risa',
+        'achievements.badge6': 'Leyenda de la risa',
+        'achievements.progressText': '{count} escuchas · Siguiente insignia: {next}',
+        'achievements.allBadges': '{count} escuchas · Todas las insignias',
+        'footer.text': 'Creado con amor para risas diarias.',
+        'languages.en': 'Ingles',
+        'languages.ar': 'Arabe',
+        'languages.fr': 'Frances',
+        'languages.es': 'Espanol',
+        'languages.ha': 'Hausa',
+        'languages.pt': 'Portugues',
+        'saved.count': '{count} guardados',
+        'saved.empty': 'No hay chistes guardados.',
+        'saved.show': 'Ver',
+        'saved.remove': 'Quitar',
+        'feedback.loading': 'Cargando un chiste...',
+        'feedback.loaded': 'Aqui tienes un chiste nuevo.',
+        'feedback.fallback': 'Chiste cargado de la lista local.',
+        'feedback.repeat': 'Todos los chistes nuevos usados. Aqui uno conocido.',
+        'feedback.languageSet': 'Idioma: {language}.',
+        'feedback.saved': 'Chiste guardado.',
+        'feedback.unsaved': 'Chiste eliminado.',
+        'feedback.alreadySaved': 'Chiste ya guardado.',
+        'feedback.notSaved': 'Este chiste no esta guardado.',
+        'feedback.noPrevious': 'Sin chistes anteriores.',
+        'feedback.noNext': 'Sin chistes siguientes.',
+        'feedback.noJoke': 'Carga un chiste primero.',
+        'feedback.copy': 'Copiado al portapapeles.',
+        'feedback.shareTip': 'Copiado. Pegalo en {platform}.',
+        'feedback.reactionThanks': 'Gracias por reaccionar.',
+        'feedback.submissionOk': 'Envio recibido. En revision.',
+        'feedback.submissionCooldown': 'Espera un poco antes de enviar otro.',
+        'feedback.submissionInvalid': 'Escribe un chiste amable sin enlaces.',
+        'feedback.voiceUnsupported': 'Grabacion de voz no disponible.',
+        'feedback.voiceTooLarge': 'Audio demasiado grande. Prueba mas corto.',
+        'feedback.moderationApproved': 'Envio aprobado.',
+        'feedback.moderationRejected': 'Envio rechazado.',
+        'loadingMessages': [
+          'Preparando el chiste...',
+          'Buscando una sonrisa...',
+          'Ajustando el remate...'
+        ]
+      },
+      ar: {
+        'brand.name': 'نادي النكات الصوتية',
+        'nav.home': 'الرئيسية',
+        'nav.about': 'حول',
+        'nav.listen': 'استمع',
+        'nav.community': 'المجتمع',
+        'nav.submit': 'ارسل',
+        'nav.achievements': 'الانجازات',
+        'hero.badge': 'اهلا',
+        'hero.title': 'اهلا بك في نادي النكات الصوتية',
+        'hero.subtitle': 'ضحكات لطيفة ومحتوى مجتمعي وقراءة صوتية سلسة.',
+        'hero.primary': 'نكتة عشوائية',
+        'hero.secondary': 'ابدأ الاستماع',
+        'about.title': 'حول',
+        'about.text': 'مساحة ودية للضحك السريع والمشاركة بلغات متعددة.',
+        'about.missionTitle': 'مهمتنا',
+        'about.missionText': 'نكات سهلة الاكتشاف وممتعة للاستماع.',
+        'about.creatorTitle': 'المبدع',
+        'about.creatorText': 'انشأه سليم لنشر حس فكاهي ايجابي.',
+        'listen.title': 'استمع واضحك',
+        'listen.subtitle': 'اختر الفئة واستمتع بالصوت.',
+        'controls.category': 'الفئة',
+        'controls.language': 'اللغة',
+        'controls.voiceSpeed': 'سرعة الصوت',
+        'categories.random': 'عشوائي',
+        'categories.school': 'المدرسة',
+        'categories.relationship': 'العلاقات',
+        'categories.dark': 'دعابة داكنة',
+        'categories.roast': 'سخرية',
+        'buttons.previous': 'السابق',
+        'buttons.play': 'تشغيل',
+        'buttons.replay': 'اعادة',
+        'buttons.forward': 'التالي',
+        'buttons.random': 'نكتة عشوائية',
+        'buttons.save': 'حفظ النكتة',
+        'buttons.unsave': 'ازالة',
+        'buttons.showSaved': 'عرض المحفوظ',
+        'buttons.hideSaved': 'اخفاء المحفوظ',
+        'buttons.dark': 'الوضع الداكن',
+        'buttons.light': 'الوضع الفاتح',
+        'buttons.approve': 'موافقة',
+        'buttons.reject': 'رفض',
+        'buttons.record': 'تسجيل صوت',
+        'buttons.stop': 'ايقاف',
+        'buttons.preview': 'معاينة',
+        'buttons.submit': 'ارسال',
+        'reactions.title': 'التقييمات',
+        'reactions.funny': 'مضحك',
+        'reactions.veryFunny': 'مضحك جدا',
+        'reactions.notFunny': 'غير مضحك',
+        'share.title': 'مشاركة',
+        'share.whatsapp': 'واتساب',
+        'share.tiktok': 'تيك توك',
+        'share.instagram': 'انستجرام',
+        'share.copy': 'نسخ الرابط',
+        'community.title': 'ابرز المجتمع',
+        'community.topRated': 'الافضل تقييما',
+        'community.leaderboard': 'لوحة الصدارة',
+        'community.empty': 'لا توجد تفاعلات بعد.',
+        'submit.title': 'ارسل نكتة',
+        'submit.subtitle': 'شارك نكاتك. المعتمدة تظهر في العشوائي.',
+        'submit.jokeLabel': 'نكتتك',
+        'submit.categoryLabel': 'الفئة',
+        'submit.nameLabel': 'الاسم (اختياري)',
+        'submit.namePlaceholder': 'اسمك',
+        'submit.textPlaceholder': 'اكتب نكتة لطيفة (8-240 حرف).',
+        'submit.moderatorTitle': 'وضع المشرف',
+        'submit.pendingEmpty': 'لا توجد طلبات.',
+        'jotd.title': 'نكتة اليوم',
+        'jotd.play': 'تشغيل',
+        'jotd.copy': 'نسخ',
+        'achievements.title': 'الانجازات',
+        'achievements.progress': 'تقدم الاستماع',
+        'achievements.badges': 'الشارات',
+        'achievements.badge1': 'اول استماع',
+        'achievements.badge2': 'خمس ضحكات',
+        'achievements.badge3': 'مستمع منتظم',
+        'achievements.badge4': 'محب النكات',
+        'achievements.badge5': 'محترف الضحك',
+        'achievements.badge6': 'اسطورة الضحك',
+        'achievements.progressText': '{count} استماع · الشارة القادمة: {next}',
+        'achievements.allBadges': '{count} استماع · كل الشارات مفتوحة',
+        'footer.text': 'صنع بحب للضحك اليومي.',
+        'languages.en': 'الانجليزية',
+        'languages.ar': 'العربية',
+        'languages.fr': 'الفرنسية',
+        'languages.es': 'الاسبانية',
+        'languages.ha': 'الهوسا',
+        'languages.pt': 'البرتغالية',
+        'saved.count': '{count} محفوظة',
+        'saved.empty': 'لا توجد نكات محفوظة.',
+        'saved.show': 'عرض',
+        'saved.remove': 'ازالة',
+        'feedback.loading': 'يتم تحميل نكتة...',
+        'feedback.loaded': 'هذه نكتة جديدة.',
+        'feedback.fallback': 'تم تحميل نكتة من القائمة المحلية.',
+        'feedback.repeat': 'تم استخدام كل النكات. هذه نكتة معروفة.',
+        'feedback.languageSet': 'تم تغيير اللغة الى {language}.',
+        'feedback.saved': 'تم حفظ النكتة.',
+        'feedback.unsaved': 'تم ازالة النكتة.',
+        'feedback.alreadySaved': 'النكتة محفوظة بالفعل.',
+        'feedback.notSaved': 'هذه النكتة غير محفوظة.',
+        'feedback.noPrevious': 'لا توجد نكات سابقة.',
+        'feedback.noNext': 'لا توجد نكات جديدة.',
+        'feedback.noJoke': 'حمّل نكتة اولا.',
+        'feedback.copy': 'تم النسخ.',
+        'feedback.shareTip': 'تم النسخ. الصق في {platform}.',
+        'feedback.reactionThanks': 'شكرا للتفاعل!',
+        'feedback.submissionOk': 'تم استلام النكتة. بانتظار المراجعة.',
+        'feedback.submissionCooldown': 'انتظر قليلا قبل ارسال جديد.',
+        'feedback.submissionInvalid': 'اكتب نكتة لطيفة بدون روابط.',
+        'feedback.voiceUnsupported': 'تسجيل الصوت غير مدعوم.',
+        'feedback.voiceTooLarge': 'التسجيل كبير جدا.',
+        'feedback.moderationApproved': 'تمت الموافقة.',
+        'feedback.moderationRejected': 'تم الرفض.',
+        'loadingMessages': [
+          'نبحث عن ضحكة...',
+          'نجهز النهاية...',
+          'نضيف لمسة خفيفة...'
+        ]
+      },
+      ha: {
+        'brand.name': 'Gidan Dariya',
+        'nav.home': 'Gida',
+        'nav.about': 'Bayani',
+        'nav.listen': 'Saurara',
+        'nav.community': 'Al umma',
+        'nav.submit': 'Aika',
+        'nav.achievements': 'Nasarori',
+        'hero.badge': 'Barka',
+        'hero.title': 'Barka da zuwa Gidan Dariya',
+        'hero.subtitle': 'Dariya mai laushi, abubuwan al umma, da karatu da murya.',
+        'hero.primary': 'Barkwanci Bazata',
+        'hero.secondary': 'Fara Saurara',
+        'about.title': 'Bayani',
+        'about.text': 'Wurin sada dariya da barkwanci cikin harsuna da dama.',
+        'about.missionTitle': 'Manufa',
+        'about.missionText': 'Saukin samun barkwanci mai dadi da sauraro.',
+        'about.creatorTitle': 'Mai kirkira',
+        'about.creatorText': 'Salim ya kirkiro don dariya mai kyau.',
+        'listen.title': 'Saurara ka yi dariya',
+        'listen.subtitle': 'Zabi rukuni ka more murya.',
+        'controls.category': 'Rukuni',
+        'controls.language': 'Harshe',
+        'controls.voiceSpeed': 'Gudun murya',
+        'categories.random': 'Bazata',
+        'categories.school': 'Makaranta',
+        'categories.relationship': 'Alaka',
+        'categories.dark': 'Dariya mai duhu',
+        'categories.roast': 'Barkwanci',
+        'buttons.previous': 'Baya',
+        'buttons.play': 'Kunna',
+        'buttons.replay': 'Sake kunnawa',
+        'buttons.forward': 'Gaba',
+        'buttons.random': 'Barkwanci Bazata',
+        'buttons.save': 'Ajiye',
+        'buttons.unsave': 'Cire',
+        'buttons.showSaved': 'Duba ajiyayyu',
+        'buttons.hideSaved': 'Boye ajiyayyu',
+        'buttons.dark': 'Yanayin duhu',
+        'buttons.light': 'Yanayin haske',
+        'buttons.approve': 'Amince',
+        'buttons.reject': 'Kihe',
+        'buttons.record': 'Daukar murya',
+        'buttons.stop': 'Tsaya',
+        'buttons.preview': 'Duba',
+        'buttons.submit': 'Aika',
+        'reactions.title': 'Martani',
+        'reactions.funny': 'Mai dariya',
+        'reactions.veryFunny': 'Dariya sosai',
+        'reactions.notFunny': 'Ba dariya',
+        'share.title': 'Raba',
+        'share.whatsapp': 'WhatsApp',
+        'share.tiktok': 'TikTok',
+        'share.instagram': 'Instagram',
+        'share.copy': 'Kwafi link',
+        'community.title': 'Abubuwan al umma',
+        'community.topRated': 'Mafi so',
+        'community.leaderboard': 'Tebur',
+        'community.empty': 'Babu martani tukuna.',
+        'submit.title': 'Aika barkwanci',
+        'submit.subtitle': 'Raba barkwanci. Wanda aka amince ya shiga bazata.',
+        'submit.jokeLabel': 'Barkwancinka',
+        'submit.categoryLabel': 'Rukuni',
+        'submit.nameLabel': 'Suna (zabi)',
+        'submit.namePlaceholder': 'Sunanka',
+        'submit.textPlaceholder': 'Rubuta barkwanci gajere (8-240).',
+        'submit.moderatorTitle': 'Yanayin mai dubawa',
+        'submit.pendingEmpty': 'Babu aikace-aikace.',
+        'jotd.title': 'Barkwancin yau',
+        'jotd.play': 'Kunna',
+        'jotd.copy': 'Kwafi',
+        'achievements.title': 'Nasarori',
+        'achievements.progress': 'Ci gaban sauraro',
+        'achievements.badges': 'Badges',
+        'achievements.badge1': 'Sauraro na farko',
+        'achievements.badge2': 'Dariya biyar',
+        'achievements.badge3': 'Mai sauraro kullum',
+        'achievements.badge4': 'Masoyin barkwanci',
+        'achievements.badge5': 'Kwararren dariya',
+        'achievements.badge6': 'Tauraron dariya',
+        'achievements.progressText': '{count} sauraro · Badge na gaba: {next}',
+        'achievements.allBadges': '{count} sauraro · An kammala duk badges',
+        'footer.text': 'An kirkira da kauna domin dariya.',
+        'languages.en': 'Ingilishi',
+        'languages.ar': 'Larabci',
+        'languages.fr': 'Faransanci',
+        'languages.es': 'Sifaniyanci',
+        'languages.ha': 'Hausa',
+        'languages.pt': 'Fotigal',
+        'saved.count': '{count} ajiyayyu',
+        'saved.empty': 'Babu ajiyayyun barkwanci.',
+        'saved.show': 'Duba',
+        'saved.remove': 'Cire',
+        'feedback.loading': 'Ana nemo barkwanci...',
+        'feedback.loaded': 'Ga sabuwar barkwanci.',
+        'feedback.fallback': 'An dauko daga jerin cikin gida.',
+        'feedback.repeat': 'Duka sabbi sun kare. Ga na sani.',
+        'feedback.languageSet': 'An saita harshe {language}.',
+        'feedback.saved': 'An ajiye barkwanci.',
+        'feedback.unsaved': 'An cire barkwanci.',
+        'feedback.alreadySaved': 'An riga an ajiye.',
+        'feedback.notSaved': 'Ba a ajiye wannan ba.',
+        'feedback.noPrevious': 'Babu na baya.',
+        'feedback.noNext': 'Babu na gaba.',
+        'feedback.noJoke': 'Da farko ka dauko barkwanci.',
+        'feedback.copy': 'An kwafa.',
+        'feedback.shareTip': 'An kwafa. Ka manna a {platform}.',
+        'feedback.reactionThanks': 'Mun gode da martani.',
+        'feedback.submissionOk': 'An karba. Yana jiran dubawa.',
+        'feedback.submissionCooldown': 'Ka jira kadan kafin aika.',
+        'feedback.submissionInvalid': 'Rubuta barkwanci mai kyau ba tare da link ba.',
+        'feedback.voiceUnsupported': 'Ba a goyon bayan murya.',
+        'feedback.voiceTooLarge': 'Murya ta yi girma.',
+        'feedback.moderationApproved': 'An amince.',
+        'feedback.moderationRejected': 'An ki.',
+        'loadingMessages': [
+          'Ana shirya barkwanci...',
+          'Ana nemo murmushi...',
+          'Ana dora dariya...'
+        ]
+      },
+      pt: {
+        'brand.name': 'Clube de Piadas',
+        'nav.home': 'Inicio',
+        'nav.about': 'Sobre',
+        'nav.listen': 'Ouvir',
+        'nav.community': 'Comunidade',
+        'nav.submit': 'Enviar',
+        'nav.achievements': 'Conquistas',
+        'hero.badge': 'Bem vindo',
+        'hero.title': 'Bem vindo ao Clube de Piadas',
+        'hero.subtitle': 'Risadas calmas, favoritos da comunidade e voz suave.',
+        'hero.primary': 'Piada Aleatoria',
+        'hero.secondary': 'Comecar',
+        'about.title': 'Sobre',
+        'about.text': 'Espaco amigavel para risadas rapidas e humor leve em varios idiomas.',
+        'about.missionTitle': 'Nossa missao',
+        'about.missionText': 'Piadas faceis de encontrar e agradaveis de ouvir.',
+        'about.creatorTitle': 'Criador',
+        'about.creatorText': 'Criado por Salim para humor positivo.',
+        'listen.title': 'Ouvir e rir',
+        'listen.subtitle': 'Escolha a categoria e aproveite a voz.',
+        'controls.category': 'Categoria',
+        'controls.language': 'Idioma',
+        'controls.voiceSpeed': 'Velocidade da voz',
+        'categories.random': 'Aleatorio',
+        'categories.school': 'Escola',
+        'categories.relationship': 'Relacionamento',
+        'categories.dark': 'Humor negro',
+        'categories.roast': 'Zoeira',
+        'buttons.previous': 'Anterior',
+        'buttons.play': 'Tocar',
+        'buttons.replay': 'Repetir',
+        'buttons.forward': 'Proximo',
+        'buttons.random': 'Piada Aleatoria',
+        'buttons.save': 'Salvar',
+        'buttons.unsave': 'Remover',
+        'buttons.showSaved': 'Mostrar salvos',
+        'buttons.hideSaved': 'Ocultar salvos',
+        'buttons.dark': 'Modo escuro',
+        'buttons.light': 'Modo claro',
+        'buttons.approve': 'Aprovar',
+        'buttons.reject': 'Rejeitar',
+        'buttons.record': 'Gravar voz',
+        'buttons.stop': 'Parar',
+        'buttons.preview': 'Previa',
+        'buttons.submit': 'Enviar',
+        'reactions.title': 'Reacoes',
+        'reactions.funny': 'Engracado',
+        'reactions.veryFunny': 'Muito engracado',
+        'reactions.notFunny': 'Nao engracado',
+        'share.title': 'Compartilhar',
+        'share.whatsapp': 'WhatsApp',
+        'share.tiktok': 'TikTok',
+        'share.instagram': 'Instagram',
+        'share.copy': 'Copiar link',
+        'community.title': 'Destaques da comunidade',
+        'community.topRated': 'Melhores piadas',
+        'community.leaderboard': 'Ranking',
+        'community.empty': 'Sem reacoes ainda.',
+        'submit.title': 'Enviar uma piada',
+        'submit.subtitle': 'Compartilhe sua piada. As aprovadas aparecem no aleatorio.',
+        'submit.jokeLabel': 'Sua piada',
+        'submit.categoryLabel': 'Categoria',
+        'submit.nameLabel': 'Nome (opcional)',
+        'submit.namePlaceholder': 'Seu nome',
+        'submit.textPlaceholder': 'Escreva uma piada curta (8-240).',
+        'submit.moderatorTitle': 'Modo moderador',
+        'submit.pendingEmpty': 'Sem envios pendentes.',
+        'jotd.title': 'Piada do dia',
+        'jotd.play': 'Tocar',
+        'jotd.copy': 'Copiar',
+        'achievements.title': 'Conquistas',
+        'achievements.progress': 'Progresso',
+        'achievements.badges': 'Emblemas',
+        'achievements.badge1': 'Primeira escuta',
+        'achievements.badge2': 'Cinco risadas',
+        'achievements.badge3': 'Ouvinte regular',
+        'achievements.badge4': 'Fa de piadas',
+        'achievements.badge5': 'Pro da risada',
+        'achievements.badge6': 'Lenda da risada',
+        'achievements.progressText': '{count} escutas · Proximo emblema: {next}',
+        'achievements.allBadges': '{count} escutas · Todos os emblemas',
+        'footer.text': 'Criado com carinho para risos diarios.',
+        'languages.en': 'Ingles',
+        'languages.ar': 'Arabe',
+        'languages.fr': 'Frances',
+        'languages.es': 'Espanhol',
+        'languages.ha': 'Hausa',
+        'languages.pt': 'Portugues',
+        'saved.count': '{count} salvos',
+        'saved.empty': 'Sem piadas salvas.',
+        'saved.show': 'Mostrar',
+        'saved.remove': 'Remover',
+        'feedback.loading': 'Carregando piada...',
+        'feedback.loaded': 'Aqui vai uma nova piada.',
+        'feedback.fallback': 'Piada da lista local.',
+        'feedback.repeat': 'Todas as novas usadas. Aqui uma conhecida.',
+        'feedback.languageSet': 'Idioma: {language}.',
+        'feedback.saved': 'Piada salva.',
+        'feedback.unsaved': 'Piada removida.',
+        'feedback.alreadySaved': 'Piada ja salva.',
+        'feedback.notSaved': 'Piada nao salva.',
+        'feedback.noPrevious': 'Sem piada anterior.',
+        'feedback.noNext': 'Sem piada seguinte.',
+        'feedback.noJoke': 'Carregue uma piada primeiro.',
+        'feedback.copy': 'Copiado.',
+        'feedback.shareTip': 'Copiado. Cole em {platform}.',
+        'feedback.reactionThanks': 'Obrigado pela reacao.',
+        'feedback.submissionOk': 'Envio recebido. Em revisao.',
+        'feedback.submissionCooldown': 'Espere um pouco antes de enviar.',
+        'feedback.submissionInvalid': 'Escreva uma piada gentil sem links.',
+        'feedback.voiceUnsupported': 'Gravacao de voz nao suportada.',
+        'feedback.voiceTooLarge': 'Audio muito grande.',
+        'feedback.moderationApproved': 'Envio aprovado.',
+        'feedback.moderationRejected': 'Envio rejeitado.',
+        'loadingMessages': [
+          'Preparando a piada...',
+          'Buscando um sorriso...',
+          'Ajustando o final...'
+        ]
+      }
+    };
+
+    const localJokes = {
+      en: {
+        random: [
+          'I told my coffee to stay calm. It nodded quietly.',
+          'Small jokes make big smiles.',
+          'The cloud stayed home because it felt a little foggy.',
+          'My book whispered, "One page at a time."',
+          'The calendar is on a diet. It has fewer dates.',
+          'The clock said, "No rush."',
+          'A gentle laugh is a tiny sunshine.'
+        ],
+        school: [
+          'The pencil brought a note to class. It said, "Just in case."',
+          'The homework asked for a nap before solving.',
+          'The backpack said, "I carry good vibes."',
+          'The chalkboard wrote, "Be kind to your brain."'
+        ],
+        relationship: [
+          'We argued about tea. We agreed to steep it gently.',
+          'Our love story is like a playlist. Always on shuffle.',
+          'We share the last cookie. That is true harmony.'
+        ],
+        dark: [
+          'The moon told the night, "Stay light."',
+          'The shadow said, "I am just a quiet friend."',
+          'Even the dark jokes bring soft smiles.'
+        ],
+        roast: [
+          'Your WiFi is so slow, even snails are buffering.',
+          'You are the human version of a loading screen.',
+          'Your jokes are like decaf. Still enjoyable.'
+        ]
+      },
+      fr: {
+        random: [
+          'Petit rire, grand calme.',
+          'Le vent souffle doucement. Tout va bien.',
+          'Le livre dit: "Une page a la fois."',
+          'Le matin sourit doucement.'
+        ],
+        school: [
+          'Le stylo a dit: "Je suis pret pour le test."',
+          'Le sac a dos aime les bonnes notes.',
+          'Le tableau ecrit: "Respire et avance."'
+        ],
+        relationship: [
+          'On partage le dernier biscuit. Harmonie.',
+          'Notre amour est une playlist douce.',
+          'Un sourire suffit.'
+        ],
+        dark: [
+          'La nuit dit: "Je reste douce."',
+          'L ombre reste un ami calme.',
+          'Même l humour noir peut etre tendre.'
+        ],
+        roast: [
+          'Ton WiFi est si lent qu il fait la sieste.',
+          'Tu es un ecran de chargement humain.',
+          'Tes blagues sont decaf, mais agreables.'
+        ]
+      },
+      es: {
+        random: [
+          'Risa pequena, calma grande.',
+          'El viento sopla suave. Todo esta bien.',
+          'El libro dice: "Pagina por pagina."',
+          'La manana sonrie despacio.'
+        ],
+        school: [
+          'El lapiz dijo: "Listo para el examen."',
+          'La mochila trae buenas vibras.',
+          'El pizarron dice: "Respira y sigue."'
+        ],
+        relationship: [
+          'Compartimos la ultima galleta. Paz.',
+          'Nuestro amor es una playlist suave.',
+          'Un pequeno abrazo lo arregla.'
+        ],
+        dark: [
+          'La noche susurra: "Todo tranquilo."',
+          'La sombra es un amigo silencioso.',
+          'El humor oscuro tambien puede ser suave.'
+        ],
+        roast: [
+          'Tu WiFi es tan lento que se duerme.',
+          'Eres una pantalla de carga humana.',
+          'Tus chistes son decaf, pero sirven.'
+        ]
+      },
+      ar: {
+        random: [
+          'ابتسامة صغيرة تصنع يوما لطيفا.',
+          'القهوة قالت: خذ وقتك.',
+          'النسيم قال: كله تمام.'
+        ],
+        school: [
+          'القلم قال: انا جاهز للاختبار.',
+          'الحقيبة تحب الدرجات الجيدة.',
+          'السبورة كتبت: تنفس وواصل.'
+        ],
+        relationship: [
+          'نشارك اخر قطعة حلوى بسلام.',
+          'قصتنا مثل اغنية هادئة.',
+          'ابتسامة صغيرة تكفي.'
+        ],
+        dark: [
+          'الليل قال: سأبقى لطيفا.',
+          'الظل صديق هادئ.',
+          'حتى الدعابة الداكنة يمكن ان تكون لطيفة.'
+        ],
+        roast: [
+          'الواي فاي لديك بطيء لدرجة انه ينام.',
+          'انت شاشة تحميل بشرية.',
+          'نكاتك خفيفة لكنها مقبولة.'
+        ]
+      },
+      ha: {
+        random: [
+          'Karamin dariya na kawo babbar nishadi.',
+          'Iska mai laushi ta ce komai lafiya.',
+          'Littafi ya ce: shafi daya a lokaci.'
+        ],
+        school: [
+          'Alkalam ya ce: na shirya jarrabawa.',
+          'Jaka ta ce: na dauko kwarin gwiwa.',
+          'Allo ta rubuta: numfashi ka ci gaba.'
+        ],
+        relationship: [
+          'Mun raba biskit na karshe da salama.',
+          'Soyayyar mu kamar waqa ce mai laushi.',
+          'Karamin murmushi ya isa.'
+        ],
+        dark: [
+          'Dare ya ce: zan kasance mai laushi.',
+          'Inuwa aboki ne mai shiru.',
+          'Barkwanci mai duhu na iya zama laushi.'
+        ],
+        roast: [
+          'WiFi dinka yana bacci da jinkiri.',
+          'Kana kama da allo na loading.',
+          'Barkwancin ka decaf ne amma yayi.'
+        ]
+      },
+      pt: {
+        random: [
+          'Risada pequena, calma grande.',
+          'O vento sopra suave. Tudo bem.',
+          'O livro diz: uma pagina de cada vez.'
+        ],
+        school: [
+          'O lapis disse: pronto para o teste.',
+          'A mochila trouxe boas energias.',
+          'O quadro diz: respire e siga.'
+        ],
+        relationship: [
+          'Dividimos o ultimo biscoito em paz.',
+          'Nosso amor e uma playlist suave.',
+          'Um sorriso pequeno resolve.'
+        ],
+        dark: [
+          'A noite disse: vou ficar leve.',
+          'A sombra e uma amiga calma.',
+          'Humor escuro tambem pode ser suave.'
+        ],
+        roast: [
+          'Seu WiFi e tao lento que cochila.',
+          'Voce e uma tela de carregamento humana.',
+          'Suas piadas sao decaf, mas servem.'
+        ]
+      }
+    };
+
+    const achievements = [
+      { id: 'starter', threshold: 1, labelKey: 'achievements.badge1' },
+      { id: 'warmup', threshold: 5, labelKey: 'achievements.badge2' },
+      { id: 'regular', threshold: 15, labelKey: 'achievements.badge3' },
+      { id: 'fan', threshold: 30, labelKey: 'achievements.badge4' },
+      { id: 'pro', threshold: 60, labelKey: 'achievements.badge5' },
+      { id: 'legend', threshold: 100, labelKey: 'achievements.badge6' }
+    ];
+
+    const state = {
+      currentJoke: '',
+      currentCategory: 'random',
+      currentLang: 'en',
+      history: [],
+      historyIndex: -1,
+      voices: [],
+      recorder: null,
+      voiceChunks: [],
+      voiceDataUrl: null
+    };
+
+    const settings = loadSettings();
+    const stats = loadStats();
+    const savedJokes = loadSavedJokes();
     const seenStore = loadSeenStore();
-    const seenSets = {
-      en: new Set(seenStore.en),
-      fr: new Set(seenStore.fr),
-      es: new Set(seenStore.es)
-    };
-    let savedJokes = loadSavedJokes();
-    const fallbackJokes = {
-      en: [
-        'I told my coffee to be calm. It nodded quietly.',
-        'Small steps make big smiles.',
-        'Why did the cloud stay home? It felt a little foggy.',
-        'I asked the plant for advice. It said, "Keep it simple."',
-        'The calendar is on a diet. It has fewer dates.',
-        'The pencil felt relaxed. It was drawn to peace.',
-        'A quiet joke is still a good joke.',
-        'The moon whispered, "Take it slow."',
-        'I gave my day a hug. It softened.',
-        'A soft breeze told a gentle story.',
-        'The teacup said, "Sip and smile."',
-        'A small joke is a calm hug.',
-        'My pillow said, "Rest easy."',
-        'The light bulb had a bright idea: relax.',
-        'The book sighed, "One page at a time."',
-        'A gentle laugh is a tiny sunshine.',
-        'The clock said, "No rush."',
-        'The tree waved and kept quiet.',
-        'A calm joke lands softly.'
-      ],
-      fr: [
-        'Petit rire, grand calme.',
-        'Le vent souffle doucement. Tout va bien.',
-        'Je fais une pause cafe. Le cafe dit merci.',
-        'Pourquoi le chat sourit? Il a trouve un rayon de soleil.',
-        'Un petit sourire change la journee.',
-        'Le ciel est calme, comme une pensee douce.',
-        'Un rire doux fait du bien.',
-        'La tasse de the dit: "Tout doucement."',
-        'Un nuage passe et dit bonjour.',
-        'La lampe murmure: "Reste zen."',
-        'Le livre dit: "Une page a la fois."',
-        'Le matin sourit doucement.'
-      ],
-      es: [
-        'Risa pequena, calma grande.',
-        'El viento sopla suave. Todo esta bien.',
-        'Tomo un cafe tranquilo. El cafe dice gracias.',
-        'Por que el gato sonrie? Encontro un rayo de sol.',
-        'Un pequeno sorriso cambia el dia.',
-        'El cielo esta en calma, como un pensamiento suave.',
-        'Un chiste suave abraza el dia.',
-        'La taza de te dice: "Despacio."',
-        'Una nube pasa y saluda.',
-        'La lampara dice: "Todo tranquilo."',
-        'El libro dice: "Pagina por pagina."',
-        'La manana sonrie despacio.'
-      ]
-    };
+    const reactionStore = loadReactions();
+    const userReactions = loadUserReactions();
+    const submissions = loadSubmissions();
+    const approvedJokes = loadApprovedJokes();
 
-    function setFeedback(message) {
-      feedback.textContent = message;
+    function t(key, params = {}) {
+      const dict = translations[state.currentLang] || translations.en;
+      const value = dict[key] || translations.en[key] || key;
+      if (Array.isArray(value)) {
+        return value;
+      }
+      return Object.keys(params).reduce(
+        (result, token) => result.replace(`{${token}}`, params[token]),
+        value
+      );
     }
 
-    function getSelectedLanguage() {
-      return languageSelect.value;
+    function applyTranslations() {
+      document.querySelectorAll('[data-i18n]').forEach((el) => {
+        el.textContent = t(el.dataset.i18n);
+      });
+      document.querySelectorAll('[data-i18n-placeholder]').forEach((el) => {
+        el.placeholder = t(el.dataset.i18nPlaceholder);
+      });
+      updateSavedControls();
+      updateSavedToggleLabel();
+      renderSavedList();
+      renderTopRated();
+      renderLeaderboard();
+      renderAchievements();
+      renderModeration();
+      applyTheme(settings.theme);
     }
 
-    function getSelectedLanguageLabel() {
-      return languageSelect.options[languageSelect.selectedIndex].text;
-    }
-
-    function getApiLanguage() {
-      return languageMap[getSelectedLanguage()] || 'en';
-    }
-
-    function setLanguageByApiLang(apiLang) {
-      const map = { en: 'en-US', fr: 'fr-FR', es: 'es-ES' };
-      const value = map[apiLang];
-      if (value && languageSelect.value !== value) {
-        languageSelect.value = value;
+    function applyLanguage(lang, options = {}) {
+      state.currentLang = lang;
+      dom.language.value = lang;
+      const meta = languageMeta[lang] || languageMeta.en;
+      document.documentElement.lang = lang;
+      document.documentElement.dir = meta.dir;
+      document.documentElement.classList.toggle('rtl', meta.dir === 'rtl');
+      settings.language = lang;
+      saveSettings();
+      applyTranslations();
+      resetHistory();
+      renderJokeOfDay();
+      if (!options.skipFetch) {
+        fetchJoke({ withSound: false });
       }
     }
 
-    function loadSeenStore() {
-      const empty = { en: [], fr: [], es: [] };
-      try {
-        const stored = JSON.parse(localStorage.getItem(STORAGE_KEYS.seen));
-        if (!stored || typeof stored !== 'object') {
-          return empty;
-        }
-        return {
-          en: Array.isArray(stored.en) ? stored.en : [],
-          fr: Array.isArray(stored.fr) ? stored.fr : [],
-          es: Array.isArray(stored.es) ? stored.es : []
-        };
-      } catch (e) {
-        return empty;
-      }
+    function applyTheme(theme) {
+      document.documentElement.setAttribute('data-theme', theme);
+      settings.theme = theme;
+      saveSettings();
+      dom.darkToggle.textContent = theme === 'dark' ? t('buttons.light') : t('buttons.dark');
+      dom.darkToggle.setAttribute('aria-pressed', theme === 'dark');
     }
 
-    function saveSeenStore() {
-      try {
-        localStorage.setItem(STORAGE_KEYS.seen, JSON.stringify(seenStore));
-      } catch (e) {
-        // Ignore storage errors (private mode, quota, etc).
-      }
+    function toggleTheme() {
+      const current = document.documentElement.getAttribute('data-theme') || 'light';
+      const next = current === 'dark' ? 'light' : 'dark';
+      applyTheme(next);
     }
 
-    function loadSavedJokes() {
-      try {
-        const stored = JSON.parse(localStorage.getItem(STORAGE_KEYS.saved));
-        if (!Array.isArray(stored)) {
-          return [];
-        }
-        return stored.filter(
-          (entry) => entry && typeof entry.joke === 'string' && typeof entry.lang === 'string'
-        );
-      } catch (e) {
-        return [];
-      }
+    function setFeedback(key, params = {}) {
+      dom.feedback.textContent = t(key, params);
     }
 
-    function saveSavedJokes() {
-      try {
-        localStorage.setItem(STORAGE_KEYS.saved, JSON.stringify(savedJokes));
-      } catch (e) {
-        // Ignore storage errors (private mode, quota, etc).
-      }
+    function setSubmissionFeedback(key, params = {}) {
+      dom.submissionFeedback.textContent = t(key, params);
     }
 
-    function isJokeSaved(joke, apiLang) {
-      if (!joke) {
-        return false;
+    function getLoadingMessage() {
+      const messages = t('loadingMessages');
+      if (Array.isArray(messages) && messages.length) {
+        return messages[Math.floor(Math.random() * messages.length)];
       }
-      return savedJokes.some((entry) => entry.joke === joke && entry.lang === apiLang);
+      return t('feedback.loading');
+    }
+
+    function setLoading(isLoading) {
+      dom.jokeCard.classList.toggle('is-loading', isLoading);
     }
 
     function updateSavedControls() {
-      savedCount.textContent = `${savedJokes.length} saved`;
-      const apiLang = getApiLanguage();
-      const hasJoke = Boolean(currentJoke);
-      saveButton.disabled = !hasJoke || isJokeSaved(currentJoke, apiLang);
-      unsaveButton.disabled = !hasJoke || !isJokeSaved(currentJoke, apiLang);
+      dom.savedCount.textContent = t('saved.count', { count: savedJokes.length });
+      const hasJoke = Boolean(state.currentJoke);
+      dom.save.disabled = !hasJoke || isJokeSaved(state.currentJoke, state.currentLang, state.currentCategory);
+      dom.unsave.disabled = !hasJoke || !isJokeSaved(state.currentJoke, state.currentLang, state.currentCategory);
+    }
+
+    function updateSavedToggleLabel() {
+      const isHidden = dom.savedList.hasAttribute('hidden');
+      dom.toggleSaved.textContent = isHidden ? t('buttons.showSaved') : t('buttons.hideSaved');
+    }
+
+    function isJokeSaved(joke, lang, category) {
+      return savedJokes.some((entry) => entry.joke === joke && entry.lang === lang && entry.category === category);
     }
 
     function saveCurrentJoke() {
-      if (!currentJoke) {
-        setFeedback('Load a joke first.');
+      if (!state.currentJoke) {
+        setFeedback('feedback.noJoke');
         return;
       }
-      const apiLang = getApiLanguage();
-      if (isJokeSaved(currentJoke, apiLang)) {
-        setFeedback('This joke is already saved.');
+      if (isJokeSaved(state.currentJoke, state.currentLang, state.currentCategory)) {
+        setFeedback('feedback.alreadySaved');
         return;
       }
       savedJokes.push({
-        joke: currentJoke,
-        lang: apiLang,
-        label: getSelectedLanguageLabel()
+        joke: state.currentJoke,
+        lang: state.currentLang,
+        category: state.currentCategory
       });
       saveSavedJokes();
       updateSavedControls();
       renderSavedList();
-      setFeedback('Saved this joke.');
+      setFeedback('feedback.saved');
     }
 
     function removeSavedJokeByIndex(index) {
@@ -421,116 +1864,31 @@
     }
 
     function removeCurrentSavedJoke() {
-      if (!currentJoke) {
-        setFeedback('Load a joke first.');
+      if (!state.currentJoke) {
+        setFeedback('feedback.noJoke');
         return;
       }
-      const apiLang = getApiLanguage();
       const index = savedJokes.findIndex(
-        (entry) => entry.joke === currentJoke && entry.lang === apiLang
+        (entry) =>
+          entry.joke === state.currentJoke &&
+          entry.lang === state.currentLang &&
+          entry.category === state.currentCategory
       );
       if (index === -1) {
-        setFeedback('This joke is not saved yet.');
+        setFeedback('feedback.notSaved');
         return;
       }
       removeSavedJokeByIndex(index);
-      setFeedback('Removed saved joke.');
-    }
-
-    function updateHistoryButtons() {
-      previousButton.disabled = historyIndex <= 0;
-      forwardButton.disabled = historyIndex === -1 || historyIndex >= jokeHistory.length - 1;
-    }
-
-    function displayJoke(joke) {
-      document.getElementById('joke').textContent = joke;
-    }
-
-    function showJoke(joke) {
-      currentJoke = joke;
-      displayJoke(joke);
-      updateSavedControls();
-    }
-
-    function recordJoke(joke) {
-      if (!joke) {
-        return;
-      }
-      if (historyIndex < jokeHistory.length - 1) {
-        jokeHistory.splice(historyIndex + 1);
-      }
-      jokeHistory.push(joke);
-      historyIndex = jokeHistory.length - 1;
-      updateHistoryButtons();
-    }
-
-    function applyNewJoke(joke, apiLangOverride) {
-      showJoke(joke);
-      recordJoke(joke);
-      rememberSeenJoke(joke, apiLangOverride || getApiLanguage());
-    }
-
-    function showHistoryJoke() {
-      const joke = jokeHistory[historyIndex];
-      showJoke(joke);
-      updateHistoryButtons();
-      setFeedback(`Showing joke ${historyIndex + 1} of ${jokeHistory.length}.`);
-    }
-
-    function resetHistory() {
-      jokeHistory.length = 0;
-      historyIndex = -1;
-      updateHistoryButtons();
-    }
-
-    function hasSeenJoke(joke, apiLang) {
-      const seenSet = seenSets[apiLang];
-      return Boolean(joke && seenSet && seenSet.has(joke));
-    }
-
-    function rememberSeenJoke(joke, apiLang) {
-      if (!joke) {
-        return;
-      }
-      if (!seenStore[apiLang]) {
-        seenStore[apiLang] = [];
-        seenSets[apiLang] = new Set();
-      }
-      const list = seenStore[apiLang];
-      const seenSet = seenSets[apiLang];
-      if (seenSet.has(joke)) {
-        return;
-      }
-      list.push(joke);
-      seenSet.add(joke);
-      if (list.length > MAX_SEEN_PER_LANG) {
-        const removed = list.shift();
-        seenSet.delete(removed);
-      }
-      saveSeenStore();
-    }
-
-    function isCalmJoke(joke) {
-      return Boolean(joke) && joke.length <= MAX_JOKE_LENGTH;
-    }
-
-    function pickFallbackJoke(apiLang) {
-      const list = fallbackJokes[apiLang] || fallbackJokes.en;
-      const unseen = list.filter((joke) => !hasSeenJoke(joke, apiLang));
-      const pool = unseen.length > 0 ? unseen : list;
-      return {
-        joke: pool[Math.floor(Math.random() * pool.length)],
-        wasRepeat: unseen.length === 0
-      };
+      setFeedback('feedback.unsaved');
     }
 
     function renderSavedList() {
-      savedList.innerHTML = '';
+      dom.savedList.innerHTML = '';
       if (savedJokes.length === 0) {
         const empty = document.createElement('div');
         empty.className = 'saved-empty';
-        empty.textContent = 'No saved jokes yet.';
-        savedList.appendChild(empty);
+        empty.textContent = t('saved.empty');
+        dom.savedList.appendChild(empty);
         return;
       }
       savedJokes.forEach((entry, index) => {
@@ -543,7 +1901,7 @@
 
         const tag = document.createElement('span');
         tag.className = 'saved-tag';
-        tag.textContent = entry.label || entry.lang;
+        tag.textContent = `${t(`categories.${entry.category}`)} · ${t(`languages.${entry.lang}`)}`;
 
         const actions = document.createElement('div');
         actions.className = 'saved-actions';
@@ -552,79 +1910,134 @@
         showButton.type = 'button';
         showButton.dataset.action = 'show';
         showButton.dataset.index = String(index);
-        showButton.textContent = 'Show';
+        showButton.textContent = t('saved.show');
 
         const removeButton = document.createElement('button');
         removeButton.type = 'button';
         removeButton.dataset.action = 'remove';
         removeButton.dataset.index = String(index);
-        removeButton.textContent = 'Remove';
+        removeButton.textContent = t('saved.remove');
 
         actions.appendChild(showButton);
         actions.appendChild(removeButton);
         item.appendChild(text);
         item.appendChild(tag);
         item.appendChild(actions);
-        savedList.appendChild(item);
+        dom.savedList.appendChild(item);
       });
     }
 
-    function speakJoke(joke) {
+    function updateHistoryButtons() {
+      dom.previous.disabled = state.historyIndex <= 0;
+      dom.forward.disabled = state.historyIndex === -1 || state.historyIndex >= state.history.length - 1;
+    }
+
+    function resetHistory() {
+      state.history = [];
+      state.historyIndex = -1;
+      updateHistoryButtons();
+    }
+
+    function showJoke(joke) {
+      state.currentJoke = joke;
+      dom.jokeText.textContent = joke;
+      dom.jokeCategory.textContent = t(`categories.${state.currentCategory}`);
+      dom.jokeLanguage.textContent = t(`languages.${state.currentLang}`);
+      updateSavedControls();
+      updateReactionUI();
+    }
+
+    function recordHistory(joke) {
       if (!joke) {
-        setFeedback('Load a joke first.');
         return;
       }
-      if (!window.speechSynthesis) {
-        setFeedback('Speech synthesis is not supported in this browser.');
+      if (state.historyIndex < state.history.length - 1) {
+        state.history.splice(state.historyIndex + 1);
+      }
+      state.history.push(joke);
+      state.historyIndex = state.history.length - 1;
+      updateHistoryButtons();
+    }
+
+    function applyNewJoke(joke) {
+      showJoke(joke);
+      recordHistory(joke);
+      rememberSeenJoke(joke, state.currentLang, state.currentCategory);
+    }
+
+    function showHistoryJoke(index) {
+      const joke = state.history[index];
+      if (!joke) {
         return;
       }
-      window.speechSynthesis.cancel();
-      const utter = new window.SpeechSynthesisUtterance(joke);
-      const selectedLang = getSelectedLanguage();
-      const voices = window.speechSynthesis.getVoices();
-      const exactVoice = voices.find((voice) => voice.lang === selectedLang);
-      const fallbackVoice = voices.find((voice) =>
-        voice.lang.startsWith(selectedLang.split('-')[0])
-      );
-      if (exactVoice || fallbackVoice) {
-        utter.voice = exactVoice || fallbackVoice;
+      state.historyIndex = index;
+      showJoke(joke);
+      updateHistoryButtons();
+    }
+
+    function getSeenKey(lang, category) {
+      return `${lang}:${category}`;
+    }
+
+    function hasSeenJoke(joke, lang, category) {
+      const key = getSeenKey(lang, category);
+      const seenSet = seenStore[key] || new Set();
+      return seenSet.has(joke);
+    }
+
+    function rememberSeenJoke(joke, lang, category) {
+      if (!joke) {
+        return;
       }
-      utter.rate = 1.05;
-      utter.pitch = 1.1;
-      utter.lang = selectedLang;
-      utter.onstart = () => {
-        setFeedback(`Speaking in ${getSelectedLanguageLabel()}...`);
-      };
-      utter.onend = () => {
-        setFeedback('Done speaking.');
-      };
-      utter.onerror = () => {
-        setFeedback('Could not play the voice. Please try again.');
-      };
-      window.speechSynthesis.speak(utter);
-    }
-
-    function buildJoke(data) {
-      if (data.type === 'single') {
-        return data.joke;
+      const key = getSeenKey(lang, category);
+      if (!seenStore[key]) {
+        seenStore[key] = new Set();
       }
-      if (data.type === 'twopart') {
-        return `${data.setup}\n${data.delivery}`;
+      if (seenStore[key].has(joke)) {
+        return;
       }
-      return "Oops! Couldn't find a joke.";
+      seenStore[key].add(joke);
+      saveSeenStore();
     }
 
-    function buildApiUrl(apiLang) {
-      const categories = apiLang === 'en' ? 'Misc,Pun' : 'Any';
-      return `https://v2.jokeapi.dev/joke/${categories}?type=single&safe-mode&blacklistFlags=nsfw,religious,political,racist,sexist,explicit&lang=${apiLang}`;
+    function getLocalJokes(lang, category) {
+      const base = localJokes[lang] || localJokes.en;
+      const list = base[category] || base.random || [];
+      const community = approvedJokes.filter(
+        (item) => item.lang === lang && (item.category === category || category === 'random')
+      ).map((item) => item.joke);
+      if (category === 'random') {
+        const all = categories.flatMap((cat) => base[cat] || []);
+        const combined = [...all, ...community];
+        return combined.length ? combined : localJokes.en.random;
+      }
+      const combined = [...list, ...community];
+      return combined.length ? combined : (base.random || localJokes.en.random);
     }
 
-    function isLanguageMatch(data, apiLang) {
-      return !data.lang || data.lang === apiLang;
+    function pickUnseenJoke(list, lang, category, avoidJoke = null) {
+      const unseen = list.filter((joke) => !hasSeenJoke(joke, lang, category));
+      let pool = unseen.length ? unseen : list;
+      if (avoidJoke && pool.length > 1) {
+        pool = pool.filter((joke) => joke !== avoidJoke);
+      }
+      const index = Math.floor(Math.random() * pool.length);
+      return {
+        joke: pool[index] || '',
+        wasRepeat: unseen.length === 0
+      };
     }
 
-    async function fetchJokeFromApi(apiLang) {
-      const url = buildApiUrl(apiLang);
+    function buildApiUrl(apiLang, category) {
+      let apiCategory = 'Misc,Pun';
+      if (category === 'dark') {
+        apiCategory = 'Dark';
+      }
+      return `https://v2.jokeapi.dev/joke/${apiCategory}?type=single&safe-mode&blacklistFlags=nsfw,religious,political,racist,sexist,explicit&lang=${apiLang}`;
+    }
+
+    async function fetchJokeFromApi(apiLang, category) {
+      const url = buildApiUrl(apiLang, category);
       const resp = await fetch(url);
       if (!resp.ok) {
         throw new Error('Joke request failed');
@@ -636,128 +2049,651 @@
       return data;
     }
 
-    async function fetchCalmJoke(apiLang) {
-      const maxAttempts = 5;
-      for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
-        let data;
-        try {
-          data = await fetchJokeFromApi(apiLang);
-        } catch (error) {
-          continue;
-        }
-        if (!data) {
-          continue;
-        }
-        if (!isLanguageMatch(data, apiLang)) {
-          continue;
-        }
-        const joke = buildJoke(data);
-        if (isCalmJoke(joke) && !hasSeenJoke(joke, apiLang)) {
-          return { joke, usedFallback: false };
-        }
+    function buildJoke(data) {
+      if (data.type === 'single') {
+        return data.joke;
       }
-      const fallback = pickFallbackJoke(apiLang);
-      return { joke: fallback.joke, usedFallback: true, wasRepeat: fallback.wasRepeat };
+      return '';
     }
 
-    async function fetchJoke() {
-      const languageLabel = getSelectedLanguageLabel();
-      displayJoke('Loading joke...');
-      setFeedback(`Loading a short, calm joke in ${languageLabel}...`);
-      const apiLang = getApiLanguage();
-      try {
-        const result = await fetchCalmJoke(apiLang);
-        applyNewJoke(result.joke, apiLang);
-        if (result.usedFallback) {
-          setFeedback(
-            result.wasRepeat
-              ? 'All short calm jokes were used. Showing a familiar one.'
-              : 'Loaded a short calm joke (local list).'
-          );
+    async function getJokeFromSources(lang, category) {
+      const meta = languageMeta[lang] || languageMeta.en;
+      if (meta.api && (category === 'random' || category === 'dark')) {
+        for (let attempt = 0; attempt < 3; attempt += 1) {
+          try {
+            const data = await fetchJokeFromApi(meta.api, category);
+            const joke = buildJoke(data);
+            if (joke && joke.length <= MAX_JOKE_LENGTH && !hasSeenJoke(joke, lang, category)) {
+              return { joke, source: 'api', wasRepeat: false };
+            }
+          } catch (error) {
+            // Fall back to local list.
+          }
+        }
+      }
+      const localList = getLocalJokes(lang, category);
+      const localPick = pickUnseenJoke(localList, lang, category, state.currentJoke);
+      return { joke: localPick.joke, source: 'local', wasRepeat: localPick.wasRepeat };
+    }
+
+    async function fetchJoke({ withSound = true } = {}) {
+      setLoading(true);
+      dom.jokeText.textContent = getLoadingMessage();
+      if (withSound) {
+        playSound('loading');
+      }
+      const result = await getJokeFromSources(state.currentLang, state.currentCategory);
+      if (result.joke) {
+        applyNewJoke(result.joke);
+        if (result.source === 'api') {
+          setFeedback('feedback.loaded');
+        } else if (result.wasRepeat) {
+          setFeedback('feedback.repeat');
         } else {
-          setFeedback(`Loaded a short calm joke in ${languageLabel}.`);
+          setFeedback('feedback.fallback');
         }
-      } catch (e) {
-        const fallback = pickFallbackJoke(apiLang);
-        applyNewJoke(fallback.joke, apiLang);
-        setFeedback(
-          fallback.wasRepeat
-            ? 'All short calm jokes were used. Showing a familiar one.'
-            : 'Loaded a short calm joke from the local list.'
-        );
+      } else {
+        setFeedback('feedback.fallback');
       }
+      setLoading(false);
     }
 
-    document.getElementById('play').onclick = () => speakJoke(currentJoke);
-    document.getElementById('replay').onclick = () => speakJoke(currentJoke);
-    saveButton.onclick = () => saveCurrentJoke();
-    unsaveButton.onclick = () => removeCurrentSavedJoke();
-    toggleSavedButton.onclick = () => {
-      const isHidden = savedList.hasAttribute('hidden');
-      if (isHidden) {
-        savedList.removeAttribute('hidden');
-        toggleSavedButton.textContent = 'Hide Saved';
-        renderSavedList();
+    function renderJokeOfDay() {
+      const today = new Date();
+      const dateKey = today.toISOString().slice(0, 10);
+      dom.jotdDate.textContent = dateKey;
+      const jotdKey = `jotd-${state.currentLang}-${dateKey}`;
+      let jotd = localStorage.getItem(jotdKey);
+      if (!jotd) {
+        const list = getLocalJokes(state.currentLang, 'random').filter(
+          (joke) => joke.length <= MAX_JOKE_LENGTH
+        );
+        jotd = list[Math.floor(Math.random() * list.length)] || '';
+        localStorage.setItem(jotdKey, jotd);
+      }
+      dom.jotdText.textContent = jotd || t('feedback.fallback');
+    }
+
+    function copyToClipboard(text) {
+      if (!text) {
+        return;
+      }
+      navigator.clipboard.writeText(text).then(() => {
+        setFeedback('feedback.copy');
+      });
+    }
+
+    function shareJoke(type) {
+      if (!state.currentJoke) {
+        setFeedback('feedback.noJoke');
+        return;
+      }
+      const url = window.location.href.split('#')[0];
+      const text = `${state.currentJoke} - ${t('brand.name')}`;
+      if (type === 'whatsapp') {
+        window.open(`https://wa.me/?text=${encodeURIComponent(`${text} ${url}`)}`, '_blank');
+        return;
+      }
+      if (type === 'copy') {
+        copyToClipboard(`${text} ${url}`);
+        return;
+      }
+      const platform = type === 'tiktok' ? 'TikTok' : 'Instagram';
+      copyToClipboard(text);
+      setFeedback('feedback.shareTip', { platform });
+      window.open(type === 'tiktok' ? 'https://www.tiktok.com/upload' : 'https://www.instagram.com/', '_blank');
+    }
+
+    function playSound(kind) {
+      if (!window.AudioContext) {
+        return;
+      }
+      const ctx = new AudioContext();
+      const oscillator = ctx.createOscillator();
+      const gain = ctx.createGain();
+      oscillator.type = 'sine';
+      oscillator.frequency.value = kind === 'loading' ? 520 : 640;
+      gain.gain.value = 0.05;
+      oscillator.connect(gain);
+      gain.connect(ctx.destination);
+      oscillator.start();
+      setTimeout(() => {
+        oscillator.stop();
+        ctx.close();
+      }, kind === 'loading' ? 120 : 180);
+    }
+
+    function warmUpVoices() {
+      if (!window.speechSynthesis) {
+        return;
+      }
+      state.voices = window.speechSynthesis.getVoices();
+    }
+
+    function getVoiceForLang(lang) {
+      const meta = languageMeta[lang] || languageMeta.en;
+      const voices = state.voices.length ? state.voices : window.speechSynthesis.getVoices();
+      const exact = voices.find((voice) => voice.lang === meta.voice);
+      const fallback = voices.find((voice) => voice.lang.startsWith(meta.voice.split('-')[0]));
+      return exact || fallback || null;
+    }
+
+    function speakJoke(joke) {
+      if (!joke) {
+        setFeedback('feedback.noJoke');
+        return;
+      }
+      if (!window.speechSynthesis) {
+        setFeedback('feedback.voiceUnsupported');
+        return;
+      }
+      window.speechSynthesis.cancel();
+      const utter = new window.SpeechSynthesisUtterance(joke);
+      const voice = getVoiceForLang(state.currentLang);
+      if (voice) {
+        utter.voice = voice;
+      }
+      utter.rate = Number(dom.voiceSpeed.value);
+      utter.pitch = 1.1;
+      utter.lang = (languageMeta[state.currentLang] || languageMeta.en).voice;
+      utter.onstart = () => {
+        stats.listens += 1;
+        saveStats();
+        renderAchievements();
+        playSound('play');
+      };
+      window.speechSynthesis.speak(utter);
+    }
+
+    function updateReactionUI() {
+      const reaction = getReactionData(state.currentJoke, state.currentLang, state.currentCategory);
+      dom.reactionCounts.textContent = reaction
+        ? `😂 ${reaction.funny} · 🤣 ${reaction.veryFunny} · 🙃 ${reaction.notFunny}`
+        : t('community.empty');
+    }
+
+    function addReaction(type) {
+      if (!state.currentJoke) {
+        setFeedback('feedback.noJoke');
+        return;
+      }
+      const id = buildJokeId(state.currentJoke, state.currentLang, state.currentCategory);
+      if (userReactions[id]) {
+        setFeedback('feedback.reactionThanks');
+        return;
+      }
+      const data = reactionStore[id] || {
+        joke: state.currentJoke,
+        lang: state.currentLang,
+        category: state.currentCategory,
+        funny: 0,
+        veryFunny: 0,
+        notFunny: 0
+      };
+      data[type] += 1;
+      reactionStore[id] = data;
+      userReactions[id] = type;
+      saveReactions();
+      saveUserReactions();
+      renderTopRated();
+      renderLeaderboard();
+      updateReactionUI();
+      setFeedback('feedback.reactionThanks');
+    }
+
+    function reactionScore(data) {
+      return data.veryFunny * 2 + data.funny - data.notFunny;
+    }
+
+    function renderTopRated() {
+      dom.topRatedList.innerHTML = '';
+      const items = Object.values(reactionStore).sort((a, b) => reactionScore(b) - reactionScore(a)).slice(0, 5);
+      if (!items.length) {
+        const empty = document.createElement('div');
+        empty.className = 'list-item';
+        empty.textContent = t('community.empty');
+        dom.topRatedList.appendChild(empty);
+        return;
+      }
+      items.forEach((item) => {
+        const row = document.createElement('div');
+        row.className = 'list-item';
+        const text = document.createElement('span');
+        text.textContent = item.joke;
+        const score = document.createElement('span');
+        score.textContent = `⭐ ${reactionScore(item)}`;
+        row.appendChild(text);
+        row.appendChild(score);
+        dom.topRatedList.appendChild(row);
+      });
+    }
+
+    function renderLeaderboard() {
+      dom.leaderboardList.innerHTML = '';
+      const items = Object.values(reactionStore)
+        .sort((a, b) => (b.funny + b.veryFunny + b.notFunny) - (a.funny + a.veryFunny + a.notFunny))
+        .slice(0, 5);
+      if (!items.length) {
+        const empty = document.createElement('div');
+        empty.className = 'list-item';
+        empty.textContent = t('community.empty');
+        dom.leaderboardList.appendChild(empty);
+        return;
+      }
+      items.forEach((item, index) => {
+        const total = item.funny + item.veryFunny + item.notFunny;
+        const row = document.createElement('div');
+        row.className = 'list-item';
+        const text = document.createElement('span');
+        text.textContent = `#${index + 1} ${item.joke}`;
+        const score = document.createElement('span');
+        score.textContent = `${total} 👍`;
+        row.appendChild(text);
+        row.appendChild(score);
+        dom.leaderboardList.appendChild(row);
+      });
+    }
+
+    function renderAchievements() {
+      const listens = stats.listens || 0;
+      const next = achievements.find((badge) => badge.threshold > listens);
+      const percent = next ? Math.min((listens / next.threshold) * 100, 100) : 100;
+      dom.progressBar.style.width = `${percent}%`;
+      dom.progressText.textContent = next
+        ? t('achievements.progressText', { count: listens, next: next.threshold })
+        : t('achievements.allBadges', { count: listens });
+      dom.badgeList.innerHTML = '';
+      achievements.forEach((badge) => {
+        const item = document.createElement('div');
+        item.className = `badge-item ${listens >= badge.threshold ? 'unlocked' : ''}`;
+        item.textContent = `${t(badge.labelKey)} · ${badge.threshold}`;
+        dom.badgeList.appendChild(item);
+      });
+    }
+
+    function buildJokeId(joke, lang, category) {
+      const text = `${lang}|${category}|${joke}`;
+      let hash = 0;
+      for (let i = 0; i < text.length; i += 1) {
+        hash = (hash << 5) - hash + text.charCodeAt(i);
+        hash |= 0;
+      }
+      return `joke-${Math.abs(hash)}`;
+    }
+
+    function getReactionData(joke, lang, category) {
+      if (!joke) {
+        return null;
+      }
+      const id = buildJokeId(joke, lang, category);
+      return reactionStore[id] || null;
+    }
+
+    function validateSubmission(text) {
+      const trimmed = text.trim();
+      if (trimmed.length < 8 || trimmed.length > 240) {
+        return false;
+      }
+      if (/(https?:\/\/|www\.)/i.test(trimmed)) {
+        return false;
+      }
+      if (/[<>]/.test(trimmed)) {
+        return false;
+      }
+      if (/([a-zA-Z])\1{5,}/.test(trimmed)) {
+        return false;
+      }
+      return true;
+    }
+
+    function addSubmission(joke, name, category, voiceDataUrl = null) {
+      submissions.push({
+        id: Date.now().toString(36),
+        joke,
+        name,
+        category,
+        lang: state.currentLang,
+        voiceDataUrl,
+        status: 'pending',
+        createdAt: new Date().toISOString()
+      });
+      saveSubmissions();
+    }
+
+    function renderModeration() {
+      dom.moderationList.innerHTML = '';
+      if (!dom.moderatorToggle.checked) {
+        return;
+      }
+      const pending = submissions.filter((item) => item.status === 'pending');
+      if (!pending.length) {
+        const empty = document.createElement('div');
+        empty.className = 'list-item';
+        empty.textContent = t('submit.pendingEmpty');
+        dom.moderationList.appendChild(empty);
+        return;
+      }
+      pending.forEach((item) => {
+        const row = document.createElement('div');
+        row.className = 'list-item';
+        const meta = `${t(`categories.${item.category}`)} · ${t(`languages.${item.lang}`)}`;
+        const textWrap = document.createElement('span');
+        const metaTag = document.createElement('em');
+        metaTag.className = 'muted';
+        metaTag.textContent = ` ${meta}`;
+        textWrap.textContent = item.joke;
+        textWrap.appendChild(metaTag);
+        row.appendChild(textWrap);
+        if (item.voiceDataUrl) {
+          const audio = document.createElement('audio');
+          audio.controls = true;
+          audio.src = item.voiceDataUrl;
+          row.appendChild(audio);
+        }
+        const actions = document.createElement('span');
+        const approve = document.createElement('button');
+        approve.textContent = t('buttons.approve');
+        approve.onclick = () => approveSubmission(item.id);
+        const reject = document.createElement('button');
+        reject.textContent = t('buttons.reject');
+        reject.onclick = () => rejectSubmission(item.id);
+        actions.appendChild(approve);
+        actions.appendChild(reject);
+        row.appendChild(actions);
+        dom.moderationList.appendChild(row);
+      });
+    }
+
+    function approveSubmission(id) {
+      const item = submissions.find((entry) => entry.id === id);
+      if (!item) {
+        return;
+      }
+      item.status = 'approved';
+      approvedJokes.push({
+        joke: item.joke,
+        category: item.category,
+        lang: item.lang
+      });
+      saveSubmissions();
+      saveApprovedJokes();
+      renderModeration();
+      setFeedback('feedback.moderationApproved');
+    }
+
+    function rejectSubmission(id) {
+      const item = submissions.find((entry) => entry.id === id);
+      if (!item) {
+        return;
+      }
+      item.status = 'rejected';
+      saveSubmissions();
+      renderModeration();
+      setFeedback('feedback.moderationRejected');
+    }
+
+    function initVoiceRecorder() {
+      if (!navigator.mediaDevices || !window.MediaRecorder) {
+        dom.recordVoice.disabled = true;
+        return;
+      }
+      dom.recordVoice.onclick = async () => {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          state.recorder = new MediaRecorder(stream);
+          state.voiceChunks = [];
+          state.recorder.ondataavailable = (event) => {
+            state.voiceChunks.push(event.data);
+          };
+          state.recorder.onstop = () => {
+            stream.getTracks().forEach((track) => track.stop());
+            const blob = new Blob(state.voiceChunks, { type: 'audio/webm' });
+            if (blob.size > 300000) {
+              setSubmissionFeedback('feedback.voiceTooLarge');
+              return;
+            }
+            const reader = new FileReader();
+            reader.onloadend = () => {
+              state.voiceDataUrl = reader.result;
+              dom.voicePreview.src = state.voiceDataUrl;
+              dom.voicePreview.hidden = false;
+              dom.playVoice.disabled = false;
+            };
+            reader.readAsDataURL(blob);
+          };
+          state.recorder.start();
+          dom.recordVoice.disabled = true;
+          dom.stopVoice.disabled = false;
+        } catch (error) {
+          setSubmissionFeedback('feedback.voiceUnsupported');
+        }
+      };
+      dom.stopVoice.onclick = () => {
+        if (state.recorder) {
+          state.recorder.stop();
+        }
+        dom.stopVoice.disabled = true;
+        dom.recordVoice.disabled = false;
+      };
+      dom.playVoice.onclick = () => {
+        dom.voicePreview.play();
+      };
+    }
+
+    function loadSettings() {
+      const stored = JSON.parse(localStorage.getItem(STORAGE_KEYS.settings) || '{}');
+      return {
+        language: stored.language || 'en',
+        theme: stored.theme || 'light',
+        lastSubmission: stored.lastSubmission || 0
+      };
+    }
+
+    function saveSettings() {
+      localStorage.setItem(STORAGE_KEYS.settings, JSON.stringify(settings));
+    }
+
+    function loadStats() {
+      const stored = JSON.parse(localStorage.getItem(STORAGE_KEYS.stats) || '{}');
+      return {
+        listens: stored.listens || 0
+      };
+    }
+
+    function saveStats() {
+      localStorage.setItem(STORAGE_KEYS.stats, JSON.stringify(stats));
+    }
+
+    function loadSavedJokes() {
+      const stored = JSON.parse(localStorage.getItem(STORAGE_KEYS.saved) || '[]');
+      if (Array.isArray(stored)) {
+        return stored;
+      }
+      const legacy = JSON.parse(localStorage.getItem('savedJokes') || '[]');
+      return Array.isArray(legacy)
+        ? legacy.map((entry) => ({ joke: entry.joke, lang: entry.lang, category: 'random' }))
+        : [];
+    }
+
+    function saveSavedJokes() {
+      localStorage.setItem(STORAGE_KEYS.saved, JSON.stringify(savedJokes));
+    }
+
+    function loadSeenStore() {
+      const stored = JSON.parse(localStorage.getItem(STORAGE_KEYS.seen) || '{}');
+      if (stored && typeof stored === 'object' && !Array.isArray(stored)) {
+        const mapped = {};
+        Object.keys(stored).forEach((key) => {
+          mapped[key] = new Set(stored[key]);
+        });
+        return mapped;
+      }
+      const legacy = JSON.parse(localStorage.getItem('seenJokes') || '{}');
+      const mapped = {};
+      Object.keys(legacy || {}).forEach((lang) => {
+        const list = legacy[lang];
+        if (Array.isArray(list)) {
+          mapped[`${lang}:random`] = new Set(list);
+        }
+      });
+      return mapped;
+    }
+
+    function saveSeenStore() {
+      const plain = {};
+      Object.keys(seenStore).forEach((key) => {
+        plain[key] = Array.from(seenStore[key]);
+      });
+      localStorage.setItem(STORAGE_KEYS.seen, JSON.stringify(plain));
+    }
+
+    function loadReactions() {
+      return JSON.parse(localStorage.getItem(STORAGE_KEYS.reactions) || '{}');
+    }
+
+    function saveReactions() {
+      localStorage.setItem(STORAGE_KEYS.reactions, JSON.stringify(reactionStore));
+    }
+
+    function loadUserReactions() {
+      return JSON.parse(localStorage.getItem(STORAGE_KEYS.userReactions) || '{}');
+    }
+
+    function saveUserReactions() {
+      localStorage.setItem(STORAGE_KEYS.userReactions, JSON.stringify(userReactions));
+    }
+
+    function loadSubmissions() {
+      return JSON.parse(localStorage.getItem(STORAGE_KEYS.submissions) || '[]');
+    }
+
+    function saveSubmissions() {
+      localStorage.setItem(STORAGE_KEYS.submissions, JSON.stringify(submissions));
+    }
+
+    function loadApprovedJokes() {
+      return JSON.parse(localStorage.getItem(STORAGE_KEYS.approved) || '[]');
+    }
+
+    function saveApprovedJokes() {
+      localStorage.setItem(STORAGE_KEYS.approved, JSON.stringify(approvedJokes));
+    }
+
+    dom.language.onchange = () => {
+      applyLanguage(dom.language.value);
+    };
+
+    dom.category.onchange = () => {
+      state.currentCategory = dom.category.value;
+      resetHistory();
+      fetchJoke({ withSound: false });
+    };
+
+    dom.play.onclick = () => speakJoke(state.currentJoke);
+    dom.replay.onclick = () => speakJoke(state.currentJoke);
+    dom.random.onclick = () => fetchJoke({ withSound: true });
+    dom.heroRandom.onclick = () => fetchJoke({ withSound: true });
+    dom.heroScroll.onclick = () => document.getElementById('listen').scrollIntoView({ behavior: 'smooth' });
+    dom.jotdPlay.onclick = () => speakJoke(dom.jotdText.textContent);
+    dom.jotdCopy.onclick = () => copyToClipboard(dom.jotdText.textContent);
+    dom.previous.onclick = () => {
+      if (state.historyIndex > 0) {
+        showHistoryJoke(state.historyIndex - 1);
       } else {
-        savedList.setAttribute('hidden', '');
-        toggleSavedButton.textContent = 'Show Saved';
+        setFeedback('feedback.noPrevious');
       }
     };
-    savedList.onclick = (event) => {
+    dom.forward.onclick = () => {
+      if (state.historyIndex < state.history.length - 1) {
+        showHistoryJoke(state.historyIndex + 1);
+      } else {
+        setFeedback('feedback.noNext');
+      }
+    };
+    dom.save.onclick = () => saveCurrentJoke();
+    dom.unsave.onclick = () => removeCurrentSavedJoke();
+    dom.toggleSaved.onclick = () => {
+      const isHidden = dom.savedList.hasAttribute('hidden');
+      if (isHidden) {
+        dom.savedList.removeAttribute('hidden');
+        renderSavedList();
+      } else {
+        dom.savedList.setAttribute('hidden', '');
+      }
+      updateSavedToggleLabel();
+    };
+    dom.savedList.onclick = (event) => {
       const button = event.target.closest('button');
       if (!button) {
         return;
       }
       const index = Number(button.dataset.index);
-      if (Number.isNaN(index)) {
-        return;
-      }
       const entry = savedJokes[index];
       if (!entry) {
         return;
       }
       if (button.dataset.action === 'show') {
-        setLanguageByApiLang(entry.lang);
-        applyNewJoke(entry.joke, entry.lang);
-        setFeedback(`Showing saved ${entry.label || entry.lang} joke.`);
+        applyLanguage(entry.lang, { skipFetch: true });
+        dom.category.value = entry.category;
+        state.currentCategory = entry.category;
+        showJoke(entry.joke);
       }
       if (button.dataset.action === 'remove') {
         removeSavedJokeByIndex(index);
-        setFeedback('Removed saved joke.');
       }
     };
-    previousButton.onclick = () => {
-      if (historyIndex > 0) {
-        historyIndex -= 1;
-        showHistoryJoke();
-      } else {
-        setFeedback('No previous jokes yet.');
-        updateHistoryButtons();
+    dom.darkToggle.onclick = () => toggleTheme();
+    dom.jokeCard.addEventListener('click', (event) => {
+      const reactionButton = event.target.closest('button[data-reaction]');
+      if (reactionButton) {
+        addReaction(reactionButton.dataset.reaction);
       }
-    };
-    forwardButton.onclick = () => {
-      if (historyIndex < jokeHistory.length - 1) {
-        historyIndex += 1;
-        showHistoryJoke();
-      } else {
-        setFeedback('No newer jokes yet.');
-        updateHistoryButtons();
+      const shareButton = event.target.closest('button[data-share]');
+      if (shareButton) {
+        shareJoke(shareButton.dataset.share);
       }
+    });
+    dom.submissionForm.onsubmit = (event) => {
+      event.preventDefault();
+      if (dom.submissionWebsite.value) {
+        setSubmissionFeedback('feedback.submissionInvalid');
+        return;
+      }
+      const text = dom.submissionText.value;
+      if (!validateSubmission(text)) {
+        setSubmissionFeedback('feedback.submissionInvalid');
+        return;
+      }
+      const now = Date.now();
+      if (settings.lastSubmission && now - settings.lastSubmission < 30000) {
+        setSubmissionFeedback('feedback.submissionCooldown');
+        return;
+      }
+      settings.lastSubmission = now;
+      saveSettings();
+      addSubmission(text.trim(), dom.submissionName.value.trim(), dom.submissionCategory.value, state.voiceDataUrl);
+      dom.submissionText.value = '';
+      dom.submissionName.value = '';
+      state.voiceDataUrl = null;
+      dom.voicePreview.hidden = true;
+      dom.playVoice.disabled = true;
+      renderModeration();
+      setSubmissionFeedback('feedback.submissionOk');
     };
-    newButton.onclick = () => fetchJoke();
-    languageSelect.onchange = () => {
-      resetHistory();
-      setFeedback(`Language set to ${getSelectedLanguageLabel()}.`);
-      fetchJoke();
-    };
+    dom.moderatorToggle.onchange = () => renderModeration();
 
-    // On page load, load the first joke
-    window.onload = () => {
-      updateHistoryButtons();
-      updateSavedControls();
-      renderSavedList();
-      fetchJoke();
-    };
+    state.currentCategory = dom.category.value;
+    initVoiceRecorder();
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.onvoiceschanged = warmUpVoices;
+    }
+    if ('requestIdleCallback' in window) {
+      requestIdleCallback(warmUpVoices);
+    } else {
+      setTimeout(warmUpVoices, 300);
+    }
+    applyLanguage(settings.language);
+    updateHistoryButtons();
   </script>
 </body>
 </html>
