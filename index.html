@@ -605,6 +605,18 @@
       gap: 0.6rem;
       font-weight: 600;
     }
+    .moderation-access {
+      display: grid;
+      gap: 0.5rem;
+    }
+    .moderation-access .form-row {
+      gap: 0.5rem;
+      align-items: center;
+    }
+    .moderation-access input {
+      flex: 1;
+      min-width: 180px;
+    }
     .honeypot {
       display: none;
     }
@@ -1000,6 +1012,16 @@
           <input type="checkbox" id="moderator-toggle" />
           <span data-i18n="submit.moderatorTitle">Moderator Mode</span>
         </label>
+        <div class="moderation-access">
+          <label for="admin-key" data-i18n="submit.adminTitle">Admin access</label>
+          <div class="form-row">
+            <input id="admin-key" type="password" data-i18n-placeholder="submit.adminPlaceholder" />
+            <button type="button" id="admin-unlock" data-i18n="buttons.unlock">Unlock</button>
+            <button type="button" id="admin-lock" class="ghost" data-i18n="buttons.lock">Lock</button>
+          </div>
+          <div id="admin-feedback" class="feedback" aria-live="polite"></div>
+          <div class="muted" data-i18n="submit.adminHint">Admin access required to review submissions.</div>
+        </div>
         <div id="moderation-list" class="list"></div>
       </div>
     </section>
@@ -1180,6 +1202,10 @@
       playVoice: document.getElementById('play-voice'),
       voicePreview: document.getElementById('voice-preview'),
       moderatorToggle: document.getElementById('moderator-toggle'),
+      adminKey: document.getElementById('admin-key'),
+      adminUnlock: document.getElementById('admin-unlock'),
+      adminLock: document.getElementById('admin-lock'),
+      adminFeedback: document.getElementById('admin-feedback'),
       moderationList: document.getElementById('moderation-list'),
       progressBar: document.getElementById('progress-bar'),
       progressText: document.getElementById('progress-text'),
@@ -1220,7 +1246,15 @@
       'dark',
       'roast'
     ];
-    const MAX_JOKE_LENGTH = 180;
+    const MAX_JOKE_LENGTH = 280;
+    const MAX_JOKES_PER_BATCH = 100;
+    const ADMIN_CODE = 'salim-admin'; // Replace with a private admin key in production.
+    const BLOCKED_PATTERNS = [
+      /\b(hate|kill|murder|rape|terror|nazi|racist)\b/i,
+      /\b(sex|porn|xxx|nude|explicit)\b/i,
+      /\b(scam|phish|malware|hack|exploit)\b/i,
+      /\b(suicide|self-harm|violence)\b/i
+    ];
 
     const translations = {
       en: {
@@ -1282,6 +1316,9 @@
         'buttons.light': 'Light Mode',
         'buttons.approve': 'Approve',
         'buttons.reject': 'Reject',
+        'buttons.edit': 'Edit',
+        'buttons.unlock': 'Unlock',
+        'buttons.lock': 'Lock',
         'buttons.record': 'Record Voice',
         'buttons.stop': 'Stop',
         'buttons.preview': 'Preview',
@@ -1340,7 +1377,11 @@
         'submit.categoryLabel': 'Category',
         'submit.nameLabel': 'Name (optional)',
         'submit.namePlaceholder': 'Your name',
-        'submit.textPlaceholder': 'Write a short, friendly joke (8-240 characters).',
+        'submit.adminTitle': 'Admin access',
+        'submit.adminPlaceholder': 'Enter admin key',
+        'submit.adminHint': 'Admin access required to review submissions.',
+        'submit.editPrompt': 'Edit submission before approval:',
+        'submit.textPlaceholder': 'Write a short, friendly joke (8-280 characters).',
         'submit.moderatorTitle': 'Moderator Mode',
         'submit.pendingEmpty': 'No pending submissions.',
         'jotd.title': 'Joke of the Day',
@@ -1413,6 +1454,13 @@
         'feedback.voiceTooLarge': 'Voice clip is too large. Try a shorter recording.',
         'feedback.moderationApproved': 'Submission approved.',
         'feedback.moderationRejected': 'Submission rejected.',
+        'feedback.submissionEdited': 'Submission updated.',
+        'feedback.adminUnlocked': 'Admin access enabled.',
+        'feedback.adminLocked': 'Admin access locked.',
+        'feedback.adminDenied': 'Invalid admin key.',
+        'feedback.commentBlocked': 'Please keep comments friendly and safe.',
+        'labels.setup': 'Setup:',
+        'labels.punchline': 'Punchline:',
         'toast.saved': 'Joke saved!',
         'toast.removed': 'Saved joke removed.',
         'loadingMessages': [
@@ -1481,6 +1529,9 @@
         'buttons.light': 'Mode Clair',
         'buttons.approve': 'Approuver',
         'buttons.reject': 'Refuser',
+        'buttons.edit': 'Modifier',
+        'buttons.unlock': 'Debloquer',
+        'buttons.lock': 'Verrouiller',
         'buttons.record': 'Enregistrer',
         'buttons.stop': 'Arreter',
         'buttons.preview': 'Apercu',
@@ -1543,7 +1594,11 @@
         'submit.categoryLabel': 'Categorie',
         'submit.nameLabel': 'Nom (optionnel)',
         'submit.namePlaceholder': 'Votre nom',
-        'submit.textPlaceholder': 'Ecrivez une blague courte (8-240 caracteres).',
+        'submit.adminTitle': 'Acces admin',
+        'submit.adminPlaceholder': 'Cle admin',
+        'submit.adminHint': 'Acces admin requis pour moderer.',
+        'submit.editPrompt': 'Modifier la soumission avant approbation :',
+        'submit.textPlaceholder': 'Ecrivez une blague courte (8-280 caracteres).',
         'submit.moderatorTitle': 'Mode moderateur',
         'submit.pendingEmpty': 'Aucune soumission en attente.',
         'jotd.title': 'Blague du jour',
@@ -1612,6 +1667,13 @@
         'feedback.voiceTooLarge': 'Clip vocal trop grand. Essayez plus court.',
         'feedback.moderationApproved': 'Soumission approuvee.',
         'feedback.moderationRejected': 'Soumission rejetee.',
+        'feedback.submissionEdited': 'Soumission mise a jour.',
+        'feedback.adminUnlocked': 'Acces admin active.',
+        'feedback.adminLocked': 'Acces admin verrouille.',
+        'feedback.adminDenied': 'Cle admin invalide.',
+        'feedback.commentBlocked': 'Merci de garder des commentaires respectueux.',
+        'labels.setup': 'Mise en place:',
+        'labels.punchline': 'Chute:',
         'toast.saved': 'Blague sauvegardee.',
         'toast.removed': 'Blague retiree.',
         'loadingMessages': [
@@ -1679,6 +1741,9 @@
         'buttons.light': 'Modo claro',
         'buttons.approve': 'Aprobar',
         'buttons.reject': 'Rechazar',
+        'buttons.edit': 'Editar',
+        'buttons.unlock': 'Desbloquear',
+        'buttons.lock': 'Bloquear',
         'buttons.record': 'Grabar voz',
         'buttons.stop': 'Detener',
         'buttons.preview': 'Vista previa',
@@ -1741,7 +1806,11 @@
         'submit.categoryLabel': 'Categoria',
         'submit.nameLabel': 'Nombre (opcional)',
         'submit.namePlaceholder': 'Tu nombre',
-        'submit.textPlaceholder': 'Escribe un chiste corto (8-240 caracteres).',
+        'submit.adminTitle': 'Acceso admin',
+        'submit.adminPlaceholder': 'Clave admin',
+        'submit.adminHint': 'Se requiere acceso admin para moderar.',
+        'submit.editPrompt': 'Editar envio antes de aprobar:',
+        'submit.textPlaceholder': 'Escribe un chiste corto (8-280 caracteres).',
         'submit.moderatorTitle': 'Modo moderador',
         'submit.pendingEmpty': 'No hay envios pendientes.',
         'jotd.title': 'Chiste del dia',
@@ -1810,6 +1879,13 @@
         'feedback.voiceTooLarge': 'Audio demasiado grande. Prueba mas corto.',
         'feedback.moderationApproved': 'Envio aprobado.',
         'feedback.moderationRejected': 'Envio rechazado.',
+        'feedback.submissionEdited': 'Envio actualizado.',
+        'feedback.adminUnlocked': 'Acceso admin activado.',
+        'feedback.adminLocked': 'Acceso admin bloqueado.',
+        'feedback.adminDenied': 'Clave admin invalida.',
+        'feedback.commentBlocked': 'Mantenga los comentarios respetuosos.',
+        'labels.setup': 'Preparacion:',
+        'labels.punchline': 'Remate:',
         'toast.saved': 'Chiste guardado.',
         'toast.removed': 'Chiste eliminado.',
         'loadingMessages': [
@@ -1877,6 +1953,9 @@
         'buttons.light': 'الوضع الفاتح',
         'buttons.approve': 'موافقة',
         'buttons.reject': 'رفض',
+        'buttons.edit': 'تعديل',
+        'buttons.unlock': 'فتح',
+        'buttons.lock': 'قفل',
         'buttons.record': 'تسجيل صوت',
         'buttons.stop': 'ايقاف',
         'buttons.preview': 'معاينة',
@@ -1939,7 +2018,11 @@
         'submit.categoryLabel': 'الفئة',
         'submit.nameLabel': 'الاسم (اختياري)',
         'submit.namePlaceholder': 'اسمك',
-        'submit.textPlaceholder': 'اكتب نكتة لطيفة (8-240 حرف).',
+        'submit.adminTitle': 'وصول المشرف',
+        'submit.adminPlaceholder': 'رمز المشرف',
+        'submit.adminHint': 'يلزم وصول المشرف للمراجعة.',
+        'submit.editPrompt': 'تعديل الارسال قبل الموافقة:',
+        'submit.textPlaceholder': 'اكتب نكتة لطيفة (8-280 حرف).',
         'submit.moderatorTitle': 'وضع المشرف',
         'submit.pendingEmpty': 'لا توجد طلبات.',
         'jotd.title': 'نكتة اليوم',
@@ -2008,6 +2091,13 @@
         'feedback.voiceTooLarge': 'التسجيل كبير جدا.',
         'feedback.moderationApproved': 'تمت الموافقة.',
         'feedback.moderationRejected': 'تم الرفض.',
+        'feedback.submissionEdited': 'تم تحديث الارسال.',
+        'feedback.adminUnlocked': 'تم تفعيل وصول المشرف.',
+        'feedback.adminLocked': 'تم قفل وصول المشرف.',
+        'feedback.adminDenied': 'رمز غير صحيح.',
+        'feedback.commentBlocked': 'يرجى كتابة تعليقات محترمة.',
+        'labels.setup': 'البداية:',
+        'labels.punchline': 'الخاتمة:',
         'toast.saved': 'تم حفظ النكتة.',
         'toast.removed': 'تم حذف النكتة المحفوظة.',
         'loadingMessages': [
@@ -2075,6 +2165,9 @@
         'buttons.light': 'Yanayin haske',
         'buttons.approve': 'Amince',
         'buttons.reject': 'Kihe',
+        'buttons.edit': 'Gyara',
+        'buttons.unlock': 'Bude',
+        'buttons.lock': 'Kulle',
         'buttons.record': 'Daukar murya',
         'buttons.stop': 'Tsaya',
         'buttons.preview': 'Duba',
@@ -2137,7 +2230,11 @@
         'submit.categoryLabel': 'Rukuni',
         'submit.nameLabel': 'Suna (zabi)',
         'submit.namePlaceholder': 'Sunanka',
-        'submit.textPlaceholder': 'Rubuta barkwanci gajere (8-240).',
+        'submit.adminTitle': 'Shigar admin',
+        'submit.adminPlaceholder': 'Lambar admin',
+        'submit.adminHint': 'Ana bukatar admin don dubawa.',
+        'submit.editPrompt': 'Gyara aikawa kafin amincewa:',
+        'submit.textPlaceholder': 'Rubuta barkwanci gajere (8-280).',
         'submit.moderatorTitle': 'Yanayin mai dubawa',
         'submit.pendingEmpty': 'Babu aikace-aikace.',
         'jotd.title': 'Barkwancin yau',
@@ -2206,6 +2303,13 @@
         'feedback.voiceTooLarge': 'Murya ta yi girma.',
         'feedback.moderationApproved': 'An amince.',
         'feedback.moderationRejected': 'An ki.',
+        'feedback.submissionEdited': 'An sabunta aikawa.',
+        'feedback.adminUnlocked': 'An kunna shigar admin.',
+        'feedback.adminLocked': 'An kulle shigar admin.',
+        'feedback.adminDenied': 'Lambar admin ba daidai ba.',
+        'feedback.commentBlocked': 'A rubuta sharhi mai kyau.',
+        'labels.setup': 'Farko:',
+        'labels.punchline': 'Karshen:',
         'toast.saved': 'An ajiye barkwanci.',
         'toast.removed': 'An cire ajiyayyen barkwanci.',
         'loadingMessages': [
@@ -2273,6 +2377,9 @@
         'buttons.light': 'Modo claro',
         'buttons.approve': 'Aprovar',
         'buttons.reject': 'Rejeitar',
+        'buttons.edit': 'Editar',
+        'buttons.unlock': 'Desbloquear',
+        'buttons.lock': 'Bloquear',
         'buttons.record': 'Gravar voz',
         'buttons.stop': 'Parar',
         'buttons.preview': 'Previa',
@@ -2335,7 +2442,11 @@
         'submit.categoryLabel': 'Categoria',
         'submit.nameLabel': 'Nome (opcional)',
         'submit.namePlaceholder': 'Seu nome',
-        'submit.textPlaceholder': 'Escreva uma piada curta (8-240).',
+        'submit.adminTitle': 'Acesso admin',
+        'submit.adminPlaceholder': 'Chave admin',
+        'submit.adminHint': 'Acesso admin necessario para moderar.',
+        'submit.editPrompt': 'Editar envio antes de aprovar:',
+        'submit.textPlaceholder': 'Escreva uma piada curta (8-280).',
         'submit.moderatorTitle': 'Modo moderador',
         'submit.pendingEmpty': 'Sem envios pendentes.',
         'jotd.title': 'Piada do dia',
@@ -2404,6 +2515,13 @@
         'feedback.voiceTooLarge': 'Audio muito grande.',
         'feedback.moderationApproved': 'Envio aprovado.',
         'feedback.moderationRejected': 'Envio rejeitado.',
+        'feedback.submissionEdited': 'Envio atualizado.',
+        'feedback.adminUnlocked': 'Acesso admin ativado.',
+        'feedback.adminLocked': 'Acesso admin bloqueado.',
+        'feedback.adminDenied': 'Chave admin invalida.',
+        'feedback.commentBlocked': 'Mantenha os comentarios respeitosos.',
+        'labels.setup': 'Preparacao:',
+        'labels.punchline': 'Final:',
         'toast.saved': 'Piada salva.',
         'toast.removed': 'Piada removida.',
         'loadingMessages': [
@@ -2414,59 +2532,382 @@
       }
     };
 
-    const jokeFactory = {
-      words: {
-        subject: ['dog', 'cat', 'teacher', 'robot', 'clock', 'banana', 'pencil', 'browser', 'phone', 'book'],
-        place: ['kitchen', 'classroom', 'garage', 'office', 'library', 'park', 'lab'],
-        tech: ['server', 'database', 'API', 'keyboard', 'router', 'bug', 'compiler', 'cloud'],
-        family: ['dad', 'mom', 'grandpa', 'aunt', 'cousin'],
-        verb: ['relax', 'laugh', 'debug', 'nap', 'smile', 'reboot', 'charge', 'learn'],
-        snack: ['cookie', 'pizza', 'sandwich', 'taco', 'noodle', 'muffin'],
-        school: ['homework', 'quiz', 'notebook', 'backpack', 'chalk'],
-        punThing: ['math', 'coffee', 'code', 'history', 'music', 'art'],
-        gadget: ['laptop', 'tablet', 'calculator', 'mouse', 'speaker'],
-        adjective: ['tiny', 'happy', 'sleepy', 'curious', 'gentle', 'noisy', 'bright'],
-        shortVerb: ['blinked', 'yawned', 'winked', 'paused', 'clicked'],
-        general: ['joke', 'smile', 'laugh', 'giggle', 'story']
+    const languageFactories = {
+      en: {
+        words: {
+          subject: ['dog', 'cat', 'teacher', 'robot', 'clock', 'banana', 'pencil', 'browser', 'phone', 'book'],
+          place: ['kitchen', 'classroom', 'garage', 'office', 'library', 'park', 'lab'],
+          tech: ['server', 'database', 'API', 'router', 'bug', 'compiler', 'cloud'],
+          family: ['dad', 'mom', 'grandpa', 'aunt', 'cousin'],
+          verb: ['relax', 'laugh', 'debug', 'nap', 'smile', 'reboot', 'learn'],
+          snack: ['cookie', 'pizza', 'sandwich', 'taco', 'muffin', 'noodle'],
+          school: ['homework', 'quiz', 'notebook', 'backpack', 'chalk'],
+          punThing: ['math', 'coffee', 'code', 'history', 'music', 'art'],
+          gadget: ['laptop', 'tablet', 'calculator', 'mouse', 'speaker'],
+          adjective: ['tiny', 'happy', 'sleepy', 'curious', 'gentle', 'bright'],
+          general: ['joke', 'smile', 'laugh', 'giggle', 'story']
+        },
+        templates: {
+          random: [
+            'Why did the {subject} go to the {place}? Because it wanted a {snack}.',
+            'I asked the {subject} to {verb}. It said, "After a {snack}."',
+            'The {gadget} told me a joke: "Start with a {general}, finish with a grin."'
+          ],
+          dad: [
+            'I am reading a book on {punThing}. It is full of dad jokes.',
+            'My {family} said, "Make it a dad joke." So I said, "Dad joke."',
+            'Why did the {subject} laugh? Because I said, "Hi {subject}, I am dad."'
+          ],
+          pun: [
+            'I tried a {punThing} pun. It did not {verb} well, but it smiled.',
+            'I used to be into {punThing}, but it was too {adjective}.',
+            'My {gadget} loves {punThing} because it always clicks.'
+          ],
+          school: [
+            'Why did the {school} bring a {snack}? It wanted a tasty lesson.',
+            'The {school} asked, "Can we {verb} after class?"',
+            'The {subject} carried a {snack} to the {place} study group.'
+          ],
+          tech: [
+            'Why did the {tech} take a break? It needed a {general} reboot.',
+            'The {tech} said, "Let us {verb} after this update."',
+            'I told the {tech} a {general}. It responded with a gentle beep.'
+          ],
+          short: [
+            'Setup: The {subject} walked in. Punchline: It left with my {snack}.',
+            'Setup: A {adjective} {subject} arrived. Punchline: A {general} followed.',
+            'Setup: My {gadget} smiled. Punchline: It wanted a {general}.'
+          ],
+          relationship: [
+            'My partner said, "Let us {verb}." I said, "After a {snack}."',
+            'We both love {punThing}. It keeps our smiles in sync.',
+            'I gave a {general} to my partner. It came back as a hug.'
+          ],
+          dark: [
+            'The night asked, "Are we {adjective}?" The moon replied, "Always."',
+            'Even the quiet {place} shared a soft {general} tonight.',
+            'The shadow said, "Let us {verb} gently."'
+          ],
+          roast: [
+            'Your {gadget} is so old it still thinks {punThing} is new.',
+            'Your {subject} has more updates than your {tech}.',
+            'That {gadget} is so slow it asks for a {general} break.'
+          ]
+        }
       },
-      templates: {
-        random: [
-          'The {subject} in the {place} just {verb}ed and smiled.',
-          'I met a {adjective} {subject} who loved a good {general}.',
-          'My {gadget} said, "Let us {verb}."'
-        ],
-        dad: [
-          'Hi {subject}, I am dad.',
-          'I told my {family} a {general}. They said, "Nice one, dad."',
-          'I am reading a book on {punThing}. It is a real page turner.'
-        ],
-        pun: [
-          'I used to be into {punThing}, but it was too {adjective}.',
-          'I tried to tell a {punThing} joke, but it did not add up.',
-          'My {gadget} loves {punThing} because it always clicks.'
-        ],
-        school: [
-          'The {school} asked for a {general} before class.',
-          'My {school} said, "Take it {adjective} today."',
-          'The {subject} brought a {snack} to {place} study time.'
-        ],
-        tech: [
-          'My {tech} said it needed a {general} break.',
-          'I tried to {verb} the {tech}, but it asked for coffee first.',
-          'The {tech} told the {gadget} to stay {adjective}.'
-        ],
-        short: [
-          'The {subject} {shortVerb}.',
-          'Just a {adjective} {general}.',
-          'My {gadget} {shortVerb} and smiled.'
-        ],
-        general: [
-          'A {adjective} {subject} shared a {general} today.',
-          'The {general} of the day was short and sweet.',
-          'I asked the {subject} to {verb}, and it did.'
-        ]
+      fr: {
+        words: {
+          subject: ['chien', 'chat', 'prof', 'robot', 'horloge', 'banane', 'stylo', 'navigateur', 'telephone', 'livre'],
+          place: ['cuisine', 'classe', 'garage', 'bureau', 'bibliotheque', 'parc', 'labo'],
+          tech: ['serveur', 'base de donnees', 'API', 'routeur', 'bug', 'compilateur', 'cloud'],
+          family: ['papa', 'maman', 'grand pere', 'tante', 'cousin'],
+          verb: ['se reposer', 'rire', 'debuguer', 'dormir', 'sourire', 'redemarrer', 'apprendre'],
+          snack: ['cookie', 'pizza', 'sandwich', 'taco', 'muffin', 'nouille'],
+          school: ['devoir', 'quiz', 'cahier', 'sac', 'craie'],
+          punThing: ['maths', 'cafe', 'code', 'histoire', 'musique', 'art'],
+          gadget: ['ordinateur', 'tablette', 'calculatrice', 'souris', 'enceinte'],
+          adjective: ['petit', 'joyeux', 'fatigue', 'curieux', 'doux', 'lumineux'],
+          general: ['blague', 'sourire', 'rire', 'histoire', 'pause']
+        },
+        templates: {
+          random: [
+            'Pourquoi le {subject} est alle au {place} ? Parce qu il voulait un {snack}.',
+            'J ai demande au {subject} de {verb}. Il a dit, "Apres un {snack}."',
+            'Mon {gadget} a dit: "Une {general} et un sourire."'
+          ],
+          dad: [
+            'Je lis un livre sur {punThing}. C est plein de blagues de papa.',
+            'Mon {family} a dit: "Fais une blague de papa." Alors j ai dit: "Papa."',
+            'Pourquoi le {subject} a ri ? Parce que papa a parle.'
+          ],
+          pun: [
+            'J ai tente un jeu de mots sur {punThing}. C etait {adjective}.',
+            'Mon {gadget} aime {punThing} car il clique bien.',
+            'Je voulais parler de {punThing}, mais j ai rate le mot.'
+          ],
+          school: [
+            'Pourquoi le {school} a apporte un {snack} ? Pour une pause gourmande.',
+            'Le {school} a demande: "On peut {verb} apres la classe ?" ',
+            'Le {subject} a apporte un {snack} au {place}.'
+          ],
+          tech: [
+            'Pourquoi le {tech} a fait une pause ? Pour un redemarrage {general}.',
+            'Le {tech} a dit: "On {verb} apres la mise a jour."',
+            'J ai raconte une {general} au {tech}. Il a bippe.'
+          ],
+          short: [
+            'Mise en place: Le {subject} arrive. Chute: Il repart avec mon {snack}.',
+            'Mise en place: Un {subject} {adjective}. Chute: Une {general} suit.',
+            'Mise en place: Mon {gadget} sourit. Chute: Il veut une {general}.'
+          ],
+          relationship: [
+            'Mon partenaire a dit: "On {verb}." J ai repondu: "Apres un {snack}."',
+            'On aime {punThing}. Ca garde nos sourires.',
+            'Je donne une {general}, je recois un calin.'
+          ],
+          dark: [
+            'La nuit a dit: "On reste {adjective}." La lune a repondu: "Oui."',
+            'Le {place} calme a partage une {general} douce.',
+            'L ombre a dit: "On {verb} doucement."'
+          ],
+          roast: [
+            'Ton {gadget} est si vieux qu il croit que {punThing} est nouveau.',
+            'Ton {tech} a plus de pauses que de reponses.',
+            'Ce {gadget} est si lent qu il demande une {general}.'
+          ]
+        }
+      },
+      es: {
+        words: {
+          subject: ['perro', 'gato', 'profe', 'robot', 'reloj', 'banana', 'lapiz', 'navegador', 'telefono', 'libro'],
+          place: ['cocina', 'clase', 'garaje', 'oficina', 'biblioteca', 'parque', 'laboratorio'],
+          tech: ['servidor', 'base de datos', 'API', 'router', 'bug', 'compilador', 'nube'],
+          family: ['papa', 'mama', 'abuelo', 'tio', 'prima'],
+          verb: ['relajarse', 'reir', 'depurar', 'dormir', 'sonreir', 'reiniciar', 'aprender'],
+          snack: ['galleta', 'pizza', 'sandwich', 'taco', 'muffin', 'fideos'],
+          school: ['tarea', 'examen', 'cuaderno', 'mochila', 'tiza'],
+          punThing: ['mates', 'cafe', 'codigo', 'historia', 'musica', 'arte'],
+          gadget: ['portatil', 'tableta', 'calculadora', 'raton', 'altavoz'],
+          adjective: ['pequeno', 'feliz', 'cansado', 'curioso', 'suave', 'brillante'],
+          general: ['chiste', 'sonrisa', 'risa', 'historia', 'pausa']
+        },
+        templates: {
+          random: [
+            'Por que el {subject} fue a la {place}? Porque queria un {snack}.',
+            'Le pedi al {subject} que se {verb}. Dijo, "Despues de un {snack}."',
+            'Mi {gadget} dijo: "Un {general} y una sonrisa."'
+          ],
+          dad: [
+            'Estoy leyendo un libro sobre {punThing}. Esta lleno de chistes de papa.',
+            'Mi {family} dijo: "Haz un chiste de papa." Entonces dije: "Papa."',
+            'Por que el {subject} rio? Porque papa hablo.'
+          ],
+          pun: [
+            'Hice un juego de palabras con {punThing}. Fue {adjective}.',
+            'Mi {gadget} ama {punThing} porque siempre hace clic.',
+            'Quise hablar de {punThing}, pero perdi la palabra.'
+          ],
+          school: [
+            'Por que el {school} llevo un {snack}? Para una pausa rica.',
+            'El {school} pregunto: "Podemos {verb} despues de clase?"',
+            'El {subject} llevo un {snack} a la {place}.'
+          ],
+          tech: [
+            'Por que el {tech} descanso? Necesitaba reinicio {general}.',
+            'El {tech} dijo: "Nos {verb} luego."',
+            'Le conte un {general} al {tech}. Respondio con un beep.'
+          ],
+          short: [
+            'Preparacion: El {subject} entra. Remate: Se va con mi {snack}.',
+            'Preparacion: Un {subject} {adjective}. Remate: Llega un {general}.',
+            'Preparacion: Mi {gadget} sonrie. Remate: Quiere un {general}.'
+          ],
+          relationship: [
+            'Mi pareja dijo: "Vamos a {verb}." Yo: "Despues de un {snack}."',
+            'Nos gusta {punThing}. Eso cuida las sonrisas.',
+            'Doy un {general} y recibo un abrazo.'
+          ],
+          dark: [
+            'La noche dijo: "Sigamos {adjective}." La luna: "Si."',
+            'El {place} tranquilo compartio un {general} suave.',
+            'La sombra dijo: "Vamos a {verb} despacio."'
+          ],
+          roast: [
+            'Tu {gadget} es tan viejo que cree que {punThing} es nuevo.',
+            'Tu {tech} pide mas pausas que respuestas.',
+            'Ese {gadget} es tan lento que pide un {general}.'
+          ]
+        }
+      },
+      ar: {
+        words: {
+          subject: ['كلب', 'قط', 'معلم', 'روبوت', 'ساعة', 'موزة', 'قلم', 'متصفح', 'هاتف', 'كتاب'],
+          place: ['مطبخ', 'فصل', 'مرآب', 'مكتب', 'مكتبة', 'حديقة', 'مختبر'],
+          tech: ['خادم', 'قاعدة بيانات', 'واجهة API', 'موجه', 'خطأ', 'مترجم', 'سحابة'],
+          family: ['أبي', 'أمي', 'جدي', 'عمتي', 'ابن عمي'],
+          verb: ['يرتاح', 'يضحك', 'يصحح', 'ينام', 'يبتسم', 'يعيد التشغيل', 'يتعلم'],
+          snack: ['بسكويت', 'بيتزا', 'ساندويتش', 'تاكو', 'مافن', 'نودلز'],
+          school: ['واجب', 'اختبار', 'دفتر', 'حقيبة', 'طباشير'],
+          punThing: ['رياضيات', 'قهوة', 'كود', 'تاريخ', 'موسيقى', 'فن'],
+          gadget: ['حاسوب', 'جهاز لوحي', 'آلة حاسبة', 'فأرة', 'سماعة'],
+          adjective: ['صغير', 'سعيد', 'نعسان', 'فضولي', 'لطيف', 'لامع'],
+          general: ['نكتة', 'ابتسامة', 'ضحكة', 'حكاية', 'استراحة']
+        },
+        templates: {
+          random: [
+            'لماذا ذهب الـ{subject} إلى {place}؟ لأنه أراد {snack}.',
+            'طلبت من الـ{subject} أن {verb}. قال: بعد {snack}.',
+            'قال {gadget}: نكتة ثم ابتسامة.'
+          ],
+          dad: [
+            'أقرأ كتابا عن {punThing}. مليء بنكات الاب.',
+            'قال {family}: قل نكتة اب. فقلت: اب.',
+            'لماذا ضحك الـ{subject}؟ لأن الاب تكلم.'
+          ],
+          pun: [
+            'جربت تلاعبا لفظيا في {punThing}. كان {adjective}.',
+            'يحب {gadget} {punThing} لأنه دائما ينقر.',
+            'اردت التحدث عن {punThing} لكن الكلمة هربت.'
+          ],
+          school: [
+            'لماذا أحضر {school} {snack}؟ لدرس لذيذ.',
+            'سأل {school}: هل يمكن أن {verb} بعد الحصة؟',
+            'أحضر {subject} {snack} إلى {place}.'
+          ],
+          tech: [
+            'لماذا أخذ {tech} استراحة؟ يحتاج إعادة تشغيل {general}.',
+            'قال {tech}: سن{verb} لاحقا.',
+            'حكيت {general} لـ{tech}. رد بصفير.'
+          ],
+          short: [
+            'البداية: دخل {subject}. النهاية: خرج ومعه {snack}.',
+            'البداية: {subject} {adjective}. النهاية: جاءت {general}.',
+            'البداية: ابتسم {gadget}. النهاية: أراد {general}.'
+          ],
+          relationship: [
+            'قال الشريك: لن{verb}. قلت: بعد {snack}.',
+            'نحب {punThing}. هذا يحفظ الابتسامة.',
+            'أعطي {general} وأتلقى عناقا.'
+          ],
+          dark: [
+            'قال الليل: لنبق {adjective}. ردت القمر: نعم.',
+            '{place} الهادئ شارك {general} لطيفة.',
+            'قال الظل: لن{verb} بهدوء.'
+          ],
+          roast: [
+            '{gadget} قديم لدرجة أنه يظن {punThing} جديد.',
+            '{tech} يطلب استراحة أكثر من الاجابة.',
+            'هذا {gadget} بطيء ويطلب {general}.'
+          ]
+        }
+      },
+      ha: {
+        words: {
+          subject: ['kare', 'kuli', 'malami', 'robot', 'agogo', 'ayaba', 'alkalami', 'burauza', 'waya', 'littafi'],
+          place: ['kicin', 'aji', 'gareji', 'ofis', 'dakin karatu', 'filin shakatawa', 'dakin gwaje-gwaje'],
+          tech: ['sabar', 'database', 'API', 'router', 'bug', 'compiler', 'cloud'],
+          family: ['baba', 'mama', 'kaka', 'anti', 'dan uwa'],
+          verb: ['huta', 'dariya', 'gyara', 'barci', 'murmushi', 'sake farawa', 'koyo'],
+          snack: ['biskit', 'pizza', 'sandwich', 'taco', 'muffin', 'taliya'],
+          school: ['aiki na gida', 'jarabawa', 'littafin rubutu', 'jaka', 'chalk'],
+          punThing: ['lissafi', 'kofi', 'lamba', 'tarihi', 'waka', 'zane'],
+          gadget: ['laptop', 'tablet', 'calculator', 'mouse', 'speaker'],
+          adjective: ['kankane', 'farin ciki', 'gajiya', 'mai sha’awa', 'taushi', 'haske'],
+          general: ['barkwanci', 'murmushi', 'dariya', 'labari', 'hutu']
+        },
+        templates: {
+          random: [
+            'Me yasa {subject} ya je {place}? Saboda yana son {snack}.',
+            'Na ce wa {subject} ya {verb}. Ya ce, "Bayan {snack}."',
+            '{gadget} ya ce: barkwanci sannan murmushi.'
+          ],
+          dad: [
+            'Ina karanta littafi kan {punThing}. Cike yake da barkwancin baba.',
+            '{family} ya ce: yi barkwancin baba. Na ce: baba.',
+            'Me yasa {subject} ya yi dariya? Saboda baba ya yi magana.'
+          ],
+          pun: [
+            'Na gwada barkwanci a {punThing}. Ya kasance {adjective}.',
+            '{gadget} yana son {punThing} saboda yana danna kyau.',
+            'Na so in yi magana game da {punThing} amma na manta.'
+          ],
+          school: [
+            'Me yasa {school} ya kawo {snack}? Don darasi mai dadi.',
+            '{school} ya tambaya: za mu {verb} bayan aji?',
+            '{subject} ya kawo {snack} zuwa {place}.'
+          ],
+          tech: [
+            'Me yasa {tech} ya huta? Don sake farawa {general}.',
+            '{tech} ya ce: mu {verb} daga baya.',
+            'Na ba {tech} {general}. Ya yi beep.'
+          ],
+          short: [
+            'Farko: {subject} ya shigo. Karshe: ya tafi da {snack}.',
+            'Farko: {subject} {adjective}. Karshe: {general} ta biyo.',
+            'Farko: {gadget} ya yi murmushi. Karshe: yana son {general}.'
+          ],
+          relationship: [
+            'Abokin zama ya ce: mu {verb}. Na ce: bayan {snack}.',
+            'Muna son {punThing}. Hakan yana kawo murmushi.',
+            'Na ba da {general}, sai na samu runguma.'
+          ],
+          dark: [
+            'Dare ya ce: mu tsaya {adjective}. Wata ta ce: eh.',
+            '{place} mai shiru ya ba da {general} mai laushi.',
+            'Inuwa ta ce: mu {verb} a hankali.'
+          ],
+          roast: [
+            '{gadget} dinka tsoho ne har yana tunanin {punThing} sabo ne.',
+            '{tech} yana neman hutu fiye da amsa.',
+            '{gadget} dinka yana bukatar {general} kafin ya yi aiki.'
+          ]
+        }
+      },
+      pt: {
+        words: {
+          subject: ['cachorro', 'gato', 'professor', 'robo', 'relogio', 'banana', 'lapis', 'navegador', 'telefone', 'livro'],
+          place: ['cozinha', 'sala', 'garagem', 'escritorio', 'biblioteca', 'parque', 'laboratorio'],
+          tech: ['servidor', 'banco de dados', 'API', 'roteador', 'bug', 'compilador', 'nuvem'],
+          family: ['pai', 'mae', 'avo', 'tia', 'primo'],
+          verb: ['relaxar', 'rir', 'depurar', 'dormir', 'sorrir', 'reiniciar', 'aprender'],
+          snack: ['biscoito', 'pizza', 'sanduiche', 'taco', 'muffin', 'macarrao'],
+          school: ['tarefa', 'prova', 'caderno', 'mochila', 'giz'],
+          punThing: ['matematica', 'cafe', 'codigo', 'historia', 'musica', 'arte'],
+          gadget: ['laptop', 'tablet', 'calculadora', 'mouse', 'caixa de som'],
+          adjective: ['pequeno', 'feliz', 'cansado', 'curioso', 'suave', 'brilhante'],
+          general: ['piada', 'sorriso', 'risada', 'historia', 'pausa']
+        },
+        templates: {
+          random: [
+            'Por que o {subject} foi ao {place}? Porque queria um {snack}.',
+            'Pedi ao {subject} para {verb}. Ele disse: "Depois do {snack}."',
+            'Meu {gadget} disse: "Uma {general} e um sorriso."'
+          ],
+          dad: [
+            'Estou lendo um livro sobre {punThing}. E cheio de piadas de pai.',
+            '{family} disse: "Conte piada de pai." Eu disse: "Pai."',
+            'Por que o {subject} riu? Porque o pai falou.'
+          ],
+          pun: [
+            'Fiz um trocadilho com {punThing}. Ficou {adjective}.',
+            '{gadget} adora {punThing} porque sempre clica.',
+            'Quis falar de {punThing}, mas perdi a palavra.'
+          ],
+          school: [
+            'Por que o {school} levou um {snack}? Para uma pausa gostosa.',
+            '{school} perguntou: "Podemos {verb} depois da aula?"',
+            '{subject} levou um {snack} para o {place}.'
+          ],
+          tech: [
+            'Por que o {tech} descansou? Precisava de reinicio {general}.',
+            '{tech} disse: "Vamos {verb} depois."',
+            'Contei uma {general} para o {tech}. Ele fez beep.'
+          ],
+          short: [
+            'Preparacao: O {subject} entrou. Final: Saiu com meu {snack}.',
+            'Preparacao: {subject} {adjective}. Final: Chegou uma {general}.',
+            'Preparacao: Meu {gadget} sorriu. Final: Queria uma {general}.'
+          ],
+          relationship: [
+            'Minha pessoa disse: "Vamos {verb}." Eu: "Depois do {snack}."',
+            'A gente gosta de {punThing}. Isso traz sorriso.',
+            'Eu dou uma {general} e recebo um abraco.'
+          ],
+          dark: [
+            'A noite disse: "Fiquemos {adjective}." A lua respondeu: "Sim."',
+            'O {place} calmo contou uma {general} suave.',
+            'A sombra disse: "Vamos {verb} devagar."'
+          ],
+          roast: [
+            'Seu {gadget} e tao velho que acha {punThing} novidade.',
+            '{tech} pede mais pausa do que resposta.',
+            'Esse {gadget} e lento e pede uma {general}.'
+          ]
+        }
       }
     };
+
+    const JOKE_COUNTS = { en: 120, fr: 80, es: 80, ar: 60, ha: 60, pt: 80 };
 
     function hashString(value) {
       let hash = 0;
@@ -2477,40 +2918,42 @@
       return Math.abs(hash);
     }
 
-    function fillTemplate(template, seed) {
+    function fillTemplateLang(template, factory, seed) {
       return template.replace(/\{(\w+)\}/g, (match, key) => {
-        const list = jokeFactory.words[key] || jokeFactory.words.general;
+        const list = factory.words[key] || factory.words.general;
         const index = (seed + hashString(`${template}-${key}`)) % list.length;
         return list[index];
       });
     }
 
-    function generateCategoryJokes(category, count) {
-      const templates = jokeFactory.templates[category] || jokeFactory.templates.general;
+    function generateCategoryJokesLang(factory, category, count) {
+      const templates = factory.templates[category] || factory.templates.random;
       const results = new Set();
       let seed = 0;
-      while (results.size < count && seed < count * 30) {
+      while (results.size < count && seed < count * 40) {
         const template = templates[seed % templates.length];
-        const joke = fillTemplate(template, seed);
+        const joke = fillTemplateLang(template, factory, seed);
         results.add(joke);
         seed += 1;
       }
       return Array.from(results);
     }
 
-    function buildGeneratedJokes() {
-      return {
-        random: generateCategoryJokes('general', 80),
-        general: generateCategoryJokes('general', 120),
-        dad: generateCategoryJokes('dad', 80),
-        pun: generateCategoryJokes('pun', 80),
-        school: generateCategoryJokes('school', 80),
-        tech: generateCategoryJokes('tech', 80),
-        short: generateCategoryJokes('short', 80)
-      };
+    function buildGeneratedJokesByLang() {
+      const result = {};
+      Object.keys(languageFactories).forEach((lang) => {
+        const factory = languageFactories[lang];
+        const count = JOKE_COUNTS[lang] || 60;
+        const jokes = {};
+        categories.forEach((cat) => {
+          jokes[cat] = generateCategoryJokesLang(factory, cat, count);
+        });
+        result[lang] = jokes;
+      });
+      return result;
     }
 
-    const generatedJokes = buildGeneratedJokes();
+    const generatedJokesByLang = buildGeneratedJokesByLang();
 
     const legacyJokes = {
       en: {
@@ -2694,12 +3137,12 @@
     }
 
     const localJokes = {
-      en: mergeJokes(generatedJokes, legacyJokes.en),
-      fr: legacyJokes.fr,
-      es: legacyJokes.es,
-      ar: legacyJokes.ar,
-      ha: legacyJokes.ha,
-      pt: legacyJokes.pt
+      en: mergeJokes(generatedJokesByLang.en, legacyJokes.en),
+      fr: mergeJokes(generatedJokesByLang.fr, legacyJokes.fr),
+      es: mergeJokes(generatedJokesByLang.es, legacyJokes.es),
+      ar: mergeJokes(generatedJokesByLang.ar, legacyJokes.ar),
+      ha: mergeJokes(generatedJokesByLang.ha, legacyJokes.ha),
+      pt: mergeJokes(generatedJokesByLang.pt, legacyJokes.pt)
     };
 
     const achievements = [
@@ -2716,6 +3159,7 @@
       currentCategory: 'random',
       currentLang: 'en',
       jokeList: [],
+      allJokeIds: [],
       jokeOrder: [],
       jokeIndex: {},
       currentIndex: -1,
@@ -2744,6 +3188,18 @@
 
     function t(key, params = {}) {
       const dict = translations[state.currentLang] || translations.en;
+      const value = dict[key] || translations.en[key] || key;
+      if (Array.isArray(value)) {
+        return value;
+      }
+      return Object.keys(params).reduce(
+        (result, token) => result.replace(`{${token}}`, params[token]),
+        value
+      );
+    }
+
+    function tForLang(lang, key, params = {}) {
+      const dict = translations[lang] || translations.en;
       const value = dict[key] || translations.en[key] || key;
       if (Array.isArray(value)) {
         return value;
@@ -2937,9 +3393,13 @@
         dom.commentFeedback.textContent = t('feedback.noJoke');
         return;
       }
-      const trimmed = text.trim();
+      const trimmed = sanitizeText(text);
       if (trimmed.length < 2) {
         dom.commentFeedback.textContent = t('comments.placeholder');
+        return;
+      }
+      if (containsBlockedContent(trimmed)) {
+        dom.commentFeedback.textContent = t('feedback.commentBlocked');
         return;
       }
       const list = getCommentsForJoke();
@@ -3235,7 +3695,8 @@
       let items = getSavedJokesList();
       if (query) {
         items = getSavedJokesList().filter((entry) => {
-          const text = entry.joke.toLowerCase();
+          const formatted = ensureSetupPunchline(entry.joke, entry.lang);
+          const text = formatted.toLowerCase();
           const categoryLabel = t(`categories.${entry.category}`).toLowerCase();
           const langLabel = t(`languages.${entry.lang}`).toLowerCase();
           return text.includes(query) || categoryLabel.includes(query) || langLabel.includes(query);
@@ -3261,7 +3722,7 @@
         row.className = 'list-item';
 
         const text = document.createElement('div');
-        text.textContent = entry.joke;
+        text.textContent = ensureSetupPunchline(entry.joke, entry.lang);
 
         const meta = document.createElement('div');
         meta.className = 'saved-meta';
@@ -3301,10 +3762,20 @@
       });
     }
 
+    function hasNextJoke() {
+      if (!state.jokeOrder.length) {
+        return false;
+      }
+      if (state.searchQuery.trim()) {
+        return state.currentIndex < state.jokeOrder.length - 1;
+      }
+      return true;
+    }
+
     function updateNavButtons() {
       const hasList = state.jokeOrder.length > 0;
       dom.previous.disabled = !hasList || state.currentIndex <= 0;
-      dom.next.disabled = !hasList || state.currentIndex >= state.jokeOrder.length - 1;
+      dom.next.disabled = !hasList || !hasNextJoke();
     }
 
     function showJoke(joke) {
@@ -3317,20 +3788,57 @@
       renderComments();
     }
 
+    function hasPunchlineMarkers(text, lang = state.currentLang) {
+      const setupLabel = tForLang(lang, 'labels.setup');
+      const punchLabel = tForLang(lang, 'labels.punchline');
+      return (
+        /[?؟].+/.test(text) ||
+        text.includes(' - ') ||
+        text.includes('—') ||
+        text.includes('\n') ||
+        text.includes(setupLabel) ||
+        text.includes(punchLabel) ||
+        /Punchline:|Setup:/i.test(text)
+      );
+    }
+
+    function ensureSetupPunchline(joke, lang = state.currentLang) {
+      const cleaned = sanitizeText(joke);
+      if (!cleaned) {
+        return '';
+      }
+      if (hasPunchlineMarkers(cleaned, lang)) {
+        return cleaned;
+      }
+      const setupLabel = tForLang(lang, 'labels.setup');
+      const punchLabel = tForLang(lang, 'labels.punchline');
+      const ending = /[.!?؟]$/.test(cleaned) ? '' : '.';
+      return `${setupLabel} ${cleaned}${ending} ${punchLabel} ${cleaned}${ending}`;
+    }
+
     function buildOrderedList(lang, category) {
       const list = getLocalJokes(lang, category);
       const query = state.searchQuery.trim().toLowerCase();
+      const categoryLabel = t(`categories.${category}`).toLowerCase();
+      const languageLabel = t(`languages.${lang}`).toLowerCase();
       const unique = [];
       const seen = new Set();
       list.forEach((joke) => {
-        if (!joke || seen.has(joke)) {
+        const formatted = ensureSetupPunchline(joke, lang);
+        if (!formatted || seen.has(formatted)) {
           return;
         }
-        if (query && !joke.toLowerCase().includes(query)) {
+        const searchable = formatted.toLowerCase();
+        if (
+          query &&
+          !searchable.includes(query) &&
+          !categoryLabel.includes(query) &&
+          !languageLabel.includes(query)
+        ) {
           return;
         }
-        seen.add(joke);
-        unique.push(joke);
+        seen.add(formatted);
+        unique.push(formatted);
       });
       return unique;
     }
@@ -3348,6 +3856,75 @@
       return array;
     }
 
+    function normalizeProgressState(key, ids) {
+      const stored = progressStore[key] || {};
+      const validIds = new Set(ids);
+      const seenIds = Array.isArray(stored.seenIds)
+        ? stored.seenIds.filter((id) => validIds.has(id))
+        : [];
+      let deck = Array.isArray(stored.deck) ? stored.deck.filter((id) => validIds.has(id)) : [];
+      let index = Number.isFinite(stored.index) ? stored.index : 0;
+      if (!deck.length && Array.isArray(stored.order)) {
+        deck = stored.order.filter((id) => validIds.has(id));
+        index = Number.isFinite(stored.index) ? stored.index : 0;
+      }
+      if (index < 0) {
+        index = 0;
+      }
+      if (deck.length && index >= deck.length) {
+        index = 0;
+      }
+      return { seenIds, deck, index };
+    }
+
+    function buildNextDeck(ids, seenIds) {
+      let remaining = ids.filter((id) => !seenIds.includes(id));
+      let nextSeen = [...seenIds];
+      if (!remaining.length) {
+        nextSeen = [];
+        remaining = [...ids];
+      }
+      return {
+        deck: shuffleArray(remaining).slice(0, MAX_JOKES_PER_BATCH),
+        seenIds: nextSeen
+      };
+    }
+
+    function persistProgressState(key, progress) {
+      progressStore[key] = progress;
+      saveProgressStore();
+    }
+
+    function markJokeSeen(id) {
+      if (state.searchQuery.trim()) {
+        return;
+      }
+      if (!id) {
+        return;
+      }
+      const key = getProgressKey();
+      const progress = normalizeProgressState(key, state.allJokeIds);
+      if (!progress.seenIds.includes(id)) {
+        progress.seenIds.push(id);
+      }
+      progress.deck = state.jokeOrder;
+      progress.index = state.currentIndex;
+      persistProgressState(key, progress);
+    }
+
+    function rotateDeck() {
+      if (!state.allJokeIds.length) {
+        return;
+      }
+      const key = getProgressKey();
+      const progress = normalizeProgressState(key, state.allJokeIds);
+      const next = buildNextDeck(state.allJokeIds, progress.seenIds);
+      state.jokeOrder = next.deck;
+      state.currentIndex = 0;
+      persistProgressState(key, { deck: state.jokeOrder, index: 0, seenIds: next.seenIds });
+      showJokeAt(0);
+    }
+
     function setJokeList() {
       const ordered = buildOrderedList(state.currentLang, state.currentCategory);
       if (state.currentJoke && !ordered.includes(state.currentJoke)) {
@@ -3360,42 +3937,39 @@
         state.jokeIndex[id] = joke;
         return id;
       });
+      state.allJokeIds = ids;
 
       if (!ids.length) {
         state.currentIndex = -1;
         state.jokeOrder = [];
-        showJoke(state.searchQuery ? t('feedback.noResults') : t('feedback.fallback'));
+        showJoke(state.searchQuery.trim() ? t('feedback.noResults') : t('feedback.fallback'));
         updateNavButtons();
         return;
       }
 
-      let order = ids;
-      let index = 0;
       const key = getProgressKey();
-
-      if (!state.searchQuery) {
-        const saved = progressStore[key];
-        if (saved && Array.isArray(saved.order)) {
-          const filtered = saved.order.filter((id) => state.jokeIndex[id]);
-          if (filtered.length === ids.length) {
-            order = filtered;
-            index = Math.min(saved.index || 0, order.length - 1);
-          } else {
-            order = shuffleArray(ids);
-          }
-        } else {
-          order = shuffleArray(ids);
-        }
+      if (state.searchQuery.trim()) {
+        state.jokeOrder = ids;
+        state.currentIndex = 0;
+        showJokeAt(0);
+        updateNavButtons();
+        return;
       }
 
-      state.jokeOrder = order;
-      state.currentIndex = index;
-      showJoke(state.jokeIndex[state.jokeOrder[state.currentIndex]]);
+      const progress = normalizeProgressState(key, ids);
+      let { deck, index, seenIds } = progress;
+      if (!deck.length || index >= deck.length) {
+        const next = buildNextDeck(ids, seenIds);
+        deck = next.deck;
+        seenIds = next.seenIds;
+        index = 0;
+      }
+
+      state.jokeOrder = deck;
+      state.currentIndex = Math.min(index, state.jokeOrder.length - 1);
+      persistProgressState(key, { deck: state.jokeOrder, index: state.currentIndex, seenIds });
+      showJokeAt(state.currentIndex);
       updateNavButtons();
-      if (!state.searchQuery) {
-        progressStore[key] = { order: state.jokeOrder, index: state.currentIndex };
-        saveProgressStore();
-      }
     }
 
     function showJokeAt(index) {
@@ -3406,10 +3980,7 @@
       const id = state.jokeOrder[state.currentIndex];
       showJoke(state.jokeIndex[id]);
       updateNavButtons();
-      if (!state.searchQuery) {
-        progressStore[getProgressKey()] = { order: state.jokeOrder, index: state.currentIndex };
-        saveProgressStore();
-      }
+      markJokeSeen(id);
     }
 
     function navigateJoke(direction) {
@@ -3422,14 +3993,8 @@
         if (direction === 'next') {
           if (state.currentIndex < state.jokeOrder.length - 1) {
             showJokeAt(state.currentIndex + 1);
-          } else if (!state.searchQuery) {
-            const lastId = state.jokeOrder[state.currentIndex];
-            let nextOrder = shuffleArray(state.jokeOrder);
-            if (nextOrder[0] === lastId && nextOrder.length > 1) {
-              nextOrder.push(nextOrder.shift());
-            }
-            state.jokeOrder = nextOrder;
-            showJokeAt(0);
+          } else if (!state.searchQuery.trim()) {
+            rotateDeck();
           } else {
             setFeedback('feedback.noNext');
           }
@@ -3474,7 +4039,7 @@
       const list = base[category] || base.random || [];
       const community = approvedJokes.filter(
         (item) => item.lang === lang && item.category === category
-      ).map((item) => item.joke);
+      ).map((item) => sanitizeText(item.joke));
       const combined = [...list, ...community];
       return combined.length ? combined : (base.random || localJokes.en.random);
     }
@@ -3560,6 +4125,7 @@
         jotd = list[Math.floor(Math.random() * list.length)] || '';
         localStorage.setItem(jotdKey, jotd);
       }
+      jotd = ensureSetupPunchline(jotd, state.currentLang);
       dom.jotdText.textContent = jotd || t('feedback.fallback');
     }
 
@@ -3814,6 +4380,20 @@
       return `joke-${Math.abs(hash)}`;
     }
 
+    function sanitizeText(value) {
+      if (!value) {
+        return '';
+      }
+      return value.replace(/[<>]/g, '').replace(/\s+/g, ' ').trim();
+    }
+
+    function containsBlockedContent(value) {
+      if (!value) {
+        return false;
+      }
+      return BLOCKED_PATTERNS.some((pattern) => pattern.test(value));
+    }
+
     function getReactionData(joke, lang, category) {
       if (!joke) {
         return null;
@@ -3823,27 +4403,29 @@
     }
 
     function validateSubmission(text) {
-      const trimmed = text.trim();
-      if (trimmed.length < 8 || trimmed.length > 240) {
+      const trimmed = sanitizeText(text);
+      if (trimmed.length < 8 || trimmed.length > 280) {
         return false;
       }
       if (/(https?:\/\/|www\.)/i.test(trimmed)) {
         return false;
       }
-      if (/[<>]/.test(trimmed)) {
+      if (/([a-zA-Z])\1{5,}/.test(trimmed)) {
         return false;
       }
-      if (/([a-zA-Z])\1{5,}/.test(trimmed)) {
+      if (containsBlockedContent(trimmed)) {
         return false;
       }
       return true;
     }
 
     function addSubmission(joke, name, category, voiceDataUrl = null) {
+      const safeJoke = sanitizeText(joke);
+      const safeName = sanitizeText(name);
       submissions.push({
         id: Date.now().toString(36),
-        joke,
-        name: name || getCurrentUserName(),
+        joke: safeJoke,
+        name: safeName || getCurrentUserName(),
         userId: state.currentUserId,
         category,
         lang: state.currentLang,
@@ -3857,6 +4439,13 @@
     function renderModeration() {
       dom.moderationList.innerHTML = '';
       if (!dom.moderatorToggle.checked) {
+        return;
+      }
+      if (!settings.adminUnlocked) {
+        const locked = document.createElement('div');
+        locked.className = 'list-item';
+        locked.textContent = t('submit.adminHint');
+        dom.moderationList.appendChild(locked);
         return;
       }
       const pending = submissions.filter((item) => item.status === 'pending');
@@ -3875,7 +4464,7 @@
         const metaTag = document.createElement('em');
         metaTag.className = 'muted';
         metaTag.textContent = ` ${meta}`;
-        textWrap.textContent = item.joke;
+        textWrap.textContent = sanitizeText(item.joke);
         textWrap.appendChild(metaTag);
         row.appendChild(textWrap);
         if (item.voiceDataUrl) {
@@ -3885,12 +4474,16 @@
           row.appendChild(audio);
         }
         const actions = document.createElement('span');
+        const edit = document.createElement('button');
+        edit.textContent = t('buttons.edit');
+        edit.onclick = () => editSubmission(item.id);
         const approve = document.createElement('button');
         approve.textContent = t('buttons.approve');
         approve.onclick = () => approveSubmission(item.id);
         const reject = document.createElement('button');
         reject.textContent = t('buttons.reject');
         reject.onclick = () => rejectSubmission(item.id);
+        actions.appendChild(edit);
         actions.appendChild(approve);
         actions.appendChild(reject);
         row.appendChild(actions);
@@ -3899,10 +4492,20 @@
     }
 
     function approveSubmission(id) {
+      if (!settings.adminUnlocked) {
+        setFeedback('feedback.adminLocked');
+        return;
+      }
       const item = submissions.find((entry) => entry.id === id);
       if (!item) {
         return;
       }
+      const safeJoke = sanitizeText(item.joke);
+      if (!validateSubmission(safeJoke)) {
+        setFeedback('feedback.submissionInvalid');
+        return;
+      }
+      item.joke = safeJoke;
       item.status = 'approved';
       approvedJokes.push({
         joke: item.joke,
@@ -3915,7 +4518,35 @@
       setFeedback('feedback.moderationApproved');
     }
 
+    function editSubmission(id) {
+      if (!settings.adminUnlocked) {
+        setFeedback('feedback.adminLocked');
+        return;
+      }
+      const item = submissions.find((entry) => entry.id === id);
+      if (!item) {
+        return;
+      }
+      const updated = window.prompt(t('submit.editPrompt'), item.joke);
+      if (updated === null) {
+        return;
+      }
+      const safeJoke = sanitizeText(updated);
+      if (!validateSubmission(safeJoke)) {
+        setFeedback('feedback.submissionInvalid');
+        return;
+      }
+      item.joke = safeJoke;
+      saveSubmissions();
+      renderModeration();
+      setFeedback('feedback.submissionEdited');
+    }
+
     function rejectSubmission(id) {
+      if (!settings.adminUnlocked) {
+        setFeedback('feedback.adminLocked');
+        return;
+      }
       const item = submissions.find((entry) => entry.id === id);
       if (!item) {
         return;
@@ -3979,7 +4610,8 @@
       return {
         language: stored.language || 'en',
         theme: stored.theme || 'light',
-        lastSubmission: stored.lastSubmission || 0
+        lastSubmission: stored.lastSubmission || 0,
+        adminUnlocked: Boolean(stored.adminUnlocked)
       };
     }
 
@@ -4304,9 +4936,35 @@
       renderModeration();
       setSubmissionFeedback('feedback.submissionOk');
     };
+    if (dom.adminUnlock) {
+      dom.adminUnlock.onclick = () => {
+        const key = dom.adminKey.value.trim();
+        if (key && key === ADMIN_CODE) {
+          settings.adminUnlocked = true;
+          saveSettings();
+          dom.adminFeedback.textContent = t('feedback.adminUnlocked');
+          dom.adminKey.value = '';
+          dom.moderatorToggle.checked = true;
+          renderModeration();
+        } else {
+          dom.adminFeedback.textContent = t('feedback.adminDenied');
+        }
+      };
+    }
+    if (dom.adminLock) {
+      dom.adminLock.onclick = () => {
+        settings.adminUnlocked = false;
+        saveSettings();
+        dom.adminFeedback.textContent = t('feedback.adminLocked');
+        dom.adminKey.value = '';
+        dom.moderatorToggle.checked = false;
+        renderModeration();
+      };
+    }
     dom.moderatorToggle.onchange = () => renderModeration();
 
     state.currentCategory = dom.category.value;
+    dom.moderatorToggle.checked = Boolean(settings.adminUnlocked);
     initVoiceRecorder();
     if ('speechSynthesis' in window) {
       window.speechSynthesis.onvoiceschanged = warmUpVoices;
