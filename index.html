@@ -844,8 +844,12 @@
         <div class="control-group">
           <label for="category-select" data-i18n="controls.category">Category</label>
           <select id="category-select">
-            <option value="random" data-i18n="categories.random">Random</option>
+            <option value="random" data-i18n="categories.random">General</option>
+            <option value="dad" data-i18n="categories.dad">Dad Jokes</option>
+            <option value="pun" data-i18n="categories.pun">Puns</option>
             <option value="school" data-i18n="categories.school">School</option>
+            <option value="tech" data-i18n="categories.tech">Technology</option>
+            <option value="short" data-i18n="categories.short">Short Jokes</option>
             <option value="relationship" data-i18n="categories.relationship">Relationship</option>
             <option value="dark" data-i18n="categories.dark">Dark Humor</option>
             <option value="roast" data-i18n="categories.roast">Roasting</option>
@@ -965,8 +969,12 @@
           <div class="control-group">
             <label for="submission-category" data-i18n="submit.categoryLabel">Category</label>
             <select id="submission-category">
-              <option value="random" data-i18n="categories.random">Random</option>
+              <option value="random" data-i18n="categories.random">General</option>
+              <option value="dad" data-i18n="categories.dad">Dad Jokes</option>
+              <option value="pun" data-i18n="categories.pun">Puns</option>
               <option value="school" data-i18n="categories.school">School</option>
+              <option value="tech" data-i18n="categories.tech">Technology</option>
+              <option value="short" data-i18n="categories.short">Short Jokes</option>
               <option value="relationship" data-i18n="categories.relationship">Relationship</option>
               <option value="dark" data-i18n="categories.dark">Dark Humor</option>
               <option value="roast" data-i18n="categories.roast">Roasting</option>
@@ -1188,7 +1196,8 @@
       settings: 'jokeSettingsV1',
       stats: 'jokeStatsV1',
       comments: 'commentStoreV1',
-      notifications: 'notificationPrefsV1'
+      notifications: 'notificationPrefsV1',
+      progress: 'jokeProgressV1'
     };
 
     const languageMeta = {
@@ -1200,7 +1209,17 @@
       pt: { voice: 'pt-PT', api: null, dir: 'ltr' }
     };
 
-    const categories = ['random', 'school', 'relationship', 'dark', 'roast'];
+    const categories = [
+      'random',
+      'dad',
+      'pun',
+      'school',
+      'tech',
+      'short',
+      'relationship',
+      'dark',
+      'roast'
+    ];
     const MAX_JOKE_LENGTH = 180;
 
     const translations = {
@@ -1234,8 +1253,12 @@
         'controls.voiceSpeed': 'Voice Speed',
         'controls.search': 'Search',
         'controls.searchPlaceholder': 'Search jokes...',
-        'categories.random': 'Random',
+        'categories.random': 'General',
+        'categories.dad': 'Dad Jokes',
+        'categories.pun': 'Puns',
         'categories.school': 'School',
+        'categories.tech': 'Technology',
+        'categories.short': 'Short Jokes',
         'categories.relationship': 'Relationship',
         'categories.dark': 'Dark Humor',
         'categories.roast': 'Roasting',
@@ -1429,8 +1452,12 @@
         'controls.voiceSpeed': 'Vitesse voix',
         'controls.search': 'Recherche',
         'controls.searchPlaceholder': 'Chercher des blagues...',
-        'categories.random': 'Aleatoire',
+        'categories.random': 'General',
+        'categories.dad': 'Blagues de papa',
+        'categories.pun': 'Jeux de mots',
         'categories.school': 'Ecole',
+        'categories.tech': 'Technologie',
+        'categories.short': 'Blagues courtes',
         'categories.relationship': 'Relations',
         'categories.dark': 'Humour noir',
         'categories.roast': 'Taquinerie',
@@ -1623,8 +1650,12 @@
         'controls.voiceSpeed': 'Velocidad de voz',
         'controls.search': 'Buscar',
         'controls.searchPlaceholder': 'Buscar chistes...',
-        'categories.random': 'Aleatorio',
+        'categories.random': 'General',
+        'categories.dad': 'Chistes de papa',
+        'categories.pun': 'Juegos de palabras',
         'categories.school': 'Escuela',
+        'categories.tech': 'Tecnologia',
+        'categories.short': 'Chistes cortos',
         'categories.relationship': 'Relaciones',
         'categories.dark': 'Humor oscuro',
         'categories.roast': 'Bromear',
@@ -1817,8 +1848,12 @@
         'controls.voiceSpeed': 'سرعة الصوت',
         'controls.search': 'بحث',
         'controls.searchPlaceholder': 'ابحث عن نكات...',
-        'categories.random': 'عشوائي',
+        'categories.random': 'عام',
+        'categories.dad': 'نكات الاب',
+        'categories.pun': 'تلاعب لفظي',
         'categories.school': 'المدرسة',
+        'categories.tech': 'تقنية',
+        'categories.short': 'نكات قصيرة',
         'categories.relationship': 'العلاقات',
         'categories.dark': 'دعابة داكنة',
         'categories.roast': 'سخرية',
@@ -2011,8 +2046,12 @@
         'controls.voiceSpeed': 'Gudun murya',
         'controls.search': 'Bincike',
         'controls.searchPlaceholder': 'Nemo barkwanci...',
-        'categories.random': 'Bazata',
+        'categories.random': 'Gaba daya',
+        'categories.dad': 'Barkwancin baba',
+        'categories.pun': 'Kalmar wasa',
         'categories.school': 'Makaranta',
+        'categories.tech': 'Fasaha',
+        'categories.short': 'Gajerun barkwanci',
         'categories.relationship': 'Alaka',
         'categories.dark': 'Dariya mai duhu',
         'categories.roast': 'Barkwanci',
@@ -2205,8 +2244,12 @@
         'controls.voiceSpeed': 'Velocidade da voz',
         'controls.search': 'Buscar',
         'controls.searchPlaceholder': 'Buscar piadas...',
-        'categories.random': 'Aleatorio',
+        'categories.random': 'Geral',
+        'categories.dad': 'Piadas de pai',
+        'categories.pun': 'Trocadilhos',
         'categories.school': 'Escola',
+        'categories.tech': 'Tecnologia',
+        'categories.short': 'Piadas curtas',
         'categories.relationship': 'Relacionamento',
         'categories.dark': 'Humor negro',
         'categories.roast': 'Zoeira',
@@ -2371,7 +2414,105 @@
       }
     };
 
-    const localJokes = {
+    const jokeFactory = {
+      words: {
+        subject: ['dog', 'cat', 'teacher', 'robot', 'clock', 'banana', 'pencil', 'browser', 'phone', 'book'],
+        place: ['kitchen', 'classroom', 'garage', 'office', 'library', 'park', 'lab'],
+        tech: ['server', 'database', 'API', 'keyboard', 'router', 'bug', 'compiler', 'cloud'],
+        family: ['dad', 'mom', 'grandpa', 'aunt', 'cousin'],
+        verb: ['relax', 'laugh', 'debug', 'nap', 'smile', 'reboot', 'charge', 'learn'],
+        snack: ['cookie', 'pizza', 'sandwich', 'taco', 'noodle', 'muffin'],
+        school: ['homework', 'quiz', 'notebook', 'backpack', 'chalk'],
+        punThing: ['math', 'coffee', 'code', 'history', 'music', 'art'],
+        gadget: ['laptop', 'tablet', 'calculator', 'mouse', 'speaker'],
+        adjective: ['tiny', 'happy', 'sleepy', 'curious', 'gentle', 'noisy', 'bright'],
+        shortVerb: ['blinked', 'yawned', 'winked', 'paused', 'clicked'],
+        general: ['joke', 'smile', 'laugh', 'giggle', 'story']
+      },
+      templates: {
+        random: [
+          'The {subject} in the {place} just {verb}ed and smiled.',
+          'I met a {adjective} {subject} who loved a good {general}.',
+          'My {gadget} said, "Let us {verb}."'
+        ],
+        dad: [
+          'Hi {subject}, I am dad.',
+          'I told my {family} a {general}. They said, "Nice one, dad."',
+          'I am reading a book on {punThing}. It is a real page turner.'
+        ],
+        pun: [
+          'I used to be into {punThing}, but it was too {adjective}.',
+          'I tried to tell a {punThing} joke, but it did not add up.',
+          'My {gadget} loves {punThing} because it always clicks.'
+        ],
+        school: [
+          'The {school} asked for a {general} before class.',
+          'My {school} said, "Take it {adjective} today."',
+          'The {subject} brought a {snack} to {place} study time.'
+        ],
+        tech: [
+          'My {tech} said it needed a {general} break.',
+          'I tried to {verb} the {tech}, but it asked for coffee first.',
+          'The {tech} told the {gadget} to stay {adjective}.'
+        ],
+        short: [
+          'The {subject} {shortVerb}.',
+          'Just a {adjective} {general}.',
+          'My {gadget} {shortVerb} and smiled.'
+        ],
+        general: [
+          'A {adjective} {subject} shared a {general} today.',
+          'The {general} of the day was short and sweet.',
+          'I asked the {subject} to {verb}, and it did.'
+        ]
+      }
+    };
+
+    function hashString(value) {
+      let hash = 0;
+      for (let i = 0; i < value.length; i += 1) {
+        hash = (hash << 5) - hash + value.charCodeAt(i);
+        hash |= 0;
+      }
+      return Math.abs(hash);
+    }
+
+    function fillTemplate(template, seed) {
+      return template.replace(/\{(\w+)\}/g, (match, key) => {
+        const list = jokeFactory.words[key] || jokeFactory.words.general;
+        const index = (seed + hashString(`${template}-${key}`)) % list.length;
+        return list[index];
+      });
+    }
+
+    function generateCategoryJokes(category, count) {
+      const templates = jokeFactory.templates[category] || jokeFactory.templates.general;
+      const results = new Set();
+      let seed = 0;
+      while (results.size < count && seed < count * 30) {
+        const template = templates[seed % templates.length];
+        const joke = fillTemplate(template, seed);
+        results.add(joke);
+        seed += 1;
+      }
+      return Array.from(results);
+    }
+
+    function buildGeneratedJokes() {
+      return {
+        random: generateCategoryJokes('general', 80),
+        general: generateCategoryJokes('general', 120),
+        dad: generateCategoryJokes('dad', 80),
+        pun: generateCategoryJokes('pun', 80),
+        school: generateCategoryJokes('school', 80),
+        tech: generateCategoryJokes('tech', 80),
+        short: generateCategoryJokes('short', 80)
+      };
+    }
+
+    const generatedJokes = buildGeneratedJokes();
+
+    const legacyJokes = {
       en: {
         random: [
           'I told my coffee to stay calm. It nodded quietly.',
@@ -2543,6 +2684,24 @@
       }
     };
 
+    function mergeJokes(primary, secondary) {
+      const merged = { ...primary };
+      Object.keys(secondary).forEach((key) => {
+        const list = secondary[key] || [];
+        merged[key] = merged[key] ? merged[key].concat(list) : list;
+      });
+      return merged;
+    }
+
+    const localJokes = {
+      en: mergeJokes(generatedJokes, legacyJokes.en),
+      fr: legacyJokes.fr,
+      es: legacyJokes.es,
+      ar: legacyJokes.ar,
+      ha: legacyJokes.ha,
+      pt: legacyJokes.pt
+    };
+
     const achievements = [
       { id: 'starter', threshold: 1, labelKey: 'achievements.badge1' },
       { id: 'warmup', threshold: 5, labelKey: 'achievements.badge2' },
@@ -2557,6 +2716,8 @@
       currentCategory: 'random',
       currentLang: 'en',
       jokeList: [],
+      jokeOrder: [],
+      jokeIndex: {},
       currentIndex: -1,
       searchQuery: '',
       replyTo: null,
@@ -2579,6 +2740,7 @@
     const approvedJokes = loadApprovedJokes();
     const commentStore = loadComments();
     const notificationPrefs = loadNotifications();
+    const progressStore = loadProgressStore();
 
     function t(key, params = {}) {
       const dict = translations[state.currentLang] || translations.en;
@@ -3140,9 +3302,9 @@
     }
 
     function updateNavButtons() {
-      const hasList = state.jokeList.length > 0;
+      const hasList = state.jokeOrder.length > 0;
       dom.previous.disabled = !hasList || state.currentIndex <= 0;
-      dom.next.disabled = !hasList || state.currentIndex >= state.jokeList.length - 1;
+      dom.next.disabled = !hasList || state.currentIndex >= state.jokeOrder.length - 1;
     }
 
     function showJoke(joke) {
@@ -3173,43 +3335,101 @@
       return unique;
     }
 
+    function getProgressKey() {
+      return `${state.currentLang}|${state.currentCategory}`;
+    }
+
+    function shuffleArray(list) {
+      const array = [...list];
+      for (let i = array.length - 1; i > 0; i -= 1) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+      return array;
+    }
+
     function setJokeList() {
       const ordered = buildOrderedList(state.currentLang, state.currentCategory);
       if (state.currentJoke && !ordered.includes(state.currentJoke)) {
         ordered.unshift(state.currentJoke);
       }
       state.jokeList = ordered;
-      if (!state.jokeList.length) {
+      state.jokeIndex = {};
+      const ids = ordered.map((joke) => {
+        const id = buildJokeId(joke, state.currentLang, state.currentCategory);
+        state.jokeIndex[id] = joke;
+        return id;
+      });
+
+      if (!ids.length) {
         state.currentIndex = -1;
+        state.jokeOrder = [];
         showJoke(state.searchQuery ? t('feedback.noResults') : t('feedback.fallback'));
         updateNavButtons();
         return;
       }
-      const currentIndex = state.jokeList.indexOf(state.currentJoke);
-      state.currentIndex = currentIndex >= 0 ? currentIndex : 0;
-      showJoke(state.jokeList[state.currentIndex]);
+
+      let order = ids;
+      let index = 0;
+      const key = getProgressKey();
+
+      if (!state.searchQuery) {
+        const saved = progressStore[key];
+        if (saved && Array.isArray(saved.order)) {
+          const filtered = saved.order.filter((id) => state.jokeIndex[id]);
+          if (filtered.length === ids.length) {
+            order = filtered;
+            index = Math.min(saved.index || 0, order.length - 1);
+          } else {
+            order = shuffleArray(ids);
+          }
+        } else {
+          order = shuffleArray(ids);
+        }
+      }
+
+      state.jokeOrder = order;
+      state.currentIndex = index;
+      showJoke(state.jokeIndex[state.jokeOrder[state.currentIndex]]);
       updateNavButtons();
+      if (!state.searchQuery) {
+        progressStore[key] = { order: state.jokeOrder, index: state.currentIndex };
+        saveProgressStore();
+      }
     }
 
     function showJokeAt(index) {
-      if (index < 0 || index >= state.jokeList.length) {
+      if (index < 0 || index >= state.jokeOrder.length) {
         return;
       }
       state.currentIndex = index;
-      showJoke(state.jokeList[index]);
+      const id = state.jokeOrder[state.currentIndex];
+      showJoke(state.jokeIndex[id]);
       updateNavButtons();
+      if (!state.searchQuery) {
+        progressStore[getProgressKey()] = { order: state.jokeOrder, index: state.currentIndex };
+        saveProgressStore();
+      }
     }
 
     function navigateJoke(direction) {
-      if (!state.jokeList.length) {
+      if (!state.jokeOrder.length) {
         return;
       }
       setLoading(true);
       dom.jokeText.textContent = getLoadingMessage();
       setTimeout(() => {
         if (direction === 'next') {
-          if (state.currentIndex < state.jokeList.length - 1) {
+          if (state.currentIndex < state.jokeOrder.length - 1) {
             showJokeAt(state.currentIndex + 1);
+          } else if (!state.searchQuery) {
+            const lastId = state.jokeOrder[state.currentIndex];
+            let nextOrder = shuffleArray(state.jokeOrder);
+            if (nextOrder[0] === lastId && nextOrder.length > 1) {
+              nextOrder.push(nextOrder.shift());
+            }
+            state.jokeOrder = nextOrder;
+            showJokeAt(0);
           } else {
             setFeedback('feedback.noNext');
           }
@@ -3253,13 +3473,8 @@
       const base = localJokes[lang] || localJokes.en;
       const list = base[category] || base.random || [];
       const community = approvedJokes.filter(
-        (item) => item.lang === lang && (item.category === category || category === 'random')
+        (item) => item.lang === lang && item.category === category
       ).map((item) => item.joke);
-      if (category === 'random') {
-        const all = categories.flatMap((cat) => base[cat] || []);
-        const combined = [...all, ...community];
-        return combined.length ? combined : localJokes.en.random;
-      }
       const combined = [...list, ...community];
       return combined.length ? combined : (base.random || localJokes.en.random);
     }
@@ -3872,6 +4087,15 @@
 
     function saveNotifications() {
       localStorage.setItem(STORAGE_KEYS.notifications, JSON.stringify(notificationPrefs));
+    }
+
+    function loadProgressStore() {
+      const stored = JSON.parse(localStorage.getItem(STORAGE_KEYS.progress) || '{}');
+      return stored && typeof stored === 'object' ? stored : {};
+    }
+
+    function saveProgressStore() {
+      localStorage.setItem(STORAGE_KEYS.progress, JSON.stringify(progressStore));
     }
 
     function loadSeenStore() {
