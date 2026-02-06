@@ -1223,7 +1223,8 @@
       stats: 'jokeStatsV1',
       comments: 'commentStoreV1',
       notifications: 'notificationPrefsV1',
-      progress: 'jokeProgressV1'
+      progress: 'jokeProgressV1',
+      sessionSeen: 'jokeSessionSeenV1'
     };
 
     const languageMeta = {
@@ -3163,6 +3164,7 @@
       jokeOrder: [],
       jokeIndex: {},
       currentIndex: -1,
+      lastJokeId: '',
       searchQuery: '',
       replyTo: null,
       currentUserId: null,
@@ -3185,6 +3187,7 @@
     const commentStore = loadComments();
     const notificationPrefs = loadNotifications();
     const progressStore = loadProgressStore();
+    const sessionSeen = loadSessionSeen();
 
     function t(key, params = {}) {
       const dict = translations[state.currentLang] || translations.en;
@@ -3877,16 +3880,41 @@
       return { seenIds, deck, index };
     }
 
-    function buildNextDeck(ids, seenIds) {
+    function getSessionSeenSet(key, ids) {
+      const list = sessionSeen.seenByKey[key] || [];
+      const validIds = new Set(ids);
+      const filtered = list.filter((id) => validIds.has(id));
+      let set = new Set(filtered);
+      if (ids.length && set.size >= ids.length) {
+        set = new Set();
+      }
+      sessionSeen.seenByKey[key] = Array.from(set);
+      saveSessionSeen();
+      return set;
+    }
+
+    function updateSessionSeen(key, set) {
+      sessionSeen.seenByKey[key] = Array.from(set);
+      saveSessionSeen();
+    }
+
+    function buildNextDeck(ids, seenIds, sessionSeenSet, avoidId = '') {
       const seenSet = new Set(seenIds);
+      if (sessionSeenSet) {
+        sessionSeenSet.forEach((id) => seenSet.add(id));
+      }
       let remaining = ids.filter((id) => !seenSet.has(id));
-      let nextSeen = Array.from(seenSet);
+      let nextSeen = Array.from(new Set(seenIds));
       if (!remaining.length) {
         nextSeen = [];
         remaining = [...ids];
       }
+      const deck = shuffleArray(remaining).slice(0, MAX_JOKES_PER_BATCH);
+      if (avoidId && deck.length > 1 && deck[0] === avoidId) {
+        deck.push(deck.shift());
+      }
       return {
-        deck: shuffleArray(remaining).slice(0, MAX_JOKES_PER_BATCH),
+        deck,
         seenIds: nextSeen
       };
     }
@@ -3908,6 +3936,13 @@
       const seenSet = new Set(progress.seenIds);
       seenSet.add(id);
       progress.seenIds = Array.from(seenSet);
+      const sessionKey = getProgressKey();
+      const sessionSet = getSessionSeenSet(sessionKey, state.allJokeIds);
+      sessionSet.add(id);
+      if (state.allJokeIds.length && sessionSet.size >= state.allJokeIds.length) {
+        sessionSet.clear();
+      }
+      updateSessionSeen(sessionKey, sessionSet);
       progress.deck = state.jokeOrder;
       progress.index = state.currentIndex;
       persistProgressState(key, progress);
@@ -3919,7 +3954,8 @@
       }
       const key = getProgressKey();
       const progress = normalizeProgressState(key, state.allJokeIds);
-      const next = buildNextDeck(state.allJokeIds, progress.seenIds);
+      const sessionSeenSet = getSessionSeenSet(key, state.allJokeIds);
+      const next = buildNextDeck(state.allJokeIds, progress.seenIds, sessionSeenSet, state.lastJokeId);
       state.jokeOrder = next.deck;
       state.currentIndex = 0;
       persistProgressState(key, { deck: state.jokeOrder, index: 0, seenIds: next.seenIds });
@@ -3956,8 +3992,9 @@
 
       const progress = normalizeProgressState(key, ids);
       let { deck, index, seenIds } = progress;
+      const sessionSeenSet = getSessionSeenSet(key, ids);
       if (!deck.length || index >= deck.length) {
-        const next = buildNextDeck(ids, seenIds);
+        const next = buildNextDeck(ids, seenIds, sessionSeenSet, state.lastJokeId);
         deck = next.deck;
         seenIds = next.seenIds;
         index = 0;
@@ -3977,6 +4014,7 @@
       state.currentIndex = index;
       const id = state.jokeOrder[state.currentIndex];
       showJoke(state.jokeIndex[id]);
+      state.lastJokeId = id;
       updateNavButtons();
       markJokeSeen(id);
     }
@@ -4726,6 +4764,32 @@
 
     function saveProgressStore() {
       localStorage.setItem(STORAGE_KEYS.progress, JSON.stringify(progressStore));
+    }
+
+    function getSessionId() {
+      try {
+        let sessionId = sessionStorage.getItem('jokeSessionId');
+        if (!sessionId) {
+          sessionId = `sess_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
+          sessionStorage.setItem('jokeSessionId', sessionId);
+        }
+        return sessionId;
+      } catch (error) {
+        return 'session';
+      }
+    }
+
+    function loadSessionSeen() {
+      const stored = JSON.parse(localStorage.getItem(STORAGE_KEYS.sessionSeen) || '{}');
+      const sessionId = getSessionId();
+      if (!stored || stored.sessionId !== sessionId || typeof stored.seenByKey !== 'object') {
+        return { sessionId, seenByKey: {} };
+      }
+      return stored;
+    }
+
+    function saveSessionSeen() {
+      localStorage.setItem(STORAGE_KEYS.sessionSeen, JSON.stringify(sessionSeen));
     }
 
     function loadSeenStore() {
