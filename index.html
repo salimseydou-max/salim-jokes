@@ -2575,9 +2575,9 @@
             'I told the {tech} a {general}. It responded with a gentle beep.'
           ],
           short: [
-            'Setup: The {subject} walked in. Punchline: It left with my {snack}.',
-            'Setup: A {adjective} {subject} arrived. Punchline: A {general} followed.',
-            'Setup: My {gadget} smiled. Punchline: It wanted a {general}.'
+            'The {subject} walked in and left with my {snack}.',
+            'A {adjective} {subject} arrived, and a {general} followed.',
+            'My {gadget} smiled because it wanted a {general}.'
           ],
           relationship: [
             'My partner said, "Let us {verb}." I said, "After a {snack}."',
@@ -2637,9 +2637,9 @@
             'J ai raconte une {general} au {tech}. Il a bippe.'
           ],
           short: [
-            'Mise en place: Le {subject} arrive. Chute: Il repart avec mon {snack}.',
-            'Mise en place: Un {subject} {adjective}. Chute: Une {general} suit.',
-            'Mise en place: Mon {gadget} sourit. Chute: Il veut une {general}.'
+            'Le {subject} arrive et repart avec mon {snack}.',
+            'Un {subject} {adjective} arrive, et une {general} suit.',
+            'Mon {gadget} sourit parce qu il veut une {general}.'
           ],
           relationship: [
             'Mon partenaire a dit: "On {verb}." J ai repondu: "Apres un {snack}."',
@@ -2699,9 +2699,9 @@
             'Le conte un {general} al {tech}. Respondio con un beep.'
           ],
           short: [
-            'Preparacion: El {subject} entra. Remate: Se va con mi {snack}.',
-            'Preparacion: Un {subject} {adjective}. Remate: Llega un {general}.',
-            'Preparacion: Mi {gadget} sonrie. Remate: Quiere un {general}.'
+            'El {subject} entra y se va con mi {snack}.',
+            'Un {subject} {adjective} llega y aparece un {general}.',
+            'Mi {gadget} sonrie porque quiere un {general}.'
           ],
           relationship: [
             'Mi pareja dijo: "Vamos a {verb}." Yo: "Despues de un {snack}."',
@@ -2761,9 +2761,9 @@
             'حكيت {general} لـ{tech}. رد بصفير.'
           ],
           short: [
-            'البداية: دخل {subject}. النهاية: خرج ومعه {snack}.',
-            'البداية: {subject} {adjective}. النهاية: جاءت {general}.',
-            'البداية: ابتسم {gadget}. النهاية: أراد {general}.'
+            'دخل {subject} ثم خرج ومعه {snack}.',
+            '{subject} {adjective} وجاءت {general}.',
+            'ابتسم {gadget} لأنه أراد {general}.'
           ],
           relationship: [
             'قال الشريك: لن{verb}. قلت: بعد {snack}.',
@@ -2823,9 +2823,9 @@
             'Na ba {tech} {general}. Ya yi beep.'
           ],
           short: [
-            'Farko: {subject} ya shigo. Karshe: ya tafi da {snack}.',
-            'Farko: {subject} {adjective}. Karshe: {general} ta biyo.',
-            'Farko: {gadget} ya yi murmushi. Karshe: yana son {general}.'
+            '{subject} ya shigo ya tafi da {snack}.',
+            '{subject} {adjective}, sai {general} ta biyo.',
+            '{gadget} ya yi murmushi saboda yana son {general}.'
           ],
           relationship: [
             'Abokin zama ya ce: mu {verb}. Na ce: bayan {snack}.',
@@ -2885,9 +2885,9 @@
             'Contei uma {general} para o {tech}. Ele fez beep.'
           ],
           short: [
-            'Preparacao: O {subject} entrou. Final: Saiu com meu {snack}.',
-            'Preparacao: {subject} {adjective}. Final: Chegou uma {general}.',
-            'Preparacao: Meu {gadget} sorriu. Final: Queria uma {general}.'
+            'O {subject} entrou e saiu com meu {snack}.',
+            '{subject} {adjective}, e chegou uma {general}.',
+            'Meu {gadget} sorriu porque queria uma {general}.'
           ],
           relationship: [
             'Minha pessoa disse: "Vamos {verb}." Eu: "Depois do {snack}."',
@@ -3807,17 +3807,7 @@
     }
 
     function ensureSetupPunchline(joke, lang = state.currentLang) {
-      const cleaned = sanitizeText(joke);
-      if (!cleaned) {
-        return '';
-      }
-      if (hasPunchlineMarkers(cleaned, lang)) {
-        return cleaned;
-      }
-      const setupLabel = tForLang(lang, 'labels.setup');
-      const punchLabel = tForLang(lang, 'labels.punchline');
-      const ending = /[.!?؟]$/.test(cleaned) ? '' : '.';
-      return `${setupLabel} ${cleaned}${ending} ${punchLabel} ${cleaned}${ending}`;
+      return sanitizeText(joke);
     }
 
     function buildOrderedList(lang, category) {
