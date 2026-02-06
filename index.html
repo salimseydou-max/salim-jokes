@@ -383,6 +383,37 @@
       flex-wrap: wrap;
       gap: 0.6rem;
     }
+    .image-share {
+      margin-top: 1rem;
+      display: grid;
+      gap: 0.6rem;
+    }
+    .image-options,
+    .image-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+      align-items: center;
+    }
+    .image-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+    .image-preview {
+      border: 1px dashed var(--border);
+      border-radius: 16px;
+      background: var(--bg-soft);
+      padding: 0.8rem;
+      display: flex;
+      justify-content: center;
+    }
+    .image-preview img {
+      max-width: 100%;
+      border-radius: 12px;
+    }
     .reaction-counts {
       font-size: 0.9rem;
       color: var(--muted);
@@ -921,6 +952,23 @@
           <button data-share="instagram" data-i18n="share.instagram">Instagram</button>
           <button data-share="copy" data-i18n="share.copy">Copy Link</button>
         </div>
+        <div class="image-share">
+          <span class="section-label" data-i18n="image.title">Joke Image</span>
+          <div class="image-options">
+            <label class="image-toggle">
+              <input id="image-qr-toggle" type="checkbox" checked />
+              <span data-i18n="image.includeQr">Include QR code</span>
+            </label>
+          </div>
+          <div class="image-actions">
+            <button id="save-image" data-i18n="image.save">Save as Image</button>
+            <button id="share-image" data-i18n="image.share">Share Image</button>
+            <button id="share-url" class="ghost" data-i18n="image.shareUrl">Share URL</button>
+          </div>
+          <div id="image-preview" class="image-preview" hidden>
+            <img id="image-preview-img" alt="Joke image preview" />
+          </div>
+        </div>
         <div class="comment-section">
           <span class="section-label" data-i18n="comments.title">Comments</span>
           <div id="comment-list" class="comment-list"></div>
@@ -1197,6 +1245,12 @@
       commentText: document.getElementById('comment-text'),
       commentFeedback: document.getElementById('comment-feedback'),
       cancelReply: document.getElementById('cancel-reply'),
+      imageQrToggle: document.getElementById('image-qr-toggle'),
+      saveImage: document.getElementById('save-image'),
+      shareImage: document.getElementById('share-image'),
+      shareUrl: document.getElementById('share-url'),
+      imagePreview: document.getElementById('image-preview'),
+      imagePreviewImg: document.getElementById('image-preview-img'),
       recordVoice: document.getElementById('record-voice'),
       stopVoice: document.getElementById('stop-voice'),
       playVoice: document.getElementById('play-voice'),
@@ -1250,6 +1304,12 @@
     const MAX_JOKE_LENGTH = 280;
     const MAX_JOKES_PER_BATCH = 100;
     const ADMIN_CODE = 'salim-admin'; // Replace with a private admin key in production.
+    const BRANDING = {
+      site: 'Salim-jokes.vercel.app',
+      instagram: '@lolwith_salim',
+      tiktok: '@lolwith_salim',
+      url: 'https://salim-jokes.vercel.app'
+    };
     const BLOCKED_PATTERNS = [
       /\b(hate|kill|murder|rape|terror|nazi|racist)\b/i,
       /\b(sex|porn|xxx|nude|explicit)\b/i,
@@ -1342,6 +1402,11 @@
         'share.tiktok': 'TikTok',
         'share.instagram': 'Instagram',
         'share.copy': 'Copy Link',
+        'image.title': 'Joke Image',
+        'image.includeQr': 'Include QR code',
+        'image.save': 'Save as Image',
+        'image.share': 'Share Image',
+        'image.shareUrl': 'Share URL',
         'community.title': 'Community Highlights',
         'community.topRated': 'Top Rated Jokes',
         'community.leaderboard': 'Leaderboard',
@@ -1460,6 +1525,9 @@
         'feedback.adminLocked': 'Admin access locked.',
         'feedback.adminDenied': 'Invalid admin key.',
         'feedback.commentBlocked': 'Please keep comments friendly and safe.',
+        'feedback.imageSaved': 'Image saved.',
+        'feedback.imageFailed': 'Could not generate image.',
+        'feedback.shareUnsupported': 'Sharing is not supported here.',
         'labels.setup': 'Setup:',
         'labels.punchline': 'Punchline:',
         'toast.saved': 'Joke saved!',
@@ -1555,6 +1623,11 @@
         'share.tiktok': 'TikTok',
         'share.instagram': 'Instagram',
         'share.copy': 'Copier le lien',
+        'image.title': 'Image de blague',
+        'image.includeQr': 'Inclure le QR',
+        'image.save': 'Enregistrer image',
+        'image.share': 'Partager image',
+        'image.shareUrl': 'Partager le lien',
         'community.title': 'Moments forts',
         'community.topRated': 'Top blagues',
         'community.leaderboard': 'Classement',
@@ -1673,6 +1746,9 @@
         'feedback.adminLocked': 'Acces admin verrouille.',
         'feedback.adminDenied': 'Cle admin invalide.',
         'feedback.commentBlocked': 'Merci de garder des commentaires respectueux.',
+        'feedback.imageSaved': 'Image enregistree.',
+        'feedback.imageFailed': 'Impossible de creer l image.',
+        'feedback.shareUnsupported': 'Partage non pris en charge.',
         'labels.setup': 'Mise en place:',
         'labels.punchline': 'Chute:',
         'toast.saved': 'Blague sauvegardee.',
@@ -1767,6 +1843,11 @@
         'share.tiktok': 'TikTok',
         'share.instagram': 'Instagram',
         'share.copy': 'Copiar enlace',
+        'image.title': 'Imagen del chiste',
+        'image.includeQr': 'Incluir QR',
+        'image.save': 'Guardar imagen',
+        'image.share': 'Compartir imagen',
+        'image.shareUrl': 'Compartir enlace',
         'community.title': 'Momentos de la comunidad',
         'community.topRated': 'Mejores chistes',
         'community.leaderboard': 'Clasificacion',
@@ -1885,6 +1966,9 @@
         'feedback.adminLocked': 'Acceso admin bloqueado.',
         'feedback.adminDenied': 'Clave admin invalida.',
         'feedback.commentBlocked': 'Mantenga los comentarios respetuosos.',
+        'feedback.imageSaved': 'Imagen guardada.',
+        'feedback.imageFailed': 'No se pudo crear la imagen.',
+        'feedback.shareUnsupported': 'Compartir no compatible.',
         'labels.setup': 'Preparacion:',
         'labels.punchline': 'Remate:',
         'toast.saved': 'Chiste guardado.',
@@ -1979,6 +2063,11 @@
         'share.tiktok': 'تيك توك',
         'share.instagram': 'انستجرام',
         'share.copy': 'نسخ الرابط',
+        'image.title': 'صورة النكتة',
+        'image.includeQr': 'اضافة QR',
+        'image.save': 'حفظ الصورة',
+        'image.share': 'مشاركة الصورة',
+        'image.shareUrl': 'مشاركة الرابط',
         'community.title': 'ابرز المجتمع',
         'community.topRated': 'الافضل تقييما',
         'community.leaderboard': 'لوحة الصدارة',
@@ -2097,6 +2186,9 @@
         'feedback.adminLocked': 'تم قفل وصول المشرف.',
         'feedback.adminDenied': 'رمز غير صحيح.',
         'feedback.commentBlocked': 'يرجى كتابة تعليقات محترمة.',
+        'feedback.imageSaved': 'تم حفظ الصورة.',
+        'feedback.imageFailed': 'تعذر انشاء الصورة.',
+        'feedback.shareUnsupported': 'المشاركة غير مدعومة.',
         'labels.setup': 'البداية:',
         'labels.punchline': 'الخاتمة:',
         'toast.saved': 'تم حفظ النكتة.',
@@ -2191,6 +2283,11 @@
         'share.tiktok': 'TikTok',
         'share.instagram': 'Instagram',
         'share.copy': 'Kwafi link',
+        'image.title': 'Hoton barkwanci',
+        'image.includeQr': 'Hada QR',
+        'image.save': 'Ajiye hoto',
+        'image.share': 'Raba hoto',
+        'image.shareUrl': 'Raba link',
         'community.title': 'Abubuwan al umma',
         'community.topRated': 'Mafi so',
         'community.leaderboard': 'Tebur',
@@ -2309,6 +2406,9 @@
         'feedback.adminLocked': 'An kulle shigar admin.',
         'feedback.adminDenied': 'Lambar admin ba daidai ba.',
         'feedback.commentBlocked': 'A rubuta sharhi mai kyau.',
+        'feedback.imageSaved': 'An ajiye hoto.',
+        'feedback.imageFailed': 'Ba a iya kirkirar hoto.',
+        'feedback.shareUnsupported': 'Raba baya aiki a nan.',
         'labels.setup': 'Farko:',
         'labels.punchline': 'Karshen:',
         'toast.saved': 'An ajiye barkwanci.',
@@ -2403,6 +2503,11 @@
         'share.tiktok': 'TikTok',
         'share.instagram': 'Instagram',
         'share.copy': 'Copiar link',
+        'image.title': 'Imagem da piada',
+        'image.includeQr': 'Incluir QR',
+        'image.save': 'Salvar imagem',
+        'image.share': 'Compartilhar imagem',
+        'image.shareUrl': 'Compartilhar link',
         'community.title': 'Destaques da comunidade',
         'community.topRated': 'Melhores piadas',
         'community.leaderboard': 'Ranking',
@@ -2521,6 +2626,9 @@
         'feedback.adminLocked': 'Acesso admin bloqueado.',
         'feedback.adminDenied': 'Chave admin invalida.',
         'feedback.commentBlocked': 'Mantenha os comentarios respeitosos.',
+        'feedback.imageSaved': 'Imagem salva.',
+        'feedback.imageFailed': 'Nao foi possivel criar a imagem.',
+        'feedback.shareUnsupported': 'Compartilhamento nao suportado.',
         'labels.setup': 'Preparacao:',
         'labels.punchline': 'Final:',
         'toast.saved': 'Piada salva.',
@@ -4254,6 +4362,276 @@
       window.open(type === 'tiktok' ? 'https://www.tiktok.com/upload' : 'https://www.instagram.com/', '_blank');
     }
 
+    let qrScriptPromise = null;
+
+    function loadQrLibrary() {
+      if (window.qrcode) {
+        return Promise.resolve(window.qrcode);
+      }
+      if (qrScriptPromise) {
+        return qrScriptPromise;
+      }
+      qrScriptPromise = new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js';
+        script.onload = () => resolve(window.qrcode);
+        script.onerror = () => reject(new Error('QR load failed'));
+        document.head.appendChild(script);
+      });
+      return qrScriptPromise;
+    }
+
+    function wrapText(ctx, text, maxWidth) {
+      const words = text.split(/\s+/).filter(Boolean);
+      if (!words.length) {
+        return [''];
+      }
+      const lines = [];
+      let line = '';
+      words.forEach((word) => {
+        const testLine = line ? `${line} ${word}` : word;
+        if (ctx.measureText(testLine).width > maxWidth && line) {
+          lines.push(line);
+          line = word;
+        } else {
+          line = testLine;
+        }
+      });
+      if (line) {
+        lines.push(line);
+      }
+      if (lines.length === 1 && ctx.measureText(lines[0]).width > maxWidth) {
+        const chars = Array.from(text);
+        const charLines = [];
+        let charLine = '';
+        chars.forEach((char) => {
+          const testLine = charLine + char;
+          if (ctx.measureText(testLine).width > maxWidth && charLine) {
+            charLines.push(charLine);
+            charLine = char;
+          } else {
+            charLine = testLine;
+          }
+        });
+        if (charLine) {
+          charLines.push(charLine);
+        }
+        return charLines;
+      }
+      return lines;
+    }
+
+    function fitTextLines(ctx, text, maxWidth, maxHeight, baseSize) {
+      let fontSize = baseSize;
+      let lines = [];
+      let lineHeight = fontSize * 1.3;
+      while (fontSize >= 28) {
+        ctx.font = `700 ${fontSize}px 'Comic Neue', 'Comic Sans MS', sans-serif`;
+        lines = wrapText(ctx, text, maxWidth);
+        lineHeight = fontSize * 1.3;
+        if (lines.length * lineHeight <= maxHeight) {
+          return { lines, fontSize, lineHeight };
+        }
+        fontSize -= 4;
+      }
+      return { lines, fontSize, lineHeight };
+    }
+
+    function drawRoundedRect(ctx, x, y, width, height, radius) {
+      const r = Math.min(radius, width / 2, height / 2);
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.lineTo(x + width - r, y);
+      ctx.quadraticCurveTo(x + width, y, x + width, y + r);
+      ctx.lineTo(x + width, y + height - r);
+      ctx.quadraticCurveTo(x + width, y + height, x + width - r, y + height);
+      ctx.lineTo(x + r, y + height);
+      ctx.quadraticCurveTo(x, y + height, x, y + height - r);
+      ctx.lineTo(x, y + r);
+      ctx.quadraticCurveTo(x, y, x + r, y);
+      ctx.closePath();
+    }
+
+    async function drawQrCode(ctx, text, x, y, size, color) {
+      try {
+        const qrLib = await loadQrLibrary();
+        if (!qrLib) {
+          return false;
+        }
+        const qr = qrLib(0, 'M');
+        qr.addData(text);
+        qr.make();
+        const count = qr.getModuleCount();
+        const cellSize = Math.floor(size / count);
+        const offset = Math.floor((size - cellSize * count) / 2);
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(x, y, size, size);
+        ctx.fillStyle = color;
+        for (let row = 0; row < count; row += 1) {
+          for (let col = 0; col < count; col += 1) {
+            if (qr.isDark(row, col)) {
+              ctx.fillRect(x + offset + col * cellSize, y + offset + row * cellSize, cellSize, cellSize);
+            }
+          }
+        }
+        return true;
+      } catch (error) {
+        return false;
+      }
+    }
+
+    async function renderJokeImageCard(includeQr) {
+      if (!state.currentJoke) {
+        return null;
+      }
+      if (document.fonts && document.fonts.ready) {
+        await document.fonts.ready;
+      }
+      const canvas = document.createElement('canvas');
+      const width = 1080;
+      const height = 1080;
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      const styles = getComputedStyle(document.documentElement);
+      const bg = styles.getPropertyValue('--bg-soft').trim() || '#fff5c3';
+      const card = styles.getPropertyValue('--card').trim() || '#fffde7';
+      const textColor = styles.getPropertyValue('--text').trim() || '#1f1f1f';
+      const muted = styles.getPropertyValue('--muted').trim() || '#5c5c5c';
+      const accent = styles.getPropertyValue('--accent').trim() || '#ffbe76';
+      const padding = 80;
+      const bottomSpace = 160;
+
+      ctx.fillStyle = bg;
+      ctx.fillRect(0, 0, width, height);
+      const gradient = ctx.createLinearGradient(0, 0, width, height);
+      gradient.addColorStop(0, card);
+      gradient.addColorStop(1, accent);
+      ctx.globalAlpha = 0.2;
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, width, height);
+      ctx.globalAlpha = 1;
+
+      drawRoundedRect(ctx, 50, 50, width - 100, height - 120, 32);
+      ctx.fillStyle = card;
+      ctx.fill();
+
+      const meta = languageMeta[state.currentLang] || languageMeta.en;
+      ctx.direction = meta.dir;
+      ctx.fillStyle = textColor;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+
+      const textAreaWidth = width - padding * 2;
+      const textAreaHeight = height - bottomSpace - padding * 2;
+      const { lines, fontSize, lineHeight } = fitTextLines(
+        ctx,
+        state.currentJoke,
+        textAreaWidth,
+        textAreaHeight,
+        60
+      );
+      ctx.font = `700 ${fontSize}px 'Comic Neue', 'Comic Sans MS', sans-serif`;
+      const startY = height / 2 - ((lines.length - 1) * lineHeight) / 2;
+      lines.forEach((line, index) => {
+        ctx.fillText(line, width / 2, startY + index * lineHeight);
+      });
+
+      ctx.font = "600 28px 'Comic Neue', 'Comic Sans MS', sans-serif";
+      ctx.textAlign = 'left';
+      ctx.fillStyle = textColor;
+      ctx.fillText(BRANDING.site, padding, height - padding);
+
+      ctx.textAlign = 'right';
+      ctx.fillStyle = muted;
+      ctx.font = "600 24px 'Comic Neue', 'Comic Sans MS', sans-serif";
+      ctx.fillText(BRANDING.instagram, width - padding, height - padding - 30);
+      ctx.fillText(BRANDING.tiktok, width - padding, height - padding);
+
+      if (includeQr) {
+        const qrSize = 160;
+        await drawQrCode(ctx, BRANDING.url, width - padding - qrSize, padding, qrSize, textColor);
+      }
+
+      return canvas;
+    }
+
+    function updateImagePreview(dataUrl) {
+      if (!dom.imagePreview || !dom.imagePreviewImg) {
+        return;
+      }
+      dom.imagePreviewImg.src = dataUrl;
+      dom.imagePreview.hidden = false;
+    }
+
+    async function generateJokeImage(includeQr) {
+      const canvas = await renderJokeImageCard(includeQr);
+      if (!canvas) {
+        return null;
+      }
+      const dataUrl = canvas.toDataURL('image/png');
+      const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
+      return { dataUrl, blob };
+    }
+
+    async function saveJokeImage() {
+      if (!state.currentJoke) {
+        setFeedback('feedback.noJoke');
+        return;
+      }
+      const includeQr = dom.imageQrToggle ? dom.imageQrToggle.checked : true;
+      const result = await generateJokeImage(includeQr);
+      if (!result) {
+        setFeedback('feedback.imageFailed');
+        return;
+      }
+      updateImagePreview(result.dataUrl);
+      const link = document.createElement('a');
+      link.href = result.dataUrl;
+      link.download = 'joke-card.png';
+      link.click();
+      showToast(t('feedback.imageSaved'));
+    }
+
+    async function shareJokeImage() {
+      if (!state.currentJoke) {
+        setFeedback('feedback.noJoke');
+        return;
+      }
+      const includeQr = dom.imageQrToggle ? dom.imageQrToggle.checked : true;
+      const result = await generateJokeImage(includeQr);
+      if (!result || !result.blob) {
+        setFeedback('feedback.imageFailed');
+        return;
+      }
+      updateImagePreview(result.dataUrl);
+      const file = new File([result.blob], 'joke-card.png', { type: 'image/png' });
+      if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+        navigator.share({
+          title: t('brand.name'),
+          text: state.currentJoke,
+          files: [file],
+          url: BRANDING.url
+        }).catch(() => {});
+      } else {
+        setFeedback('feedback.shareUnsupported');
+      }
+    }
+
+    function shareJokeUrl() {
+      if (!state.currentJoke) {
+        setFeedback('feedback.noJoke');
+        return;
+      }
+      const url = BRANDING.url;
+      const text = `${state.currentJoke} - ${t('brand.name')}`;
+      if (navigator.share) {
+        navigator.share({ title: t('brand.name'), text, url }).catch(() => {});
+      } else {
+        copyToClipboard(`${text} ${url}`);
+      }
+    }
+
     function playSound(kind) {
       if (!window.AudioContext) {
         return;
@@ -4951,6 +5329,15 @@
       }
       copyToClipboard(state.currentJoke);
     };
+    if (dom.saveImage) {
+      dom.saveImage.onclick = () => saveJokeImage();
+    }
+    if (dom.shareImage) {
+      dom.shareImage.onclick = () => shareJokeImage();
+    }
+    if (dom.shareUrl) {
+      dom.shareUrl.onclick = () => shareJokeUrl();
+    }
     dom.heroStart.onclick = () => {
       if (location.hash !== '#/jokes') {
         location.hash = '#/jokes';
