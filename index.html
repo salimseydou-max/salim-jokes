@@ -3878,8 +3878,9 @@
     }
 
     function buildNextDeck(ids, seenIds) {
-      let remaining = ids.filter((id) => !seenIds.includes(id));
-      let nextSeen = [...seenIds];
+      const seenSet = new Set(seenIds);
+      let remaining = ids.filter((id) => !seenSet.has(id));
+      let nextSeen = Array.from(seenSet);
       if (!remaining.length) {
         nextSeen = [];
         remaining = [...ids];
@@ -3904,9 +3905,9 @@
       }
       const key = getProgressKey();
       const progress = normalizeProgressState(key, state.allJokeIds);
-      if (!progress.seenIds.includes(id)) {
-        progress.seenIds.push(id);
-      }
+      const seenSet = new Set(progress.seenIds);
+      seenSet.add(id);
+      progress.seenIds = Array.from(seenSet);
       progress.deck = state.jokeOrder;
       progress.index = state.currentIndex;
       persistProgressState(key, progress);
@@ -3927,9 +3928,6 @@
 
     function setJokeList() {
       const ordered = buildOrderedList(state.currentLang, state.currentCategory);
-      if (state.currentJoke && !ordered.includes(state.currentJoke)) {
-        ordered.unshift(state.currentJoke);
-      }
       state.jokeList = ordered;
       state.jokeIndex = {};
       const ids = ordered.map((joke) => {
