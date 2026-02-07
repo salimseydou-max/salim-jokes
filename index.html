@@ -906,10 +906,22 @@
         <div class="control-group">
           <label for="category-select" data-i18n="controls.category">Category</label>
           <select id="category-select">
+            <option value="" data-i18n="controls.selectCategory">Select category</option>
             <option value="random" data-i18n="categories.random">General</option>
+            <option value="classic" data-i18n="categories.classic">Classic</option>
+            <option value="story" data-i18n="categories.story">Story</option>
+            <option value="one-line" data-i18n="categories.oneLine">One-Line</option>
+            <option value="qa" data-i18n="categories.qa">Q&A</option>
+            <option value="school-life" data-i18n="categories.schoolLife">School Life</option>
             <option value="dad" data-i18n="categories.dad">Dad Jokes</option>
             <option value="pun" data-i18n="categories.pun">Puns</option>
             <option value="school" data-i18n="categories.school">School</option>
+            <option value="parents" data-i18n="categories.parents">Parents</option>
+            <option value="single-life" data-i18n="categories.singleLife">Single Life</option>
+            <option value="daily-struggles" data-i18n="categories.dailyStruggles">Daily Struggles</option>
+            <option value="sleep" data-i18n="categories.sleep">Sleep</option>
+            <option value="food" data-i18n="categories.food">Food</option>
+            <option value="phone-addiction" data-i18n="categories.phoneAddiction">Phone Addiction</option>
             <option value="tech" data-i18n="categories.tech">Technology</option>
             <option value="short" data-i18n="categories.short">Short Jokes</option>
             <option value="relationship" data-i18n="categories.relationship">Relationship</option>
@@ -926,6 +938,7 @@
           <input id="voice-speed" type="range" min="0.8" max="1.3" step="0.05" value="1.05" />
         </div>
       </div>
+      <div id="category-suggestions" class="muted" hidden></div>
 
       <div id="joke-card" class="joke-card card">
         <div id="joke-skeleton" class="skeleton" hidden>
@@ -1048,10 +1061,22 @@
           <div class="control-group">
             <label for="submission-category" data-i18n="submit.categoryLabel">Category</label>
             <select id="submission-category">
+              <option value="" data-i18n="controls.selectCategory">Select category</option>
               <option value="random" data-i18n="categories.random">General</option>
+              <option value="classic" data-i18n="categories.classic">Classic</option>
+              <option value="story" data-i18n="categories.story">Story</option>
+              <option value="one-line" data-i18n="categories.oneLine">One-Line</option>
+              <option value="qa" data-i18n="categories.qa">Q&A</option>
+              <option value="school-life" data-i18n="categories.schoolLife">School Life</option>
               <option value="dad" data-i18n="categories.dad">Dad Jokes</option>
               <option value="pun" data-i18n="categories.pun">Puns</option>
               <option value="school" data-i18n="categories.school">School</option>
+              <option value="parents" data-i18n="categories.parents">Parents</option>
+              <option value="single-life" data-i18n="categories.singleLife">Single Life</option>
+              <option value="daily-struggles" data-i18n="categories.dailyStruggles">Daily Struggles</option>
+              <option value="sleep" data-i18n="categories.sleep">Sleep</option>
+              <option value="food" data-i18n="categories.food">Food</option>
+              <option value="phone-addiction" data-i18n="categories.phoneAddiction">Phone Addiction</option>
               <option value="tech" data-i18n="categories.tech">Technology</option>
               <option value="short" data-i18n="categories.short">Short Jokes</option>
               <option value="relationship" data-i18n="categories.relationship">Relationship</option>
@@ -1261,6 +1286,7 @@
       play: document.getElementById('play'),
       replay: document.getElementById('replay'),
       copyJoke: document.getElementById('copy-joke'),
+      categorySuggestions: document.getElementById('category-suggestions'),
       searchInput: document.getElementById('search-input'),
       heroStart: document.getElementById('hero-start'),
       heroScroll: document.getElementById('hero-scroll'),
@@ -1356,9 +1382,20 @@
 
     const categories = [
       'random',
+      'classic',
+      'story',
+      'one-line',
+      'qa',
+      'school-life',
       'dad',
       'pun',
       'school',
+      'parents',
+      'single-life',
+      'daily-struggles',
+      'sleep',
+      'food',
+      'phone-addiction',
       'tech',
       'short',
       'relationship',
@@ -1368,13 +1405,45 @@
     const MAX_JOKE_LENGTH = 280;
     const MAX_JOKES_PER_BATCH = 100;
     const ADMIN_CODE = 'salim-admin'; // Replace with a private admin key in production.
-    const SAFE_CATEGORIES = ['random', 'dad', 'pun', 'school', 'tech', 'short', 'relationship'];
+    const SAFE_CATEGORIES = [
+      'random',
+      'classic',
+      'story',
+      'one-line',
+      'qa',
+      'school-life',
+      'sleep',
+      'food',
+      'parents',
+      'phone-addiction',
+      'daily-struggles',
+      'single-life',
+      'dad',
+      'pun',
+      'school',
+      'tech',
+      'short',
+      'relationship'
+    ];
     const CATEGORY_KEYWORDS = {
       school: ['school', 'class', 'teacher', 'homework', 'quiz', 'exam', 'ecole', 'classe', 'prof', 'escuela', 'clase', 'tarea', 'درس', 'مدرس', 'malami', 'aji', 'escola', 'aula'],
       tech: ['tech', 'code', 'api', 'server', 'bug', 'router', 'database', 'ordinateur', 'codigo', 'tecnologia', 'خادم', 'برمجة', 'kodi', 'laptop', 'computador'],
       dad: ['dad', 'papa', 'père', 'pai', 'اب', 'baba'],
       pun: ['pun', 'jeu de mots', 'juego de palabras', 'trocadilho'],
-      relationship: ['love', 'partner', 'amour', 'pareja', 'علاقة', 'حب', 'aboki', 'amor']
+      relationship: ['love', 'partner', 'amour', 'pareja', 'علاقة', 'حب', 'aboki', 'amor'],
+      sleep: ['sleep', 'nap', 'siesta', 'snooze', 'dormir', 'sommeil', 'barci', 'sono', 'نوم'],
+      food: ['food', 'snack', 'pizza', 'sandwich', 'taco', 'cuisine', 'comida', 'abinci', 'طعام'],
+      'phone-addiction': ['phone', 'mobile', 'scroll', 'screen', 'telefono', 'telemovel', 'waya', 'هاتف'],
+      'single-life': ['single', 'solo', 'celib', 'soltera', 'rashin aure', 'عزوبة'],
+      'daily-struggles': ['struggle', 'daily', 'routine', 'stress', 'galere', 'dificil', 'wahala', 'ضغوط']
+    };
+    const CATEGORY_ALIASES = {
+      'school-life': 'school',
+      parents: 'dad',
+      'phone-addiction': 'tech',
+      'daily-struggles': 'random',
+      'single-life': 'relationship',
+      classic: 'random'
     };
     const BRANDING = {
       site: 'Salim Jokes',
@@ -1426,10 +1495,23 @@
         'controls.voiceSpeed': 'Voice Speed',
         'controls.search': 'Search',
         'controls.searchPlaceholder': 'Search jokes...',
-        'categories.random': 'General',
+        'controls.selectCategory': 'Select category',
+        'controls.trendingCategories': 'Trending: {categories}',
+        'categories.random': 'Random',
+        'categories.classic': 'Classic',
+        'categories.story': 'Story',
+        'categories.oneLine': 'One-Line',
+        'categories.qa': 'Q&A',
+        'categories.schoolLife': 'School Life',
         'categories.dad': 'Dad Jokes',
         'categories.pun': 'Puns',
         'categories.school': 'School',
+        'categories.parents': 'Parents',
+        'categories.singleLife': 'Single Life',
+        'categories.dailyStruggles': 'Daily Struggles',
+        'categories.sleep': 'Sleep',
+        'categories.food': 'Food',
+        'categories.phoneAddiction': 'Phone Addiction',
         'categories.tech': 'Technology',
         'categories.short': 'Short Jokes',
         'categories.relationship': 'Relationship',
@@ -1605,6 +1687,7 @@
         'feedback.noPrevious': 'No previous jokes yet.',
         'feedback.noNext': 'No newer jokes yet.',
         'feedback.noJoke': 'Load a joke first.',
+        'feedback.selectCategory': 'Select a category to start.',
         'feedback.copy': 'Copied to clipboard.',
         'feedback.shareTip': 'Copied. Paste it on {platform}.',
         'feedback.reactionThanks': 'Thanks for your reaction!',
@@ -1680,10 +1763,23 @@
         'controls.voiceSpeed': 'Vitesse voix',
         'controls.search': 'Recherche',
         'controls.searchPlaceholder': 'Chercher des blagues...',
-        'categories.random': 'General',
+        'controls.selectCategory': 'Choisir une categorie',
+        'controls.trendingCategories': 'Tendance : {categories}',
+        'categories.random': 'Aleatoire',
+        'categories.classic': 'Classique',
+        'categories.story': 'Histoire',
+        'categories.oneLine': 'Une ligne',
+        'categories.qa': 'Questions/Reponses',
+        'categories.schoolLife': 'Vie scolaire',
         'categories.dad': 'Blagues de papa',
         'categories.pun': 'Jeux de mots',
         'categories.school': 'Ecole',
+        'categories.parents': 'Parents',
+        'categories.singleLife': 'Vie solo',
+        'categories.dailyStruggles': 'Difficultes quotidiennes',
+        'categories.sleep': 'Sommeil',
+        'categories.food': 'Cuisine',
+        'categories.phoneAddiction': 'Addiction au telephone',
         'categories.tech': 'Technologie',
         'categories.short': 'Blagues courtes',
         'categories.relationship': 'Relations',
@@ -1859,6 +1955,7 @@
         'feedback.noPrevious': 'Pas de blague precedente.',
         'feedback.noNext': 'Pas de blague suivante.',
         'feedback.noJoke': 'Chargez une blague.',
+        'feedback.selectCategory': 'Choisissez une categorie pour commencer.',
         'feedback.copy': 'Copie dans le presse papier.',
         'feedback.shareTip': 'Copie. Collez sur {platform}.',
         'feedback.reactionThanks': 'Merci pour la reaction !',
@@ -1933,10 +2030,23 @@
         'controls.voiceSpeed': 'Velocidad de voz',
         'controls.search': 'Buscar',
         'controls.searchPlaceholder': 'Buscar chistes...',
-        'categories.random': 'General',
+        'controls.selectCategory': 'Selecciona categoria',
+        'controls.trendingCategories': 'Tendencias: {categories}',
+        'categories.random': 'Aleatorio',
+        'categories.classic': 'Clasico',
+        'categories.story': 'Historia',
+        'categories.oneLine': 'Una linea',
+        'categories.qa': 'Preguntas/Respuestas',
+        'categories.schoolLife': 'Vida escolar',
         'categories.dad': 'Chistes de papa',
         'categories.pun': 'Juegos de palabras',
         'categories.school': 'Escuela',
+        'categories.parents': 'Padres',
+        'categories.singleLife': 'Vida soltera',
+        'categories.dailyStruggles': 'Luchas diarias',
+        'categories.sleep': 'Sueno',
+        'categories.food': 'Comida',
+        'categories.phoneAddiction': 'Adiccion al telefono',
         'categories.tech': 'Tecnologia',
         'categories.short': 'Chistes cortos',
         'categories.relationship': 'Relaciones',
@@ -2112,6 +2222,7 @@
         'feedback.noPrevious': 'Sin chistes anteriores.',
         'feedback.noNext': 'Sin chistes siguientes.',
         'feedback.noJoke': 'Carga un chiste primero.',
+        'feedback.selectCategory': 'Selecciona una categoria para empezar.',
         'feedback.copy': 'Copiado al portapapeles.',
         'feedback.shareTip': 'Copiado. Pegalo en {platform}.',
         'feedback.reactionThanks': 'Gracias por reaccionar.',
@@ -2186,10 +2297,23 @@
         'controls.voiceSpeed': 'سرعة الصوت',
         'controls.search': 'بحث',
         'controls.searchPlaceholder': 'ابحث عن نكات...',
-        'categories.random': 'عام',
+        'controls.selectCategory': 'اختر الفئة',
+        'controls.trendingCategories': 'الرائج: {categories}',
+        'categories.random': 'عشوائي',
+        'categories.classic': 'كلاسيكي',
+        'categories.story': 'قصة',
+        'categories.oneLine': 'سطر واحد',
+        'categories.qa': 'سؤال/جواب',
+        'categories.schoolLife': 'حياة المدرسة',
         'categories.dad': 'نكات الاب',
         'categories.pun': 'تلاعب لفظي',
         'categories.school': 'المدرسة',
+        'categories.parents': 'الاهل',
+        'categories.singleLife': 'حياة العزوبة',
+        'categories.dailyStruggles': 'معاناة يومية',
+        'categories.sleep': 'النوم',
+        'categories.food': 'الطعام',
+        'categories.phoneAddiction': 'ادمان الهاتف',
         'categories.tech': 'تقنية',
         'categories.short': 'نكات قصيرة',
         'categories.relationship': 'العلاقات',
@@ -2365,6 +2489,7 @@
         'feedback.noPrevious': 'لا توجد نكات سابقة.',
         'feedback.noNext': 'لا توجد نكات جديدة.',
         'feedback.noJoke': 'حمّل نكتة اولا.',
+        'feedback.selectCategory': 'اختر فئة للبدء.',
         'feedback.copy': 'تم النسخ.',
         'feedback.shareTip': 'تم النسخ. الصق في {platform}.',
         'feedback.reactionThanks': 'شكرا للتفاعل!',
@@ -2439,10 +2564,23 @@
         'controls.voiceSpeed': 'Gudun murya',
         'controls.search': 'Bincike',
         'controls.searchPlaceholder': 'Nemo barkwanci...',
-        'categories.random': 'Gaba daya',
+        'controls.selectCategory': 'Zabi rukuni',
+        'controls.trendingCategories': 'Masu tashe: {categories}',
+        'categories.random': 'Bazuwar',
+        'categories.classic': 'Na gargajiya',
+        'categories.story': 'Labari',
+        'categories.oneLine': 'Layi daya',
+        'categories.qa': 'Tambaya/Amsa',
+        'categories.schoolLife': 'Rayuwar makaranta',
         'categories.dad': 'Barkwancin baba',
         'categories.pun': 'Kalmar wasa',
         'categories.school': 'Makaranta',
+        'categories.parents': 'Iyaye',
+        'categories.singleLife': 'Rayuwar rashin aure',
+        'categories.dailyStruggles': 'Kalubalen yau da kullum',
+        'categories.sleep': 'Barci',
+        'categories.food': 'Abinci',
+        'categories.phoneAddiction': 'Dogaro da waya',
         'categories.tech': 'Fasaha',
         'categories.short': 'Gajerun barkwanci',
         'categories.relationship': 'Alaka',
@@ -2618,6 +2756,7 @@
         'feedback.noPrevious': 'Babu na baya.',
         'feedback.noNext': 'Babu na gaba.',
         'feedback.noJoke': 'Da farko ka dauko barkwanci.',
+        'feedback.selectCategory': 'Zabi rukuni don farawa.',
         'feedback.copy': 'An kwafa.',
         'feedback.shareTip': 'An kwafa. Ka manna a {platform}.',
         'feedback.reactionThanks': 'Mun gode da martani.',
@@ -2692,10 +2831,23 @@
         'controls.voiceSpeed': 'Velocidade da voz',
         'controls.search': 'Buscar',
         'controls.searchPlaceholder': 'Buscar piadas...',
-        'categories.random': 'Geral',
+        'controls.selectCategory': 'Escolha categoria',
+        'controls.trendingCategories': 'Em alta: {categories}',
+        'categories.random': 'Aleatorio',
+        'categories.classic': 'Classico',
+        'categories.story': 'Historia',
+        'categories.oneLine': 'Uma linha',
+        'categories.qa': 'Perguntas/Respostas',
+        'categories.schoolLife': 'Vida escolar',
         'categories.dad': 'Piadas de pai',
         'categories.pun': 'Trocadilhos',
         'categories.school': 'Escola',
+        'categories.parents': 'Pais',
+        'categories.singleLife': 'Vida solteira',
+        'categories.dailyStruggles': 'Dificuldades diarias',
+        'categories.sleep': 'Sono',
+        'categories.food': 'Comida',
+        'categories.phoneAddiction': 'Vicio em telefone',
         'categories.tech': 'Tecnologia',
         'categories.short': 'Piadas curtas',
         'categories.relationship': 'Relacionamento',
@@ -2871,6 +3023,7 @@
         'feedback.noPrevious': 'Sem piada anterior.',
         'feedback.noNext': 'Sem piada seguinte.',
         'feedback.noJoke': 'Carregue uma piada primeiro.',
+        'feedback.selectCategory': 'Escolha uma categoria para comecar.',
         'feedback.copy': 'Copiado.',
         'feedback.shareTip': 'Copiado. Cole em {platform}.',
         'feedback.reactionThanks': 'Obrigado pela reacao.',
@@ -2952,6 +3105,16 @@
             'Why did the {school} bring a {snack}? It wanted a tasty lesson.',
             'The {school} asked, "Can we {verb} after class?"',
             'The {subject} carried a {snack} to the {place} study group.'
+          ],
+          sleep: [
+            'The {subject} set an alarm and still chose to {verb}.',
+            'My {gadget} whispered, "Nap time after the {snack}."',
+            'The {place} was so calm even the {subject} took a nap.'
+          ],
+          food: [
+            'The {subject} guarded the {snack} like a treasure.',
+            'I brought a {snack} to the {place} and it turned into a {general}.',
+            'The {family} said, "Save the {snack} for later."'
           ],
           tech: [
             'Why did the {tech} take a break? It needed a {general} reboot.',
@@ -3036,6 +3199,16 @@
             'Le {school} a demande: "On peut {verb} apres la classe ?" ',
             'Le {subject} a apporte un {snack} au {place}.'
           ],
+          sleep: [
+            'Le {subject} a regle l alarme et a choisi de {verb}.',
+            'Mon {gadget} a murmure: "Sieste apres le {snack}."',
+            'Le {place} etait si calme que le {subject} a dormi.'
+          ],
+          food: [
+            'Le {subject} a protege le {snack} comme un tresor.',
+            'J ai apporte un {snack} au {place} et c est devenu une {general}.',
+            'Le {family} a dit: "Garde le {snack} pour plus tard."'
+          ],
           tech: [
             'Pourquoi le {tech} a fait une pause ? Pour un redemarrage {general}.',
             'Le {tech} a dit: "On {verb} apres la mise a jour."',
@@ -3118,6 +3291,16 @@
             'Por que el {school} llevo un {snack}? Para una pausa rica.',
             'El {school} pregunto: "Podemos {verb} despues de clase?"',
             'El {subject} llevo un {snack} a la {place}.'
+          ],
+          sleep: [
+            'El {subject} puso alarma y aun asi quiso {verb}.',
+            'Mi {gadget} dijo: "Siesta despues del {snack}."',
+            'La {place} estaba tan tranquila que el {subject} durmio.'
+          ],
+          food: [
+            'El {subject} cuido el {snack} como un tesoro.',
+            'Lleve un {snack} a la {place} y se volvio un {general}.',
+            'La {family} dijo: "Guarda el {snack} para luego."'
           ],
           tech: [
             'Por que el {tech} descanso? Necesitaba reinicio {general}.',
@@ -3202,6 +3385,16 @@
             'سأل {school}: هل يمكن أن {verb} بعد الحصة؟',
             'أحضر {subject} {snack} إلى {place}.'
           ],
+          sleep: [
+            'ضبط {subject} المنبه ومع ذلك اراد ان {verb}.',
+            'قال {gadget}: قيلولة بعد {snack}.',
+            'كان {place} هادئا حتى {subject} نام.'
+          ],
+          food: [
+            '{subject} حمى {snack} كأنه كنز.',
+            'احضرت {snack} الى {place} فصارت {general}.',
+            'قال {family}: احتفظ بـ {snack} لوقت لاحق.'
+          ],
           tech: [
             'لماذا أخذ {tech} استراحة؟ يحتاج إعادة تشغيل {general}.',
             'قال {tech}: سن{verb} لاحقا.',
@@ -3285,6 +3478,16 @@
             '{school} ya tambaya: za mu {verb} bayan aji?',
             '{subject} ya kawo {snack} zuwa {place}.'
           ],
+          sleep: [
+            '{subject} ya sa agogo amma har yanzu ya so ya {verb}.',
+            '{gadget} ya ce: mu yi barci bayan {snack}.',
+            '{place} ya yi shiru har {subject} ya yi barci.'
+          ],
+          food: [
+            '{subject} ya tsare {snack} kamar dukiya.',
+            'Na kawo {snack} zuwa {place} ya zama {general}.',
+            '{family} ta ce: ajiye {snack} don daga baya.'
+          ],
           tech: [
             'Me yasa {tech} ya huta? Don sake farawa {general}.',
             '{tech} ya ce: mu {verb} daga baya.',
@@ -3367,6 +3570,16 @@
             'Por que o {school} levou um {snack}? Para uma pausa gostosa.',
             '{school} perguntou: "Podemos {verb} depois da aula?"',
             '{subject} levou um {snack} para o {place}.'
+          ],
+          sleep: [
+            'O {subject} colocou alarme e mesmo assim quis {verb}.',
+            'Meu {gadget} disse: soneca depois do {snack}.',
+            'O {place} estava tao calmo que o {subject} dormiu.'
+          ],
+          food: [
+            'O {subject} guardou o {snack} como tesouro.',
+            'Levei um {snack} para o {place} e virou {general}.',
+            'A {family} disse: guarde o {snack} para depois.'
           ],
           tech: [
             'Por que o {tech} descansou? Precisava de reinicio {general}.',
@@ -3518,7 +3731,7 @@
       pending.forEach((item) => {
         const row = document.createElement('div');
         row.className = 'list-item';
-        const meta = `${t(`categories.${item.category}`)} · ${t(`languages.${item.lang}`)}`;
+        const meta = `${getCategoryLabel(item.category)} · ${t(`languages.${item.lang}`)}`;
         const textWrap = document.createElement('span');
         const metaTag = document.createElement('em');
         metaTag.className = 'muted';
@@ -3608,16 +3821,27 @@
     }
 
     function getCategoryTemplates(factory, category) {
-      const base =
-        (factory.templates && (factory.templates[category] || factory.templates.random)) || [];
       const formats = factory.formats || {};
-      return [
-        ...base,
-        ...(formats.qa || []),
-        ...(formats.oneLine || []),
-        ...(formats.story || []),
-        ...(formats.mixed || [])
-      ];
+      if (category === 'story') {
+        return formats.story && formats.story.length
+          ? formats.story
+          : factory.templates?.random || [];
+      }
+      if (category === 'one-line') {
+        return formats.oneLine && formats.oneLine.length
+          ? formats.oneLine
+          : factory.templates?.random || [];
+      }
+      if (category === 'qa') {
+        return formats.qa && formats.qa.length ? formats.qa : factory.templates?.random || [];
+      }
+      const alias = CATEGORY_ALIASES[category] || category;
+      let base =
+        (factory.templates && (factory.templates[alias] || factory.templates.random)) || [];
+      if (category === 'random' || category === 'classic') {
+        base = base.concat(formats.qa || [], formats.oneLine || [], formats.story || [], formats.mixed || []);
+      }
+      return base.length ? base : factory.templates?.random || [];
     }
 
     function buildGeneratedJokesByLang() {
@@ -3915,6 +4139,19 @@
       applyTheme(settings.theme);
       updateNavActive(getRouteFromHash());
       initCollapsibles();
+    }
+
+    const CATEGORY_I18N_KEYS = {
+      'school-life': 'schoolLife',
+      'phone-addiction': 'phoneAddiction',
+      'daily-struggles': 'dailyStruggles',
+      'single-life': 'singleLife',
+      'one-line': 'oneLine'
+    };
+
+    function getCategoryLabel(category) {
+      const key = CATEGORY_I18N_KEYS[category] || category;
+      return t(`categories.${key}`);
     }
 
     function applyLanguage(lang, options = {}) {
@@ -4388,7 +4625,7 @@
         items = getSavedJokesList().filter((entry) => {
           const formatted = ensureSetupPunchline(entry.joke, entry.lang);
           const text = formatted.toLowerCase();
-          const categoryLabel = t(`categories.${entry.category}`).toLowerCase();
+          const categoryLabel = getCategoryLabel(entry.category).toLowerCase();
           const langLabel = t(`languages.${entry.lang}`).toLowerCase();
           return text.includes(query) || categoryLabel.includes(query) || langLabel.includes(query);
         });
@@ -4417,7 +4654,7 @@
 
         const meta = document.createElement('div');
         meta.className = 'saved-meta';
-        const metaText = `${t(`categories.${entry.category}`)} · ${t(`languages.${entry.lang}`)}`;
+        const metaText = `${getCategoryLabel(entry.category)} · ${t(`languages.${entry.lang}`)}`;
         const date = entry.savedAt ? t('saved.savedOn', { date: formatSavedDate(entry.savedAt) }) : '';
         meta.textContent = date ? `${metaText} · ${date}` : metaText;
 
@@ -4472,8 +4709,20 @@
     function showJoke(joke) {
       state.currentJoke = joke;
       dom.jokeText.textContent = joke;
-      dom.jokeCategory.textContent = t(`categories.${state.currentCategory}`);
+      dom.jokeCategory.textContent = state.currentCategory
+        ? getCategoryLabel(state.currentCategory)
+        : '';
       dom.jokeLanguage.textContent = t(`languages.${state.currentLang}`);
+      updateSavedControls();
+      updateReactionUI();
+      renderComments();
+    }
+
+    function showJokeMessage(message) {
+      state.currentJoke = '';
+      dom.jokeText.textContent = message;
+      dom.jokeCategory.textContent = '';
+      dom.jokeLanguage.textContent = '';
       updateSavedControls();
       updateReactionUI();
       renderComments();
@@ -4500,7 +4749,7 @@
     function buildOrderedList(lang, category) {
       const list = getLocalJokes(lang, category);
       const query = state.searchQuery.trim().toLowerCase();
-      const categoryLabel = t(`categories.${category}`).toLowerCase();
+      const categoryLabel = getCategoryLabel(category).toLowerCase();
       const languageLabel = t(`languages.${lang}`).toLowerCase();
       const unique = [];
       const seen = new Set();
@@ -4696,6 +4945,15 @@
     }
 
     function setJokeList() {
+      if (!state.currentCategory) {
+        state.jokeList = [];
+        state.jokeOrder = [];
+        state.jokeIndex = {};
+        state.currentIndex = -1;
+        showJoke(t('feedback.selectCategory'));
+        updateNavButtons();
+        return;
+      }
       const ordered = buildOrderedList(state.currentLang, state.currentCategory);
       state.jokeList = ordered;
       state.jokeIndex = {};
@@ -5423,6 +5681,7 @@
         empty.className = 'list-item';
         empty.textContent = t('community.empty');
         dom.trendingList.appendChild(empty);
+        renderCategorySuggestions();
         return;
       }
       items.forEach((item) => {
@@ -5436,6 +5695,30 @@
         row.appendChild(score);
         dom.trendingList.appendChild(row);
       });
+      renderCategorySuggestions();
+    }
+
+    function renderCategorySuggestions() {
+      if (!dom.categorySuggestions) {
+        return;
+      }
+      const counts = {};
+      Object.values(reactionStore).forEach((item) => {
+        const total = item.funny + item.veryFunny + item.notFunny;
+        counts[item.category] = (counts[item.category] || 0) + total;
+      });
+      const entries = Object.entries(counts)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 3);
+      if (!entries.length) {
+        dom.categorySuggestions.hidden = true;
+        return;
+      }
+      const names = entries.map(([category]) => getCategoryLabel(category));
+      dom.categorySuggestions.textContent = t('controls.trendingCategories', {
+        categories: names.join(', ')
+      });
+      dom.categorySuggestions.hidden = false;
     }
 
     function renderAchievements() {
@@ -5630,7 +5913,7 @@
         const row = document.createElement('div');
         row.className = 'list-item';
         const action = t(`moderation.action.${entry.action}`) || entry.action;
-        const meta = `${action} · ${t(`categories.${entry.category}`)} · ${t(`languages.${entry.lang}`)}`;
+        const meta = `${action} · ${getCategoryLabel(entry.category)} · ${t(`languages.${entry.lang}`)}`;
         const title = document.createElement('div');
         title.textContent = meta;
         const subtitle = document.createElement('div');
@@ -5681,7 +5964,7 @@
       pending.forEach((item) => {
         const row = document.createElement('div');
         row.className = 'list-item';
-        const meta = `${t(`categories.${item.category}`)} · ${t(`languages.${item.lang}`)}`;
+        const meta = `${getCategoryLabel(item.category)} · ${t(`languages.${item.lang}`)}`;
         const textWrap = document.createElement('span');
         const metaTag = document.createElement('em');
         metaTag.className = 'muted';
@@ -6310,6 +6593,10 @@
       event.preventDefault();
       if (dom.submissionWebsite.value) {
         setSubmissionFeedback('feedback.submissionInvalid');
+        return;
+      }
+      if (!dom.submissionCategory.value) {
+        setSubmissionFeedback('feedback.selectCategory');
         return;
       }
       const text = dom.submissionText.value;
