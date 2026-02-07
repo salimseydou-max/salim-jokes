@@ -361,51 +361,6 @@
       text-align: center;
       white-space: pre-line;
     }
-    .joke-text.is-collapsed {
-      max-height: 8.5rem;
-      overflow: hidden;
-      position: relative;
-    }
-    .joke-text.is-collapsed::after {
-      content: '';
-      position: absolute;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      height: 3rem;
-      background: linear-gradient(transparent, var(--card));
-    }
-    .joke-toggle {
-      margin: 0.6rem auto 0;
-      display: inline-flex;
-    }
-    .joke-primary-actions {
-      margin-top: 0.9rem;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.6rem;
-      justify-content: center;
-    }
-    .more-actions {
-      margin-top: 0.8rem;
-      border: 1px dashed var(--border);
-      border-radius: 14px;
-      padding: 0.6rem 0.8rem;
-      background: var(--bg-soft);
-    }
-    .more-actions summary {
-      cursor: pointer;
-      font-weight: 600;
-      list-style: none;
-    }
-    .more-actions summary::-webkit-details-marker {
-      display: none;
-    }
-    .more-actions .more-grid {
-      display: grid;
-      gap: 0.8rem;
-      margin-top: 0.8rem;
-    }
     .joke-meta {
       display: flex;
       flex-wrap: wrap;
@@ -1003,9 +958,6 @@
           <div class="skeleton-line short"></div>
         </div>
         <div id="joke" class="joke-text">Loading joke...</div>
-        <button id="joke-toggle" class="ghost joke-toggle" type="button" data-i18n="buttons.readMore" hidden>
-          Read More
-        </button>
         <div class="joke-meta">
           <span id="joke-category" class="badge"></span>
           <span id="joke-language" class="badge"></span>
@@ -1014,9 +966,18 @@
           <button id="previous" data-i18n="buttons.previous">Previous Joke</button>
           <button id="next" data-i18n="buttons.next">Next Joke</button>
         </div>
-        <div class="joke-primary-actions">
-          <button data-share="native" data-i18n="share.quick">Share</button>
-          <button id="save-image" data-i18n="image.save">Save as Image</button>
+        <div class="quick-actions">
+          <span class="section-label" data-i18n="actions.title">Quick Actions</span>
+          <div class="quick-buttons">
+            <button id="play" data-i18n="buttons.play">Play</button>
+            <button id="replay" data-i18n="buttons.replay">Replay</button>
+            <button id="copy-joke" data-i18n="buttons.copyJoke">Copy Joke</button>
+            <button id="save-joke" data-i18n="buttons.save">Save Joke</button>
+            <button id="unsave-joke" data-i18n="buttons.unsave">Remove Saved</button>
+            <span id="saved-count" class="badge saved-count">0 saved</span>
+            <button data-reaction="funny" data-i18n="buttons.like">Like</button>
+            <button data-reaction="notFunny" data-i18n="buttons.dislike">Dislike</button>
+          </div>
         </div>
         <div class="reactions">
           <span class="section-label" data-i18n="reactions.title">Reactions</span>
@@ -1027,42 +988,30 @@
           </div>
           <div id="reaction-counts" class="reaction-counts"></div>
         </div>
-        <details class="more-actions">
-          <summary data-i18n="actions.more">More actions</summary>
-          <div class="more-grid">
-            <div class="quick-buttons">
-              <button id="play" data-i18n="buttons.play">Play</button>
-              <button id="replay" data-i18n="buttons.replay">Replay</button>
-              <button id="copy-joke" data-i18n="buttons.copyJoke">Copy Joke</button>
-              <button id="save-joke" data-i18n="buttons.save">Save Joke</button>
-              <button id="unsave-joke" data-i18n="buttons.unsave">Remove Saved</button>
-              <span id="saved-count" class="badge saved-count">0 saved</span>
-            </div>
-            <div class="share-buttons">
-              <span class="section-label" data-i18n="share.title">Share</span>
-              <button data-share="whatsapp" data-i18n="share.whatsapp">WhatsApp</button>
-              <button data-share="tiktok" data-i18n="share.tiktok">TikTok</button>
-              <button data-share="instagram" data-i18n="share.instagram">Instagram</button>
-              <button data-share="copy" data-i18n="share.copy">Copy Link</button>
-            </div>
-            <div class="image-share">
-              <span class="section-label" data-i18n="image.title">Joke Image</span>
-              <div class="image-options">
-                <label class="image-toggle">
-                  <input id="image-qr-toggle" type="checkbox" checked />
-                  <span data-i18n="image.includeQr">Include QR code</span>
-                </label>
-              </div>
-              <div class="image-actions">
-                <button id="share-image" data-i18n="image.share">Share Image</button>
-                <button id="share-url" class="ghost" data-i18n="image.shareUrl">Share URL</button>
-              </div>
-              <div id="image-preview" class="image-preview" hidden>
-                <img id="image-preview-img" alt="Joke image preview" />
-              </div>
-            </div>
+        <div class="share-buttons">
+          <span class="section-label" data-i18n="share.title">Share</span>
+          <button data-share="whatsapp" data-i18n="share.whatsapp">WhatsApp</button>
+          <button data-share="tiktok" data-i18n="share.tiktok">TikTok</button>
+          <button data-share="instagram" data-i18n="share.instagram">Instagram</button>
+          <button data-share="copy" data-i18n="share.copy">Copy Link</button>
+        </div>
+        <div class="image-share">
+          <span class="section-label" data-i18n="image.title">Joke Image</span>
+          <div class="image-options">
+            <label class="image-toggle">
+              <input id="image-qr-toggle" type="checkbox" checked />
+              <span data-i18n="image.includeQr">Include QR code</span>
+            </label>
           </div>
-        </details>
+          <div class="image-actions">
+            <button id="save-image" data-i18n="image.save">Save as Image</button>
+            <button id="share-image" data-i18n="image.share">Share Image</button>
+            <button id="share-url" class="ghost" data-i18n="image.shareUrl">Share URL</button>
+          </div>
+          <div id="image-preview" class="image-preview" hidden>
+            <img id="image-preview-img" alt="Joke image preview" />
+          </div>
+        </div>
         <div class="comment-section">
           <span class="section-label" data-i18n="comments.title">Comments</span>
           <div id="comment-list" class="comment-list"></div>
@@ -1339,7 +1288,6 @@
       voiceSpeed: document.getElementById('voice-speed'),
       jokeCard: document.getElementById('joke-card'),
       jokeText: document.getElementById('joke'),
-      jokeToggle: document.getElementById('joke-toggle'),
       jokeSkeleton: document.getElementById('joke-skeleton'),
       jokeCategory: document.getElementById('joke-category'),
       jokeLanguage: document.getElementById('joke-language'),
@@ -1349,7 +1297,6 @@
       play: document.getElementById('play'),
       replay: document.getElementById('replay'),
       copyJoke: document.getElementById('copy-joke'),
-      jokeToggle: document.getElementById('joke-toggle'),
       categorySuggestions: document.getElementById('category-suggestions'),
       searchInput: document.getElementById('search-input'),
       heroStart: document.getElementById('hero-start'),
@@ -1592,10 +1539,7 @@
         'buttons.dislike': 'Dislike',
         'buttons.expand': 'Expand',
         'buttons.collapse': 'Collapse',
-        'buttons.readMore': 'Read More',
-        'buttons.readLess': 'Read Less',
         'actions.title': 'Quick Actions',
-        'actions.more': 'More actions',
         'buttons.save': 'Save Joke',
         'buttons.unsave': 'Remove Saved',
         'buttons.showSaved': 'Show Saved',
@@ -1630,7 +1574,6 @@
         'share.tiktok': 'TikTok',
         'share.instagram': 'Instagram',
         'share.copy': 'Copy Link',
-        'share.quick': 'Share',
         'image.title': 'Joke Image',
         'image.includeQr': 'Include QR code',
         'image.save': 'Save as Image',
@@ -1864,10 +1807,7 @@
         'buttons.dislike': 'Je n aime pas',
         'buttons.expand': 'Afficher',
         'buttons.collapse': 'Masquer',
-        'buttons.readMore': 'Lire plus',
-        'buttons.readLess': 'Lire moins',
         'actions.title': 'Actions rapides',
-        'actions.more': 'Plus d actions',
         'buttons.save': 'Sauvegarder',
         'buttons.unsave': 'Retirer',
         'buttons.showSaved': 'Voir',
@@ -1902,7 +1842,6 @@
         'share.tiktok': 'TikTok',
         'share.instagram': 'Instagram',
         'share.copy': 'Copier le lien',
-        'share.quick': 'Partager',
         'image.title': 'Image de blague',
         'image.includeQr': 'Inclure le QR',
         'image.save': 'Enregistrer image',
@@ -2135,10 +2074,7 @@
         'buttons.dislike': 'No me gusta',
         'buttons.expand': 'Mostrar',
         'buttons.collapse': 'Ocultar',
-        'buttons.readMore': 'Leer mas',
-        'buttons.readLess': 'Leer menos',
         'actions.title': 'Acciones rapidas',
-        'actions.more': 'Mas acciones',
         'buttons.save': 'Guardar',
         'buttons.unsave': 'Quitar',
         'buttons.showSaved': 'Ver guardados',
@@ -2173,7 +2109,6 @@
         'share.tiktok': 'TikTok',
         'share.instagram': 'Instagram',
         'share.copy': 'Copiar enlace',
-        'share.quick': 'Compartir',
         'image.title': 'Imagen del chiste',
         'image.includeQr': 'Incluir QR',
         'image.save': 'Guardar imagen',
@@ -2406,10 +2341,7 @@
         'buttons.dislike': 'لم يعجبني',
         'buttons.expand': 'عرض',
         'buttons.collapse': 'اخفاء',
-        'buttons.readMore': 'اقرأ المزيد',
-        'buttons.readLess': 'اقرأ اقل',
         'actions.title': 'اجراءات سريعة',
-        'actions.more': 'المزيد',
         'buttons.save': 'حفظ النكتة',
         'buttons.unsave': 'ازالة',
         'buttons.showSaved': 'عرض المحفوظ',
@@ -2444,7 +2376,6 @@
         'share.tiktok': 'تيك توك',
         'share.instagram': 'انستجرام',
         'share.copy': 'نسخ الرابط',
-        'share.quick': 'مشاركة',
         'image.title': 'صورة النكتة',
         'image.includeQr': 'اضافة QR',
         'image.save': 'حفظ الصورة',
@@ -2677,10 +2608,7 @@
         'buttons.dislike': 'Ban so ba',
         'buttons.expand': 'Nuna',
         'buttons.collapse': 'Boye',
-        'buttons.readMore': 'Kara karatu',
-        'buttons.readLess': 'Rage karatu',
         'actions.title': 'Ayyuka masu sauri',
-        'actions.more': 'Karin ayyuka',
         'buttons.save': 'Ajiye',
         'buttons.unsave': 'Cire',
         'buttons.showSaved': 'Duba ajiyayyu',
@@ -2715,7 +2643,6 @@
         'share.tiktok': 'TikTok',
         'share.instagram': 'Instagram',
         'share.copy': 'Kwafi link',
-        'share.quick': 'Raba',
         'image.title': 'Hoton barkwanci',
         'image.includeQr': 'Hada QR',
         'image.save': 'Ajiye hoto',
@@ -2948,10 +2875,7 @@
         'buttons.dislike': 'Nao gostei',
         'buttons.expand': 'Mostrar',
         'buttons.collapse': 'Ocultar',
-        'buttons.readMore': 'Ler mais',
-        'buttons.readLess': 'Ler menos',
         'actions.title': 'Acoes rapidas',
-        'actions.more': 'Mais acoes',
         'buttons.save': 'Salvar',
         'buttons.unsave': 'Remover',
         'buttons.showSaved': 'Mostrar salvos',
@@ -2986,7 +2910,6 @@
         'share.tiktok': 'TikTok',
         'share.instagram': 'Instagram',
         'share.copy': 'Copiar link',
-        'share.quick': 'Compartilhar',
         'image.title': 'Imagem da piada',
         'image.includeQr': 'Incluir QR',
         'image.save': 'Salvar imagem',
@@ -4960,7 +4883,6 @@
     function showJoke(joke) {
       state.currentJoke = joke;
       dom.jokeText.textContent = joke;
-      state.jokeExpanded = false;
       dom.jokeCategory.textContent = state.currentCategory
         ? getCategoryLabel(state.currentCategory)
         : '';
@@ -4968,21 +4890,6 @@
       updateSavedControls();
       updateReactionUI();
       renderComments();
-      updateJokeToggle();
-    }
-
-    function updateJokeToggle() {
-      if (!dom.jokeToggle) {
-        return;
-      }
-      const text = state.currentJoke || '';
-      const lineCount = text.split('\n').length;
-      const shouldCollapse = text.length > 180 || lineCount > 3;
-      dom.jokeToggle.hidden = !shouldCollapse;
-      dom.jokeText.classList.toggle('is-collapsed', shouldCollapse && !state.jokeExpanded);
-      if (shouldCollapse) {
-        dom.jokeToggle.textContent = t(state.jokeExpanded ? 'buttons.readLess' : 'buttons.readMore');
-      }
     }
 
     function showJokeMessage(message) {
@@ -6772,12 +6679,6 @@
       }
       copyToClipboard(state.currentJoke);
     };
-    if (dom.jokeToggle) {
-      dom.jokeToggle.onclick = () => {
-        state.jokeExpanded = !state.jokeExpanded;
-        updateJokeToggle();
-      };
-    }
     if (dom.saveImage) {
       dom.saveImage.onclick = () => saveJokeImage();
     }
