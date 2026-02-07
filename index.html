@@ -25,9 +25,9 @@
   <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&display=swap" rel="stylesheet" />
   <style>
     :root {
-      --bg: #ffeaa7;
-      --bg-soft: #fff5c3;
-      --card: #fffde7;
+      --bg: #ffffff;
+      --bg-soft: #f7f7f7;
+      --card: #ffffff;
       --text: #1f1f1f;
       --muted: #5c5c5c;
       --accent: #ffbe76;
@@ -36,9 +36,9 @@
       --shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
       --radius: 18px;
       --button-text: #1f1f1f;
-      --bg-gradient: linear-gradient(135deg, #ffe9b3 0%, #fff2cf 45%, #ffe0d1 100%);
-      --bg-watermark: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='360' height='180'%3E%3Crect width='360' height='180' fill='none'/%3E%3Ctext x='18' y='70' font-size='32' opacity='0.07'%3ESalim%20Jokes%3C/text%3E%3Ctext x='120' y='130' font-size='32' opacity='0.05'%3ESalim%20Jokes%3C/text%3E%3C/svg%3E");
-      --bg-pattern: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Crect width='160' height='160' fill='none'/%3E%3Ctext x='12' y='42' font-size='28' opacity='0.16'%3E%F0%9F%98%82%3C/text%3E%3Ctext x='92' y='88' font-size='28' opacity='0.16'%3E%F0%9F%A4%A3%3C/text%3E%3Ctext x='40' y='132' font-size='28' opacity='0.16'%3E%F0%9F%98%9C%3C/text%3E%3C/svg%3E");
+      --bg-gradient: none;
+      --bg-watermark: none;
+      --bg-pattern: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Crect width='160' height='160' fill='none'/%3E%3Ctext x='12' y='42' font-size='28' opacity='0.12'%3E%F0%9F%98%82%3C/text%3E%3Ctext x='92' y='88' font-size='28' opacity='0.12'%3E%F0%9F%A4%A3%3C/text%3E%3Ctext x='40' y='132' font-size='28' opacity='0.12'%3E%F0%9F%98%9C%3C/text%3E%3C/svg%3E");
     }
     [data-theme="dark"] {
       --bg: #141414;
@@ -51,9 +51,9 @@
       --border: #3a3a3a;
       --shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
       --button-text: #1f1f1f;
-      --bg-gradient: linear-gradient(135deg, #151515 0%, #1d1b18 45%, #201a16 100%);
-      --bg-watermark: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='360' height='180'%3E%3Crect width='360' height='180' fill='none'/%3E%3Ctext x='18' y='70' font-size='32' opacity='0.08' fill='%23ffffff'%3ESalim%20Jokes%3C/text%3E%3Ctext x='120' y='130' font-size='32' opacity='0.06' fill='%23ffffff'%3ESalim%20Jokes%3C/text%3E%3C/svg%3E");
-      --bg-pattern: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Crect width='160' height='160' fill='none'/%3E%3Ctext x='12' y='42' font-size='28' opacity='0.10' fill='%23ffffff'%3E%F0%9F%98%82%3C/text%3E%3Ctext x='92' y='88' font-size='28' opacity='0.10' fill='%23ffffff'%3E%F0%9F%A4%A3%3C/text%3E%3Ctext x='40' y='132' font-size='28' opacity='0.10' fill='%23ffffff'%3E%F0%9F%98%9C%3C/text%3E%3C/svg%3E");
+      --bg-gradient: none;
+      --bg-watermark: none;
+      --bg-pattern: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Crect width='160' height='160' fill='none'/%3E%3Ctext x='12' y='42' font-size='28' opacity='0.08' fill='%23ffffff'%3E%F0%9F%98%82%3C/text%3E%3Ctext x='92' y='88' font-size='28' opacity='0.08' fill='%23ffffff'%3E%F0%9F%A4%A3%3C/text%3E%3Ctext x='40' y='132' font-size='28' opacity='0.08' fill='%23ffffff'%3E%F0%9F%98%9C%3C/text%3E%3C/svg%3E");
     }
     * {
       box-sizing: border-box;
@@ -68,10 +68,10 @@
     body {
       padding-top: 170px;
       background-color: var(--bg);
-      background-image: var(--bg-gradient), var(--bg-watermark), var(--bg-pattern);
-      background-repeat: no-repeat, repeat, repeat;
-      background-size: cover, 360px 180px, 160px 160px;
-      background-attachment: fixed, scroll, scroll;
+      background-image: var(--bg-pattern);
+      background-repeat: repeat;
+      background-size: 160px 160px;
+      background-attachment: fixed;
     }
     a {
       color: inherit;
