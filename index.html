@@ -1335,6 +1335,7 @@
       submissions: 'submissionsV1',
       approved: 'approvedJokesV1',
       moderationLog: 'moderationLogV1',
+      dailyIngest: 'dailyIngestV1',
       settings: 'jokeSettingsV1',
       stats: 'jokeStatsV1',
       comments: 'commentStoreV1',
@@ -1366,6 +1367,14 @@
     const MAX_JOKE_LENGTH = 280;
     const MAX_JOKES_PER_BATCH = 100;
     const ADMIN_CODE = 'salim-admin'; // Replace with a private admin key in production.
+    const SAFE_CATEGORIES = ['random', 'dad', 'pun', 'school', 'tech', 'short', 'relationship'];
+    const CATEGORY_KEYWORDS = {
+      school: ['school', 'class', 'teacher', 'homework', 'quiz', 'exam', 'ecole', 'classe', 'prof', 'escuela', 'clase', 'tarea', 'درس', 'مدرس', 'malami', 'aji', 'escola', 'aula'],
+      tech: ['tech', 'code', 'api', 'server', 'bug', 'router', 'database', 'ordinateur', 'codigo', 'tecnologia', 'خادم', 'برمجة', 'kodi', 'laptop', 'computador'],
+      dad: ['dad', 'papa', 'père', 'pai', 'اب', 'baba'],
+      pun: ['pun', 'jeu de mots', 'juego de palabras', 'trocadilho'],
+      relationship: ['love', 'partner', 'amour', 'pareja', 'علاقة', 'حب', 'aboki', 'amor']
+    };
     const BRANDING = {
       site: 'Salim Jokes',
       instagram: '@lolwith_salim',
@@ -3856,6 +3865,7 @@
     const submissions = loadSubmissions();
     const approvedJokes = loadApprovedJokes();
     const moderationLog = loadModerationLog();
+    const dailyIngest = loadDailyIngest();
     const commentStore = loadComments();
     const notificationPrefs = loadNotifications();
     const progressStore = loadProgressStore();
@@ -5490,6 +5500,48 @@
       return true;
     }
 
+    function inferCategoryFromJoke(text) {
+      const normalized = sanitizeText(text).toLowerCase();
+      if (!normalized) {
+        return 'random';
+      }
+      const entries = Object.entries(CATEGORY_KEYWORDS);
+      for (let i = 0; i < entries.length; i += 1) {
+        const [category, keywords] = entries[i];
+        if (keywords.some((word) => normalized.includes(word))) {
+          return category;
+        }
+      }
+      return 'random';
+    }
+
+    function isDuplicateJoke(joke, lang) {
+      const normalized = sanitizeText(joke).toLowerCase();
+      if (!normalized) {
+        return true;
+      }
+      const sessionId = buildSessionJokeId(normalized, lang);
+      const knownIds = getLanguageSessionIds(lang);
+      if (knownIds.includes(sessionId)) {
+        return true;
+      }
+      if (
+        submissions.some(
+          (item) => item.lang === lang && sanitizeText(item.joke).toLowerCase() === normalized
+        )
+      ) {
+        return true;
+      }
+      if (
+        approvedJokes.some(
+          (item) => item.lang === lang && sanitizeText(item.joke).toLowerCase() === normalized
+        )
+      ) {
+        return true;
+      }
+      return false;
+    }
+
     function screenSubmission(text) {
       const trimmed = sanitizeText(text);
       if (trimmed.length < 8 || trimmed.length > 280) {
@@ -5511,7 +5563,16 @@
       return { status: 'pending', reasons: [] };
     }
 
-    function addSubmission(joke, name, category, voiceDataUrl = null, status = 'pending', reasons = []) {
+    function addSubmission(
+      joke,
+      name,
+      category,
+      voiceDataUrl = null,
+      status = 'pending',
+      reasons = [],
+      source = 'user',
+      langOverride = null
+    ) {
       const safeJoke = sanitizeText(joke);
       const safeName = sanitizeText(name);
       const entry = {
@@ -5520,10 +5581,11 @@
         name: safeName || getCurrentUserName(),
         userId: state.currentUserId,
         category,
-        lang: state.currentLang,
+        lang: langOverride || state.currentLang,
         voiceDataUrl,
         status,
         flagReasons: reasons,
+        source,
         createdAt: new Date().toISOString()
       };
       submissions.push(entry);
@@ -5760,6 +5822,65 @@
       renderAdminDashboard();
       addModerationLog('deleted', item, item.flagReasons || []);
       setFeedback('feedback.moderationDeleted');
+    }
+
+    async function ingestDailyJokes() {
+      const today = new Date().toISOString().slice(0, 10);
+      const langs = Object.keys(languageMeta);
+      for (let i = 0; i < langs.length; i += 1) {
+        const lang = langs[i];
+        if (dailyIngest[lang] === today) {
+          continue;
+        }
+        await ingestLanguageJokes(lang);
+        dailyIngest[lang] = today;
+      }
+      saveDailyIngest();
+    }
+
+    async function ingestLanguageJokes(lang) {
+      const meta = languageMeta[lang] || languageMeta.en;
+      const targets = 2;
+      let added = 0;
+      for (let attempt = 0; attempt < 4 && added < targets; attempt += 1) {
+        let jokeText = '';
+        if (meta.api) {
+          try {
+            const data = await fetchJokeFromApi(meta.api, 'random');
+            jokeText = buildJoke(data);
+          } catch (error) {
+            jokeText = '';
+          }
+        }
+        if (!jokeText) {
+          const fallback = generateFallbackJoke(lang);
+          jokeText = fallback.joke;
+        }
+        const safeJoke = sanitizeText(jokeText);
+        if (!safeJoke || safeJoke.length > MAX_JOKE_LENGTH) {
+          continue;
+        }
+        if (isDuplicateJoke(safeJoke, lang)) {
+          continue;
+        }
+        const category = inferCategoryFromJoke(safeJoke);
+        const screen = screenSubmission(safeJoke);
+        if (screen.status !== 'pending') {
+          continue;
+        }
+        addSubmission(safeJoke, 'Auto', category, null, 'pending', [], 'auto', lang);
+        added += 1;
+      }
+    }
+
+    function generateFallbackJoke(lang) {
+      const factory = languageFactories[lang] || languageFactories.en;
+      const category = SAFE_CATEGORIES[Math.floor(Math.random() * SAFE_CATEGORIES.length)];
+      const templates = getCategoryTemplates(factory, category);
+      const seed = Math.floor(Math.random() * 9999);
+      const template = templates[seed % templates.length] || '{general}';
+      const joke = fillTemplateLang(template, factory, seed);
+      return { joke, category };
     }
 
     function initVoiceRecorder() {
@@ -6030,6 +6151,15 @@
       localStorage.setItem(STORAGE_KEYS.submissions, JSON.stringify(submissions));
     }
 
+    function loadDailyIngest() {
+      const stored = JSON.parse(localStorage.getItem(STORAGE_KEYS.dailyIngest) || '{}');
+      return stored && typeof stored === 'object' ? stored : {};
+    }
+
+    function saveDailyIngest() {
+      localStorage.setItem(STORAGE_KEYS.dailyIngest, JSON.stringify(dailyIngest));
+    }
+
     function loadModerationLog() {
       const stored = JSON.parse(localStorage.getItem(STORAGE_KEYS.moderationLog) || '[]');
       return Array.isArray(stored) ? stored : [];
@@ -6262,6 +6392,11 @@
       requestIdleCallback(warmUpVoices);
     } else {
       setTimeout(warmUpVoices, 300);
+    }
+    if ('requestIdleCallback' in window) {
+      requestIdleCallback(() => ingestDailyJokes());
+    } else {
+      setTimeout(() => ingestDailyJokes(), 800);
     }
     applyLanguage(settings.language);
     updateNavButtons();
