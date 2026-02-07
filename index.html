@@ -351,6 +351,7 @@
       line-height: 1.5;
       min-height: 96px;
       text-align: center;
+      white-space: pre-line;
     }
     .joke-meta {
       display: flex;
@@ -4032,6 +4033,99 @@
       }
     };
 
+    const longJokes = {
+      en: {
+        random: [
+          'I tried to write a long joke about my phone addiction.\n\nIt kept autocorrecting the punchline, so I turned it into a story about me and the charger arguing.\n\nWe made peace when the battery hit 1%.',
+          'School life taught me two things: carry a snack, and never trust the quiet classroom.\n\nI walked in with a sandwich and walked out with three new friends and a surprise quiz.\n\nThe sandwich survived. The quiz did not.',
+          'My parents asked why I was tired.\n\nI told them my pillow was practicing a bedtime story.\n\nThey said it was a classic excuse and still handed me breakfast.'
+        ],
+        story: [
+          'I tried to write a long joke about my phone addiction.\n\nIt kept autocorrecting the punchline, so I turned it into a story about me and the charger arguing.\n\nWe made peace when the battery hit 1%.',
+          'School life taught me two things: carry a snack, and never trust the quiet classroom.\n\nI walked in with a sandwich and walked out with three new friends and a surprise quiz.\n\nThe sandwich survived. The quiz did not.',
+          'My parents asked why I was tired.\n\nI told them my pillow was practicing a bedtime story.\n\nThey said it was a classic excuse and still handed me breakfast.'
+        ],
+        classic: [
+          'My parents asked why I was tired.\n\nI told them my pillow was practicing a bedtime story.\n\nThey said it was a classic excuse and still handed me breakfast.'
+        ]
+      },
+      fr: {
+        random: [
+          'J ai ecrit une longue blague sur la vie d etudiant.\n\nElle commence avec un sac lourd, un cafe froid, et une salle qui change de nom.\n\nElle finit avec un sourire, parce que le devoir n a pas encore gagne.',
+          'La nuit, mon telephone insiste pour rester reveille.\n\nJe lui raconte une histoire et je le branche au chargeur.\n\nIl s endort avant moi.',
+          'Mes parents ont demande pourquoi je ris seul.\n\nJe leur ai dit que ma pizza me racontait une histoire.\n\nIls ont dit que c etait une blague classique et ont pris une part.'
+        ],
+        story: [
+          'J ai ecrit une longue blague sur la vie d etudiant.\n\nElle commence avec un sac lourd, un cafe froid, et une salle qui change de nom.\n\nElle finit avec un sourire, parce que le devoir n a pas encore gagne.',
+          'La nuit, mon telephone insiste pour rester reveille.\n\nJe lui raconte une histoire et je le branche au chargeur.\n\nIl s endort avant moi.',
+          'Mes parents ont demande pourquoi je ris seul.\n\nJe leur ai dit que ma pizza me racontait une histoire.\n\nIls ont dit que c etait une blague classique et ont pris une part.'
+        ],
+        classic: [
+          'Mes parents ont demande pourquoi je ris seul.\n\nJe leur ai dit que ma pizza me racontait une histoire.\n\nIls ont dit que c etait une blague classique et ont pris une part.'
+        ]
+      },
+      es: {
+        random: [
+          'Escribi una historia larga sobre la vida diaria.\n\nEmpieza con una lista enorme y un cafe pequeno.\n\nTermina con una sonrisa porque hice algo bien.',
+          'Mi telefono quiere mas atencion que mi planta.\n\nLe conte un cuento y lo puse a cargar.\n\nSe durmio con la pantalla apagada.',
+          'Mis padres me preguntaron por mi sueno.\n\nLes dije que mi almohada estaba contando chistes.\n\nSe rieron y me dieron desayuno.'
+        ],
+        story: [
+          'Escribi una historia larga sobre la vida diaria.\n\nEmpieza con una lista enorme y un cafe pequeno.\n\nTermina con una sonrisa porque hice algo bien.',
+          'Mi telefono quiere mas atencion que mi planta.\n\nLe conte un cuento y lo puse a cargar.\n\nSe durmio con la pantalla apagada.',
+          'Mis padres me preguntaron por mi sueno.\n\nLes dije que mi almohada estaba contando chistes.\n\nSe rieron y me dieron desayuno.'
+        ],
+        classic: [
+          'Mis padres me preguntaron por mi sueno.\n\nLes dije que mi almohada estaba contando chistes.\n\nSe rieron y me dieron desayuno.'
+        ]
+      },
+      ar: {
+        random: [
+          'كتبت قصة طويلة عن الحياة اليومية.\n\nبدأت بقائمة مهام طويلة وكوب قهوة صغير.\n\nانتهت بابتسامة لانني انجزت شيئا.',
+          'هاتفى يطلب انتباه اكثر من النبات.\n\nحكيت له قصة ووصلته بالشاحن.\n\nنام قبل ان انام.',
+          'سألني والداي لماذا انا متعب.\n\nقلت ان الوسادة كانت تروي لي نكتة طويلة.\n\nابتسموا واعطوني فطورا.'
+        ],
+        story: [
+          'كتبت قصة طويلة عن الحياة اليومية.\n\nبدأت بقائمة مهام طويلة وكوب قهوة صغير.\n\nانتهت بابتسامة لانني انجزت شيئا.',
+          'هاتفى يطلب انتباه اكثر من النبات.\n\nحكيت له قصة ووصلته بالشاحن.\n\nنام قبل ان انام.',
+          'سألني والداي لماذا انا متعب.\n\nقلت ان الوسادة كانت تروي لي نكتة طويلة.\n\nابتسموا واعطوني فطورا.'
+        ],
+        classic: [
+          'سألني والداي لماذا انا متعب.\n\nقلت ان الوسادة كانت تروي لي نكتة طويلة.\n\nابتسموا واعطوني فطورا.'
+        ]
+      },
+      ha: {
+        random: [
+          'Na rubuta dogon barkwanci game da rayuwar yau da kullum.\n\nYa fara da jerin aiki mai tsawo da kofin kofi karami.\n\nYa kare da murmushi saboda na yi nasara.',
+          'Wayata tana neman kulawa fiye da shuka.\n\nNa ba ta labari sannan na saka ta caji.\n\nTa yi barci kafin ni.',
+          'Iyaye na suka tambaye ni me ya sa nake gajiya.\n\nNa ce matashi ya yi mini labari mai tsawo.\n\nSuka yi dariya suka kawo abinci.'
+        ],
+        story: [
+          'Na rubuta dogon barkwanci game da rayuwar yau da kullum.\n\nYa fara da jerin aiki mai tsawo da kofin kofi karami.\n\nYa kare da murmushi saboda na yi nasara.',
+          'Wayata tana neman kulawa fiye da shuka.\n\nNa ba ta labari sannan na saka ta caji.\n\nTa yi barci kafin ni.',
+          'Iyaye na suka tambaye ni me ya sa nake gajiya.\n\nNa ce matashi ya yi mini labari mai tsawo.\n\nSuka yi dariya suka kawo abinci.'
+        ],
+        classic: [
+          'Iyaye na suka tambaye ni me ya sa nake gajiya.\n\nNa ce matashi ya yi mini labari mai tsawo.\n\nSuka yi dariya suka kawo abinci.'
+        ]
+      },
+      pt: {
+        random: [
+          'Escrevi uma historia longa sobre o dia a dia.\n\nComeca com uma lista enorme e um cafe pequeno.\n\nTermina com um sorriso porque algo deu certo.',
+          'Meu telefone quer mais atencao que minha planta.\n\nContei uma historia e coloquei no carregador.\n\nEle dormiu antes de mim.',
+          'Meus pais perguntaram por que eu estava cansado.\n\nDisse que o travesseiro contou uma piada longa.\n\nEles riram e trouxeram cafe da manha.'
+        ],
+        story: [
+          'Escrevi uma historia longa sobre o dia a dia.\n\nComeca com uma lista enorme e um cafe pequeno.\n\nTermina com um sorriso porque algo deu certo.',
+          'Meu telefone quer mais atencao que minha planta.\n\nContei uma historia e coloquei no carregador.\n\nEle dormiu antes de mim.',
+          'Meus pais perguntaram por que eu estava cansado.\n\nDisse que o travesseiro contou uma piada longa.\n\nEles riram e trouxeram cafe da manha.'
+        ],
+        classic: [
+          'Meus pais perguntaram por que eu estava cansado.\n\nDisse que o travesseiro contou uma piada longa.\n\nEles riram e trouxeram cafe da manha.'
+        ]
+      }
+    };
+
     function mergeJokes(primary, secondary) {
       const merged = { ...primary };
       Object.keys(secondary).forEach((key) => {
@@ -4042,12 +4136,12 @@
     }
 
     const localJokes = {
-      en: mergeJokes(generatedJokesByLang.en, legacyJokes.en),
-      fr: mergeJokes(generatedJokesByLang.fr, legacyJokes.fr),
-      es: mergeJokes(generatedJokesByLang.es, legacyJokes.es),
-      ar: mergeJokes(generatedJokesByLang.ar, legacyJokes.ar),
-      ha: mergeJokes(generatedJokesByLang.ha, legacyJokes.ha),
-      pt: mergeJokes(generatedJokesByLang.pt, legacyJokes.pt)
+      en: mergeJokes(mergeJokes(generatedJokesByLang.en, legacyJokes.en), longJokes.en),
+      fr: mergeJokes(mergeJokes(generatedJokesByLang.fr, legacyJokes.fr), longJokes.fr),
+      es: mergeJokes(mergeJokes(generatedJokesByLang.es, legacyJokes.es), longJokes.es),
+      ar: mergeJokes(mergeJokes(generatedJokesByLang.ar, legacyJokes.ar), longJokes.ar),
+      ha: mergeJokes(mergeJokes(generatedJokesByLang.ha, legacyJokes.ha), longJokes.ha),
+      pt: mergeJokes(mergeJokes(generatedJokesByLang.pt, legacyJokes.pt), longJokes.pt)
     };
 
     const achievements = [
@@ -4743,7 +4837,7 @@
     }
 
     function ensureSetupPunchline(joke, lang = state.currentLang) {
-      return sanitizeText(joke);
+      return sanitizeTextWithLines(joke);
     }
 
     function buildOrderedList(lang, category) {
@@ -5753,6 +5847,18 @@
         return '';
       }
       return value.replace(/[<>]/g, '').replace(/\s+/g, ' ').trim();
+    }
+
+    function sanitizeTextWithLines(value) {
+      if (!value) {
+        return '';
+      }
+      return value
+        .replace(/[<>]/g, '')
+        .replace(/\r\n/g, '\n')
+        .replace(/[ \t]+/g, ' ')
+        .replace(/\n{3,}/g, '\n\n')
+        .trim();
     }
 
     function containsBlockedContent(value) {
