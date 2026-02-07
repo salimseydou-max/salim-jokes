@@ -636,6 +636,15 @@
       gap: 0.6rem;
       font-weight: 600;
     }
+    .moderation-log {
+      display: grid;
+      gap: 0.6rem;
+      margin-top: 0.6rem;
+    }
+    .moderation-log .list-item {
+      display: grid;
+      gap: 0.2rem;
+    }
     .moderation-access {
       display: grid;
       gap: 0.5rem;
@@ -1071,6 +1080,10 @@
           <div class="muted" data-i18n="submit.adminHint">Admin access required to review submissions.</div>
         </div>
         <div id="moderation-list" class="list"></div>
+        <div class="moderation-log">
+          <span class="section-label" data-i18n="moderation.logTitle">Moderation Log</span>
+          <div id="moderation-log" class="list"></div>
+        </div>
       </div>
     </section>
 
@@ -1261,6 +1274,7 @@
       adminLock: document.getElementById('admin-lock'),
       adminFeedback: document.getElementById('admin-feedback'),
       moderationList: document.getElementById('moderation-list'),
+      moderationLog: document.getElementById('moderation-log'),
       progressBar: document.getElementById('progress-bar'),
       progressText: document.getElementById('progress-text'),
       badgeList: document.getElementById('badge-list')
@@ -1273,6 +1287,7 @@
       userReactions: 'userReactionsV1',
       submissions: 'submissionsV1',
       approved: 'approvedJokesV1',
+      moderationLog: 'moderationLogV1',
       settings: 'jokeSettingsV1',
       stats: 'jokeStatsV1',
       comments: 'commentStoreV1',
@@ -1311,10 +1326,15 @@
       url: 'https://salim-jokes.vercel.app'
     };
     const BLOCKED_PATTERNS = [
-      /\b(hate|kill|murder|rape|terror|nazi|racist)\b/i,
-      /\b(sex|porn|xxx|nude|explicit)\b/i,
+      /\b(hate|kill|murder|rape|terror|nazi|racist|genocide)\b/i,
+      /\b(sex|porn|xxx|nude|explicit|nsfw)\b/i,
       /\b(scam|phish|malware|hack|exploit)\b/i,
-      /\b(suicide|self-harm|violence)\b/i
+      /\b(suicide|self-harm|violence|abuse)\b/i,
+      /\b(haine|viol|meurtre|pornographie|sexe)\b/i,
+      /\b(odio|violencia|asesinato|violacion|porno)\b/i,
+      /\b(odio|violencia|assassinato|violacao|porno)\b/i,
+      /\b(كراهية|قتل|اغتصاب|اباحية|عنف|اساءة)\b/i,
+      /\b(kashe|kisa|fyade|tsiraici|cin zarafi)\b/i
     ];
 
     const translations = {
@@ -1446,6 +1466,7 @@
         'submit.adminTitle': 'Admin access',
         'submit.adminPlaceholder': 'Enter admin key',
         'submit.adminHint': 'Admin access required to review submissions.',
+        'submit.flaggedNotice': 'Auto-flagged submissions require review.',
         'submit.editPrompt': 'Edit submission before approval:',
         'submit.textPlaceholder': 'Write a short, friendly joke (8-280 characters).',
         'submit.moderatorTitle': 'Moderator Mode',
@@ -1513,6 +1534,7 @@
         'feedback.shareTip': 'Copied. Paste it on {platform}.',
         'feedback.reactionThanks': 'Thanks for your reaction!',
         'feedback.submissionOk': 'Submission received! It is now pending review.',
+        'feedback.submissionFlagged': 'Submission received and flagged for review.',
         'feedback.submissionCooldown': 'Please wait a bit before submitting again.',
         'feedback.submissionInvalid': 'Please enter a friendly joke without links.',
         'feedback.noResults': 'No jokes found for that search.',
@@ -1528,6 +1550,18 @@
         'feedback.imageSaved': 'Image saved.',
         'feedback.imageFailed': 'Could not generate image.',
         'feedback.shareUnsupported': 'Sharing is not supported here.',
+        'moderation.logTitle': 'Moderation Log',
+        'moderation.logEmpty': 'No moderation actions yet.',
+        'moderation.status.pending': 'Pending',
+        'moderation.status.flagged': 'Flagged',
+        'moderation.action.approved': 'Approved',
+        'moderation.action.rejected': 'Rejected',
+        'moderation.action.edited': 'Edited',
+        'moderation.action.flagged': 'Auto-flagged',
+        'moderation.reason.unsafe': 'Unsafe content',
+        'moderation.reason.link': 'Links or spam',
+        'moderation.reason.spam': 'Spam or repeated text',
+        'moderation.reason.length': 'Invalid length',
         'labels.setup': 'Setup:',
         'labels.punchline': 'Punchline:',
         'toast.saved': 'Joke saved!',
@@ -1671,6 +1705,7 @@
         'submit.adminTitle': 'Acces admin',
         'submit.adminPlaceholder': 'Cle admin',
         'submit.adminHint': 'Acces admin requis pour moderer.',
+        'submit.flaggedNotice': 'Soumissions signalees a verifier.',
         'submit.editPrompt': 'Modifier la soumission avant approbation :',
         'submit.textPlaceholder': 'Ecrivez une blague courte (8-280 caracteres).',
         'submit.moderatorTitle': 'Mode moderateur',
@@ -1734,6 +1769,7 @@
         'feedback.shareTip': 'Copie. Collez sur {platform}.',
         'feedback.reactionThanks': 'Merci pour la reaction !',
         'feedback.submissionOk': 'Soumission recue. En attente de validation.',
+        'feedback.submissionFlagged': 'Soumission recue et signalee.',
         'feedback.submissionCooldown': 'Veuillez patienter avant une nouvelle soumission.',
         'feedback.submissionInvalid': 'Entrez une blague amicale sans liens.',
         'feedback.noResults': 'Aucune blague trouvee.',
@@ -1749,6 +1785,18 @@
         'feedback.imageSaved': 'Image enregistree.',
         'feedback.imageFailed': 'Impossible de creer l image.',
         'feedback.shareUnsupported': 'Partage non pris en charge.',
+        'moderation.logTitle': 'Journal de moderation',
+        'moderation.logEmpty': 'Aucune action de moderation.',
+        'moderation.status.pending': 'En attente',
+        'moderation.status.flagged': 'Signalee',
+        'moderation.action.approved': 'Approuvee',
+        'moderation.action.rejected': 'Refusee',
+        'moderation.action.edited': 'Modifiee',
+        'moderation.action.flagged': 'Auto-signalee',
+        'moderation.reason.unsafe': 'Contenu sensible',
+        'moderation.reason.link': 'Liens ou spam',
+        'moderation.reason.spam': 'Spam ou repetition',
+        'moderation.reason.length': 'Longueur invalide',
         'labels.setup': 'Mise en place:',
         'labels.punchline': 'Chute:',
         'toast.saved': 'Blague sauvegardee.',
@@ -1891,6 +1939,7 @@
         'submit.adminTitle': 'Acceso admin',
         'submit.adminPlaceholder': 'Clave admin',
         'submit.adminHint': 'Se requiere acceso admin para moderar.',
+        'submit.flaggedNotice': 'Envios marcados requieren revision.',
         'submit.editPrompt': 'Editar envio antes de aprobar:',
         'submit.textPlaceholder': 'Escribe un chiste corto (8-280 caracteres).',
         'submit.moderatorTitle': 'Modo moderador',
@@ -1954,6 +2003,7 @@
         'feedback.shareTip': 'Copiado. Pegalo en {platform}.',
         'feedback.reactionThanks': 'Gracias por reaccionar.',
         'feedback.submissionOk': 'Envio recibido. En revision.',
+        'feedback.submissionFlagged': 'Envio recibido y marcado para revision.',
         'feedback.submissionCooldown': 'Espera un poco antes de enviar otro.',
         'feedback.submissionInvalid': 'Escribe un chiste amable sin enlaces.',
         'feedback.noResults': 'No se encontraron chistes.',
@@ -1969,6 +2019,18 @@
         'feedback.imageSaved': 'Imagen guardada.',
         'feedback.imageFailed': 'No se pudo crear la imagen.',
         'feedback.shareUnsupported': 'Compartir no compatible.',
+        'moderation.logTitle': 'Registro de moderacion',
+        'moderation.logEmpty': 'Sin acciones de moderacion.',
+        'moderation.status.pending': 'Pendiente',
+        'moderation.status.flagged': 'Marcado',
+        'moderation.action.approved': 'Aprobado',
+        'moderation.action.rejected': 'Rechazado',
+        'moderation.action.edited': 'Editado',
+        'moderation.action.flagged': 'Marcado auto',
+        'moderation.reason.unsafe': 'Contenido inseguro',
+        'moderation.reason.link': 'Enlaces o spam',
+        'moderation.reason.spam': 'Spam o repeticion',
+        'moderation.reason.length': 'Longitud invalida',
         'labels.setup': 'Preparacion:',
         'labels.punchline': 'Remate:',
         'toast.saved': 'Chiste guardado.',
@@ -2111,6 +2173,7 @@
         'submit.adminTitle': 'وصول المشرف',
         'submit.adminPlaceholder': 'رمز المشرف',
         'submit.adminHint': 'يلزم وصول المشرف للمراجعة.',
+        'submit.flaggedNotice': 'الارسالات المعلّمة تحتاج مراجعة.',
         'submit.editPrompt': 'تعديل الارسال قبل الموافقة:',
         'submit.textPlaceholder': 'اكتب نكتة لطيفة (8-280 حرف).',
         'submit.moderatorTitle': 'وضع المشرف',
@@ -2174,6 +2237,7 @@
         'feedback.shareTip': 'تم النسخ. الصق في {platform}.',
         'feedback.reactionThanks': 'شكرا للتفاعل!',
         'feedback.submissionOk': 'تم استلام النكتة. بانتظار المراجعة.',
+        'feedback.submissionFlagged': 'تم استلام الارسال وتم وضعه للمراجعة.',
         'feedback.submissionCooldown': 'انتظر قليلا قبل ارسال جديد.',
         'feedback.submissionInvalid': 'اكتب نكتة لطيفة بدون روابط.',
         'feedback.noResults': 'لم يتم العثور على نكات.',
@@ -2189,6 +2253,18 @@
         'feedback.imageSaved': 'تم حفظ الصورة.',
         'feedback.imageFailed': 'تعذر انشاء الصورة.',
         'feedback.shareUnsupported': 'المشاركة غير مدعومة.',
+        'moderation.logTitle': 'سجل الاشراف',
+        'moderation.logEmpty': 'لا توجد قرارات بعد.',
+        'moderation.status.pending': 'قيد المراجعة',
+        'moderation.status.flagged': 'معلّم',
+        'moderation.action.approved': 'تمت الموافقة',
+        'moderation.action.rejected': 'تم الرفض',
+        'moderation.action.edited': 'تم التعديل',
+        'moderation.action.flagged': 'تلقائي',
+        'moderation.reason.unsafe': 'محتوى غير مناسب',
+        'moderation.reason.link': 'روابط او سبام',
+        'moderation.reason.spam': 'سبام او تكرار',
+        'moderation.reason.length': 'طول غير صالح',
         'labels.setup': 'البداية:',
         'labels.punchline': 'الخاتمة:',
         'toast.saved': 'تم حفظ النكتة.',
@@ -2331,6 +2407,7 @@
         'submit.adminTitle': 'Shigar admin',
         'submit.adminPlaceholder': 'Lambar admin',
         'submit.adminHint': 'Ana bukatar admin don dubawa.',
+        'submit.flaggedNotice': 'Aikace-aikacen da aka yi alama suna bukatar dubawa.',
         'submit.editPrompt': 'Gyara aikawa kafin amincewa:',
         'submit.textPlaceholder': 'Rubuta barkwanci gajere (8-280).',
         'submit.moderatorTitle': 'Yanayin mai dubawa',
@@ -2394,6 +2471,7 @@
         'feedback.shareTip': 'An kwafa. Ka manna a {platform}.',
         'feedback.reactionThanks': 'Mun gode da martani.',
         'feedback.submissionOk': 'An karba. Yana jiran dubawa.',
+        'feedback.submissionFlagged': 'An karba kuma an yi alama don dubawa.',
         'feedback.submissionCooldown': 'Ka jira kadan kafin aika.',
         'feedback.submissionInvalid': 'Rubuta barkwanci mai kyau ba tare da link ba.',
         'feedback.noResults': 'Babu barkwanci da aka samu.',
@@ -2409,6 +2487,18 @@
         'feedback.imageSaved': 'An ajiye hoto.',
         'feedback.imageFailed': 'Ba a iya kirkirar hoto.',
         'feedback.shareUnsupported': 'Raba baya aiki a nan.',
+        'moderation.logTitle': 'Rijistar dubawa',
+        'moderation.logEmpty': 'Babu wani aiki.',
+        'moderation.status.pending': 'Ana dubawa',
+        'moderation.status.flagged': 'An yi alama',
+        'moderation.action.approved': 'An amince',
+        'moderation.action.rejected': 'An ki',
+        'moderation.action.edited': 'An gyara',
+        'moderation.action.flagged': 'An yi alama',
+        'moderation.reason.unsafe': 'Abu mara kyau',
+        'moderation.reason.link': 'Link ko spam',
+        'moderation.reason.spam': 'Spam ko maimaitawa',
+        'moderation.reason.length': 'Tsawon ba daidai ba',
         'labels.setup': 'Farko:',
         'labels.punchline': 'Karshen:',
         'toast.saved': 'An ajiye barkwanci.',
@@ -2551,6 +2641,7 @@
         'submit.adminTitle': 'Acesso admin',
         'submit.adminPlaceholder': 'Chave admin',
         'submit.adminHint': 'Acesso admin necessario para moderar.',
+        'submit.flaggedNotice': 'Envios marcados precisam de revisao.',
         'submit.editPrompt': 'Editar envio antes de aprovar:',
         'submit.textPlaceholder': 'Escreva uma piada curta (8-280).',
         'submit.moderatorTitle': 'Modo moderador',
@@ -2614,6 +2705,7 @@
         'feedback.shareTip': 'Copiado. Cole em {platform}.',
         'feedback.reactionThanks': 'Obrigado pela reacao.',
         'feedback.submissionOk': 'Envio recebido. Em revisao.',
+        'feedback.submissionFlagged': 'Envio recebido e marcado para revisao.',
         'feedback.submissionCooldown': 'Espere um pouco antes de enviar.',
         'feedback.submissionInvalid': 'Escreva uma piada gentil sem links.',
         'feedback.noResults': 'Nenhuma piada encontrada.',
@@ -2629,6 +2721,18 @@
         'feedback.imageSaved': 'Imagem salva.',
         'feedback.imageFailed': 'Nao foi possivel criar a imagem.',
         'feedback.shareUnsupported': 'Compartilhamento nao suportado.',
+        'moderation.logTitle': 'Registro de moderacao',
+        'moderation.logEmpty': 'Sem acoes de moderacao.',
+        'moderation.status.pending': 'Pendente',
+        'moderation.status.flagged': 'Marcado',
+        'moderation.action.approved': 'Aprovado',
+        'moderation.action.rejected': 'Rejeitado',
+        'moderation.action.edited': 'Editado',
+        'moderation.action.flagged': 'Marcado auto',
+        'moderation.reason.unsafe': 'Conteudo inseguro',
+        'moderation.reason.link': 'Links ou spam',
+        'moderation.reason.spam': 'Spam ou repeticao',
+        'moderation.reason.length': 'Tamanho invalido',
         'labels.setup': 'Preparacao:',
         'labels.punchline': 'Final:',
         'toast.saved': 'Piada salva.',
@@ -3432,6 +3536,7 @@
     const userReactions = loadUserReactions();
     const submissions = loadSubmissions();
     const approvedJokes = loadApprovedJokes();
+    const moderationLog = loadModerationLog();
     const commentStore = loadComments();
     const notificationPrefs = loadNotifications();
     const progressStore = loadProgressStore();
@@ -5021,16 +5126,34 @@
       if (/([a-zA-Z])\1{5,}/.test(trimmed)) {
         return false;
       }
-      if (containsBlockedContent(trimmed)) {
-        return false;
-      }
       return true;
     }
 
-    function addSubmission(joke, name, category, voiceDataUrl = null) {
+    function screenSubmission(text) {
+      const trimmed = sanitizeText(text);
+      if (trimmed.length < 8 || trimmed.length > 280) {
+        return { status: 'invalid', reasons: ['moderation.reason.length'] };
+      }
+      const reasons = [];
+      if (/(https?:\/\/|www\.)/i.test(trimmed)) {
+        reasons.push('moderation.reason.link');
+      }
+      if (/([a-zA-Z])\1{5,}/.test(trimmed)) {
+        reasons.push('moderation.reason.spam');
+      }
+      if (containsBlockedContent(trimmed)) {
+        reasons.push('moderation.reason.unsafe');
+      }
+      if (reasons.length) {
+        return { status: 'flagged', reasons };
+      }
+      return { status: 'pending', reasons: [] };
+    }
+
+    function addSubmission(joke, name, category, voiceDataUrl = null, status = 'pending', reasons = []) {
       const safeJoke = sanitizeText(joke);
       const safeName = sanitizeText(name);
-      submissions.push({
+      const entry = {
         id: Date.now().toString(36),
         joke: safeJoke,
         name: safeName || getCurrentUserName(),
@@ -5038,10 +5161,62 @@
         category,
         lang: state.currentLang,
         voiceDataUrl,
-        status: 'pending',
+        status,
+        flagReasons: reasons,
         createdAt: new Date().toISOString()
-      });
+      };
+      submissions.push(entry);
       saveSubmissions();
+      if (status === 'flagged') {
+        addModerationLog('flagged', entry, reasons);
+      }
+    }
+
+    function addModerationLog(action, item, reasons = []) {
+      moderationLog.unshift({
+        id: `mod_${Date.now().toString(36)}`,
+        action,
+        reasons,
+        joke: item.joke,
+        lang: item.lang,
+        category: item.category,
+        at: new Date().toISOString()
+      });
+      if (moderationLog.length > 120) {
+        moderationLog.length = 120;
+      }
+      saveModerationLog();
+      renderModerationLog();
+    }
+
+    function renderModerationLog() {
+      if (!dom.moderationLog) {
+        return;
+      }
+      dom.moderationLog.innerHTML = '';
+      if (!moderationLog.length) {
+        const empty = document.createElement('div');
+        empty.className = 'list-item';
+        empty.textContent = t('moderation.logEmpty');
+        dom.moderationLog.appendChild(empty);
+        return;
+      }
+      moderationLog.slice(0, 20).forEach((entry) => {
+        const row = document.createElement('div');
+        row.className = 'list-item';
+        const action = t(`moderation.action.${entry.action}`) || entry.action;
+        const meta = `${action} · ${t(`categories.${entry.category}`)} · ${t(`languages.${entry.lang}`)}`;
+        const title = document.createElement('div');
+        title.textContent = meta;
+        const subtitle = document.createElement('div');
+        subtitle.className = 'muted';
+        const reasonText = (entry.reasons || []).map((reason) => t(reason)).join(' · ');
+        const when = new Date(entry.at).toLocaleString();
+        subtitle.textContent = reasonText ? `${reasonText} · ${when}` : when;
+        row.appendChild(title);
+        row.appendChild(subtitle);
+        dom.moderationLog.appendChild(row);
+      });
     }
 
     function renderModeration() {
@@ -5056,13 +5231,22 @@
         dom.moderationList.appendChild(locked);
         return;
       }
-      const pending = submissions.filter((item) => item.status === 'pending');
+      renderModerationLog();
+      const pending = submissions.filter(
+        (item) => item.status === 'pending' || item.status === 'flagged'
+      );
       if (!pending.length) {
         const empty = document.createElement('div');
         empty.className = 'list-item';
         empty.textContent = t('submit.pendingEmpty');
         dom.moderationList.appendChild(empty);
         return;
+      }
+      if (pending.some((item) => item.status === 'flagged')) {
+        const notice = document.createElement('div');
+        notice.className = 'list-item muted';
+        notice.textContent = t('submit.flaggedNotice');
+        dom.moderationList.appendChild(notice);
       }
       pending.forEach((item) => {
         const row = document.createElement('div');
@@ -5075,6 +5259,17 @@
         textWrap.textContent = sanitizeText(item.joke);
         textWrap.appendChild(metaTag);
         row.appendChild(textWrap);
+        const statusBadge = document.createElement('span');
+        statusBadge.className = 'badge';
+        statusBadge.textContent =
+          item.status === 'flagged' ? t('moderation.status.flagged') : t('moderation.status.pending');
+        row.appendChild(statusBadge);
+        if (item.flagReasons && item.flagReasons.length) {
+          const reasons = document.createElement('div');
+          reasons.className = 'muted';
+          reasons.textContent = item.flagReasons.map((reason) => t(reason)).join(' · ');
+          row.appendChild(reasons);
+        }
         if (item.voiceDataUrl) {
           const audio = document.createElement('audio');
           audio.controls = true;
@@ -5126,6 +5321,7 @@
         delete state.languageSessionIds[item.lang];
       }
       renderModeration();
+      addModerationLog('approved', item, item.flagReasons || []);
       setFeedback('feedback.moderationApproved');
     }
 
@@ -5148,8 +5344,12 @@
         return;
       }
       item.joke = safeJoke;
+      const screened = screenSubmission(safeJoke);
+      item.status = screened.status === 'flagged' ? 'flagged' : 'pending';
+      item.flagReasons = screened.reasons;
       saveSubmissions();
       renderModeration();
+      addModerationLog('edited', item, item.flagReasons || []);
       setFeedback('feedback.submissionEdited');
     }
 
@@ -5165,6 +5365,7 @@
       item.status = 'rejected';
       saveSubmissions();
       renderModeration();
+      addModerationLog('rejected', item, item.flagReasons || []);
       setFeedback('feedback.moderationRejected');
     }
 
@@ -5436,6 +5637,15 @@
       localStorage.setItem(STORAGE_KEYS.submissions, JSON.stringify(submissions));
     }
 
+    function loadModerationLog() {
+      const stored = JSON.parse(localStorage.getItem(STORAGE_KEYS.moderationLog) || '[]');
+      return Array.isArray(stored) ? stored : [];
+    }
+
+    function saveModerationLog() {
+      localStorage.setItem(STORAGE_KEYS.moderationLog, JSON.stringify(moderationLog));
+    }
+
     function loadApprovedJokes() {
       return JSON.parse(localStorage.getItem(STORAGE_KEYS.approved) || '[]');
     }
@@ -5579,7 +5789,8 @@
         return;
       }
       const text = dom.submissionText.value;
-      if (!validateSubmission(text)) {
+      const screen = screenSubmission(text);
+      if (screen.status === 'invalid') {
         setSubmissionFeedback('feedback.submissionInvalid');
         return;
       }
@@ -5590,14 +5801,23 @@
       }
       settings.lastSubmission = now;
       saveSettings();
-      addSubmission(text.trim(), dom.submissionName.value.trim(), dom.submissionCategory.value, state.voiceDataUrl);
+      addSubmission(
+        text.trim(),
+        dom.submissionName.value.trim(),
+        dom.submissionCategory.value,
+        state.voiceDataUrl,
+        screen.status,
+        screen.reasons
+      );
       dom.submissionText.value = '';
       dom.submissionName.value = '';
       state.voiceDataUrl = null;
       dom.voicePreview.hidden = true;
       dom.playVoice.disabled = true;
       renderModeration();
-      setSubmissionFeedback('feedback.submissionOk');
+      setSubmissionFeedback(
+        screen.status === 'flagged' ? 'feedback.submissionFlagged' : 'feedback.submissionOk'
+      );
     };
     if (dom.adminUnlock) {
       dom.adminUnlock.onclick = () => {
