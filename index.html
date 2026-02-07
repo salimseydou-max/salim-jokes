@@ -35,6 +35,10 @@
       --border: #222;
       --shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
       --radius: 18px;
+      --button-text: #1f1f1f;
+      --bg-gradient: linear-gradient(135deg, #ffe9b3 0%, #fff2cf 45%, #ffe0d1 100%);
+      --bg-watermark: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='360' height='180'%3E%3Crect width='360' height='180' fill='none'/%3E%3Ctext x='18' y='70' font-size='32' opacity='0.07'%3ESalim%20Jokes%3C/text%3E%3Ctext x='120' y='130' font-size='32' opacity='0.05'%3ESalim%20Jokes%3C/text%3E%3C/svg%3E");
+      --bg-pattern: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Crect width='160' height='160' fill='none'/%3E%3Ctext x='12' y='42' font-size='28' opacity='0.16'%3E%F0%9F%98%82%3C/text%3E%3Ctext x='92' y='88' font-size='28' opacity='0.16'%3E%F0%9F%A4%A3%3C/text%3E%3Ctext x='40' y='132' font-size='28' opacity='0.16'%3E%F0%9F%98%9C%3C/text%3E%3C/svg%3E");
     }
     [data-theme="dark"] {
       --bg: #141414;
@@ -46,6 +50,10 @@
       --accent-strong: #e4c46a;
       --border: #3a3a3a;
       --shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+      --button-text: #1f1f1f;
+      --bg-gradient: linear-gradient(135deg, #151515 0%, #1d1b18 45%, #201a16 100%);
+      --bg-watermark: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='360' height='180'%3E%3Crect width='360' height='180' fill='none'/%3E%3Ctext x='18' y='70' font-size='32' opacity='0.08' fill='%23ffffff'%3ESalim%20Jokes%3C/text%3E%3Ctext x='120' y='130' font-size='32' opacity='0.06' fill='%23ffffff'%3ESalim%20Jokes%3C/text%3E%3C/svg%3E");
+      --bg-pattern: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Crect width='160' height='160' fill='none'/%3E%3Ctext x='12' y='42' font-size='28' opacity='0.10' fill='%23ffffff'%3E%F0%9F%98%82%3C/text%3E%3Ctext x='92' y='88' font-size='28' opacity='0.10' fill='%23ffffff'%3E%F0%9F%A4%A3%3C/text%3E%3Ctext x='40' y='132' font-size='28' opacity='0.10' fill='%23ffffff'%3E%F0%9F%98%9C%3C/text%3E%3C/svg%3E");
     }
     * {
       box-sizing: border-box;
@@ -60,10 +68,10 @@
     body {
       padding-top: 170px;
       background-color: var(--bg);
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='360' height='180'%3E%3Crect width='360' height='180' fill='none'/%3E%3Ctext x='18' y='70' font-size='32' opacity='0.07'%3ESalim%20Jokes%3C/text%3E%3Ctext x='120' y='130' font-size='32' opacity='0.05'%3ESalim%20Jokes%3C/text%3E%3C/svg%3E"), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Crect width='160' height='160' fill='none'/%3E%3Ctext x='12' y='42' font-size='28' opacity='0.16'%3E%F0%9F%98%82%3C/text%3E%3Ctext x='92' y='88' font-size='28' opacity='0.16'%3E%F0%9F%A4%A3%3C/text%3E%3Ctext x='40' y='132' font-size='28' opacity='0.16'%3E%F0%9F%98%9C%3C/text%3E%3C/svg%3E");
-      background-repeat: repeat;
-      background-size: 360px 180px, 160px 160px;
-      background-attachment: fixed;
+      background-image: var(--bg-gradient), var(--bg-watermark), var(--bg-pattern);
+      background-repeat: no-repeat, repeat, repeat;
+      background-size: cover, 360px 180px, 160px 160px;
+      background-attachment: fixed, scroll, scroll;
     }
     a {
       color: inherit;
@@ -730,6 +738,7 @@
     }
     button {
       background: var(--accent-strong);
+      color: var(--button-text);
       border: 1px solid var(--border);
       border-radius: 30px;
       padding: 0.7rem 1.6rem;
@@ -751,6 +760,7 @@
     }
     .ghost {
       background: transparent;
+      color: var(--text);
     }
     .muted {
       color: var(--muted);
@@ -4272,6 +4282,76 @@
       saveSettings();
       dom.darkToggle.textContent = theme === 'dark' ? t('buttons.light') : t('buttons.dark');
       dom.darkToggle.setAttribute('aria-pressed', theme === 'dark');
+      applyThemeContrast();
+    }
+
+    function parseColor(value) {
+      const raw = value.trim();
+      if (!raw) {
+        return null;
+      }
+      if (raw.startsWith('#')) {
+        const hex = raw.replace('#', '');
+        if (hex.length === 3) {
+          return {
+            r: parseInt(hex[0] + hex[0], 16),
+            g: parseInt(hex[1] + hex[1], 16),
+            b: parseInt(hex[2] + hex[2], 16)
+          };
+        }
+        if (hex.length === 6) {
+          return {
+            r: parseInt(hex.slice(0, 2), 16),
+            g: parseInt(hex.slice(2, 4), 16),
+            b: parseInt(hex.slice(4, 6), 16)
+          };
+        }
+      }
+      const rgbMatch = raw.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/i);
+      if (rgbMatch) {
+        return {
+          r: Number(rgbMatch[1]),
+          g: Number(rgbMatch[2]),
+          b: Number(rgbMatch[3])
+        };
+      }
+      return null;
+    }
+
+    function getLuminance(color) {
+      const toLinear = (value) => {
+        const normalized = value / 255;
+        return normalized <= 0.03928
+          ? normalized / 12.92
+          : Math.pow((normalized + 0.055) / 1.055, 2.4);
+      };
+      const r = toLinear(color.r);
+      const g = toLinear(color.g);
+      const b = toLinear(color.b);
+      return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+    }
+
+    function applyThemeContrast() {
+      const styles = getComputedStyle(document.documentElement);
+      const bg = parseColor(styles.getPropertyValue('--bg'));
+      const accentStrong = parseColor(styles.getPropertyValue('--accent-strong'));
+      if (!bg) {
+        return;
+      }
+      const isDark = getLuminance(bg) < 0.5;
+      const text = isDark ? '#f5f5f5' : '#1f1f1f';
+      const muted = isDark ? 'rgba(245,245,245,0.72)' : 'rgba(31,31,31,0.68)';
+      const border = isDark ? 'rgba(255,255,255,0.18)' : 'rgba(0,0,0,0.16)';
+      const card = isDark ? 'rgba(24,24,24,0.96)' : 'rgba(255,255,255,0.96)';
+      const bgSoft = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)';
+      const buttonText = accentStrong && getLuminance(accentStrong) < 0.45 ? '#f5f5f5' : '#1f1f1f';
+
+      document.documentElement.style.setProperty('--text', text);
+      document.documentElement.style.setProperty('--muted', muted);
+      document.documentElement.style.setProperty('--border', border);
+      document.documentElement.style.setProperty('--card', card);
+      document.documentElement.style.setProperty('--bg-soft', bgSoft);
+      document.documentElement.style.setProperty('--button-text', buttonText);
     }
 
     function toggleTheme() {
