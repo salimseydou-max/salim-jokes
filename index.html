@@ -1367,9 +1367,10 @@
     const MAX_JOKES_PER_BATCH = 100;
     const ADMIN_CODE = 'salim-admin'; // Replace with a private admin key in production.
     const BRANDING = {
-      site: 'Salim-jokes.vercel.app',
+      site: 'Salim Jokes',
       instagram: '@lolwith_salim',
       tiktok: '@lolwith_salim',
+      followHandle: 'lolwith_salim',
       url: 'https://salim-jokes.vercel.app'
     };
     const BLOCKED_PATTERNS = [
@@ -1475,6 +1476,7 @@
         'image.save': 'Save as Image',
         'image.share': 'Share Image',
         'image.shareUrl': 'Share URL',
+        'image.followMe': 'Follow me 👉 {handle}',
         'community.title': 'Community Highlights',
         'community.topRated': 'Top Rated Jokes',
         'community.leaderboard': 'Leaderboard',
@@ -1728,6 +1730,7 @@
         'image.save': 'Enregistrer image',
         'image.share': 'Partager image',
         'image.shareUrl': 'Partager le lien',
+        'image.followMe': 'Suivez-moi 👉 {handle}',
         'community.title': 'Moments forts',
         'community.topRated': 'Top blagues',
         'community.leaderboard': 'Classement',
@@ -1980,6 +1983,7 @@
         'image.save': 'Guardar imagen',
         'image.share': 'Compartir imagen',
         'image.shareUrl': 'Compartir enlace',
+        'image.followMe': 'Sigueme 👉 {handle}',
         'community.title': 'Momentos de la comunidad',
         'community.topRated': 'Mejores chistes',
         'community.leaderboard': 'Clasificacion',
@@ -2232,6 +2236,7 @@
         'image.save': 'حفظ الصورة',
         'image.share': 'مشاركة الصورة',
         'image.shareUrl': 'مشاركة الرابط',
+        'image.followMe': 'تابعني 👉 {handle}',
         'community.title': 'ابرز المجتمع',
         'community.topRated': 'الافضل تقييما',
         'community.leaderboard': 'لوحة الصدارة',
@@ -2484,6 +2489,7 @@
         'image.save': 'Ajiye hoto',
         'image.share': 'Raba hoto',
         'image.shareUrl': 'Raba link',
+        'image.followMe': 'Biyo ni 👉 {handle}',
         'community.title': 'Abubuwan al umma',
         'community.topRated': 'Mafi so',
         'community.leaderboard': 'Tebur',
@@ -2736,6 +2742,7 @@
         'image.save': 'Salvar imagem',
         'image.share': 'Compartilhar imagem',
         'image.shareUrl': 'Compartilhar link',
+        'image.followMe': 'Siga-me 👉 {handle}',
         'community.title': 'Destaques da comunidade',
         'community.topRated': 'Melhores piadas',
         'community.leaderboard': 'Ranking',
@@ -5041,6 +5048,28 @@
       }
     }
 
+    function drawSocialIcons(ctx, x, y, size, gap) {
+      const platforms = [
+        { label: 'IG', color: '#E1306C' },
+        { label: 'TT', color: '#111111' },
+        { label: 'WA', color: '#25D366' },
+        { label: 'X', color: '#111111' }
+      ];
+      ctx.font = `700 ${Math.floor(size * 0.42)}px 'Comic Neue', sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      platforms.forEach((platform, index) => {
+        const cx = x + index * (size + gap) + size / 2;
+        const cy = y + size / 2;
+        ctx.fillStyle = platform.color;
+        ctx.beginPath();
+        ctx.arc(cx, cy, size / 2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#ffffff';
+        ctx.fillText(platform.label, cx, cy + 1);
+      });
+    }
+
     async function renderJokeImageCard(includeQr) {
       if (!state.currentJoke) {
         return null;
@@ -5061,7 +5090,7 @@
       const muted = styles.getPropertyValue('--muted').trim() || '#5c5c5c';
       const accent = styles.getPropertyValue('--accent').trim() || '#ffbe76';
       const padding = 80;
-      const bottomSpace = 160;
+      const bottomSpace = 200;
 
       ctx.fillStyle = bg;
       ctx.fillRect(0, 0, width, height);
@@ -5098,20 +5127,29 @@
         ctx.fillText(line, width / 2, startY + index * lineHeight);
       });
 
-      ctx.font = "600 28px 'Comic Neue', 'Comic Sans MS', sans-serif";
       ctx.textAlign = 'left';
       ctx.fillStyle = textColor;
-      ctx.fillText(BRANDING.site, padding, height - padding);
+      ctx.font = "700 32px 'Comic Neue', 'Comic Sans MS', sans-serif";
+      ctx.fillText(BRANDING.site, padding, height - padding - 10);
+      ctx.font = "700 28px 'Comic Neue', 'Comic Sans MS', sans-serif";
+      ctx.fillText('😂', padding + ctx.measureText(BRANDING.site).width + 10, height - padding - 10);
 
-      ctx.textAlign = 'right';
-      ctx.fillStyle = muted;
+      const followText = t('image.followMe', { handle: BRANDING.followHandle });
       ctx.font = "600 24px 'Comic Neue', 'Comic Sans MS', sans-serif";
-      ctx.fillText(BRANDING.instagram, width - padding, height - padding - 30);
-      ctx.fillText(BRANDING.tiktok, width - padding, height - padding);
+      ctx.fillStyle = muted;
+      ctx.textAlign = 'left';
+      ctx.fillText(followText, padding, height - padding + 26);
+
+      const iconSize = 36;
+      const iconGap = 10;
+      const iconsWidth = iconSize * 4 + iconGap * 3;
+      const iconsX = width - padding - iconsWidth;
+      const iconsY = height - padding + 6;
+      drawSocialIcons(ctx, iconsX, iconsY, iconSize, iconGap);
 
       if (includeQr) {
         const qrSize = 160;
-        await drawQrCode(ctx, BRANDING.url, width - padding - qrSize, padding, qrSize, textColor);
+        await drawQrCode(ctx, getJokeShareUrl(), width - padding - qrSize, padding, qrSize, textColor);
       }
 
       return canvas;
@@ -5184,13 +5222,19 @@
         setFeedback('feedback.noJoke');
         return;
       }
-      const url = BRANDING.url;
+      const url = getJokeShareUrl();
       const text = `${state.currentJoke} - ${t('brand.name')}`;
       if (navigator.share) {
         navigator.share({ title: t('brand.name'), text, url }).catch(() => {});
       } else {
         copyToClipboard(`${text} ${url}`);
       }
+    }
+
+    function getJokeShareUrl() {
+      const base = `${window.location.origin}${window.location.pathname}`;
+      const hash = window.location.hash || '#/jokes';
+      return `${base}${hash}`;
     }
 
     function playSound(kind) {
