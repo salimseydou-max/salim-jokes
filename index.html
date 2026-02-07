@@ -5486,7 +5486,7 @@
       ctx.closePath();
     }
 
-    async function drawQrCode(ctx, text, x, y, size, color) {
+    async function drawQrCode(ctx, text, x, y, size) {
       try {
         const qrLib = await loadQrLibrary();
         if (!qrLib) {
@@ -5496,11 +5496,13 @@
         qr.addData(text);
         qr.make();
         const count = qr.getModuleCount();
-        const cellSize = Math.floor(size / count);
-        const offset = Math.floor((size - cellSize * count) / 2);
+        const padding = Math.max(8, Math.floor(size * 0.06));
+        const innerSize = size - padding * 2;
+        const cellSize = Math.floor(innerSize / count);
+        const offset = padding + Math.floor((innerSize - cellSize * count) / 2);
         ctx.fillStyle = '#ffffff';
         ctx.fillRect(x, y, size, size);
-        ctx.fillStyle = color;
+        ctx.fillStyle = '#000000';
         for (let row = 0; row < count; row += 1) {
           for (let col = 0; col < count; col += 1) {
             if (qr.isDark(row, col)) {
@@ -5626,7 +5628,7 @@
 
       if (includeQr) {
         const qrSize = 160;
-        await drawQrCode(ctx, getJokeShareUrl(), width - padding - qrSize, padding, qrSize, textColor);
+        await drawQrCode(ctx, getJokeShareUrl(), width - padding - qrSize, padding, qrSize);
       }
 
       return canvas;
