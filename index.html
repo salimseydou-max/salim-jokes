@@ -645,6 +645,12 @@
       display: grid;
       gap: 0.2rem;
     }
+    .admin-stats .list-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.6rem;
+    }
     .moderation-access {
       display: grid;
       gap: 0.5rem;
@@ -1087,6 +1093,35 @@
       </div>
     </section>
 
+    <section id="admin" class="section view-section" data-view="admin" data-emoji="🛡️" hidden>
+      <h2 data-i18n="admin.title">Admin Dashboard</h2>
+      <p data-i18n="admin.subtitle">Private moderation tools for the site owner.</p>
+      <div id="admin-login-card" class="card">
+        <h3 data-i18n="admin.loginTitle">Admin Login</h3>
+        <p class="muted" data-i18n="admin.loginNote">Enter your admin key to unlock the dashboard.</p>
+        <div class="form-row">
+          <input id="admin-login-key" type="password" data-i18n-placeholder="admin.keyPlaceholder" />
+          <button type="button" id="admin-login" data-i18n="buttons.unlock">Unlock</button>
+          <button type="button" id="admin-logout" class="ghost" data-i18n="buttons.lock">Lock</button>
+        </div>
+        <div id="admin-login-feedback" class="feedback" aria-live="polite"></div>
+      </div>
+      <div id="admin-dashboard" class="grid-2" hidden>
+        <div class="card">
+          <h3 data-i18n="admin.statsTitle">Statistics</h3>
+          <div id="admin-stats" class="list admin-stats"></div>
+        </div>
+        <div class="card">
+          <h3 data-i18n="admin.queueTitle">Approval Queue</h3>
+          <div id="admin-queue" class="list"></div>
+        </div>
+        <div class="card">
+          <h3 data-i18n="moderation.logTitle">Moderation Log</h3>
+          <div id="admin-log" class="list"></div>
+        </div>
+      </div>
+    </section>
+
     <section id="creator" class="section view-section" data-view="creator" data-emoji="🧑‍💻" hidden>
       <h2 data-i18n="creator.title">About the Creator</h2>
       <div class="card">
@@ -1273,6 +1308,15 @@
       adminUnlock: document.getElementById('admin-unlock'),
       adminLock: document.getElementById('admin-lock'),
       adminFeedback: document.getElementById('admin-feedback'),
+      adminLoginCard: document.getElementById('admin-login-card'),
+      adminLoginKey: document.getElementById('admin-login-key'),
+      adminLogin: document.getElementById('admin-login'),
+      adminLogout: document.getElementById('admin-logout'),
+      adminLoginFeedback: document.getElementById('admin-login-feedback'),
+      adminDashboard: document.getElementById('admin-dashboard'),
+      adminQueue: document.getElementById('admin-queue'),
+      adminStats: document.getElementById('admin-stats'),
+      adminLog: document.getElementById('admin-log'),
       moderationList: document.getElementById('moderation-list'),
       moderationLog: document.getElementById('moderation-log'),
       progressBar: document.getElementById('progress-bar'),
@@ -1400,6 +1444,7 @@
         'buttons.edit': 'Edit',
         'buttons.unlock': 'Unlock',
         'buttons.lock': 'Lock',
+        'buttons.delete': 'Delete',
         'buttons.record': 'Record Voice',
         'buttons.stop': 'Stop',
         'buttons.preview': 'Preview',
@@ -1471,6 +1516,21 @@
         'submit.textPlaceholder': 'Write a short, friendly joke (8-280 characters).',
         'submit.moderatorTitle': 'Moderator Mode',
         'submit.pendingEmpty': 'No pending submissions.',
+        'admin.title': 'Admin Dashboard',
+        'admin.subtitle': 'Private tools for the site owner.',
+        'admin.loginTitle': 'Admin Login',
+        'admin.loginNote': 'Enter your admin key to unlock the dashboard.',
+        'admin.keyPlaceholder': 'Admin key',
+        'admin.statsTitle': 'Statistics',
+        'admin.queueTitle': 'Approval Queue',
+        'admin.queueEmpty': 'No submissions waiting.',
+        'admin.stats.total': 'Total submissions',
+        'admin.stats.pending': 'Pending',
+        'admin.stats.flagged': 'Flagged',
+        'admin.stats.approved': 'Approved',
+        'admin.stats.rejected': 'Rejected',
+        'admin.stats.flagRate': 'Flag rate',
+        'admin.stats.reasons': 'Top reasons',
         'jotd.title': 'Joke of the Day',
         'jotd.play': 'Play',
         'jotd.copy': 'Copy',
@@ -1542,6 +1602,7 @@
         'feedback.voiceTooLarge': 'Voice clip is too large. Try a shorter recording.',
         'feedback.moderationApproved': 'Submission approved.',
         'feedback.moderationRejected': 'Submission rejected.',
+        'feedback.moderationDeleted': 'Submission deleted.',
         'feedback.submissionEdited': 'Submission updated.',
         'feedback.adminUnlocked': 'Admin access enabled.',
         'feedback.adminLocked': 'Admin access locked.',
@@ -1558,6 +1619,7 @@
         'moderation.action.rejected': 'Rejected',
         'moderation.action.edited': 'Edited',
         'moderation.action.flagged': 'Auto-flagged',
+        'moderation.action.deleted': 'Deleted',
         'moderation.reason.unsafe': 'Unsafe content',
         'moderation.reason.link': 'Links or spam',
         'moderation.reason.spam': 'Spam or repeated text',
@@ -1635,6 +1697,7 @@
         'buttons.edit': 'Modifier',
         'buttons.unlock': 'Debloquer',
         'buttons.lock': 'Verrouiller',
+        'buttons.delete': 'Supprimer',
         'buttons.record': 'Enregistrer',
         'buttons.stop': 'Arreter',
         'buttons.preview': 'Apercu',
@@ -1710,6 +1773,21 @@
         'submit.textPlaceholder': 'Ecrivez une blague courte (8-280 caracteres).',
         'submit.moderatorTitle': 'Mode moderateur',
         'submit.pendingEmpty': 'Aucune soumission en attente.',
+        'admin.title': 'Tableau admin',
+        'admin.subtitle': 'Outils prives pour le proprietaire.',
+        'admin.loginTitle': 'Connexion admin',
+        'admin.loginNote': 'Entrez la cle admin pour deverrouiller.',
+        'admin.keyPlaceholder': 'Cle admin',
+        'admin.statsTitle': 'Statistiques',
+        'admin.queueTitle': 'File de validation',
+        'admin.queueEmpty': 'Aucune soumission en attente.',
+        'admin.stats.total': 'Total des soumissions',
+        'admin.stats.pending': 'En attente',
+        'admin.stats.flagged': 'Signalee',
+        'admin.stats.approved': 'Approuvee',
+        'admin.stats.rejected': 'Refusee',
+        'admin.stats.flagRate': 'Taux de signalement',
+        'admin.stats.reasons': 'Raisons principales',
         'jotd.title': 'Blague du jour',
         'jotd.play': 'Jouer',
         'jotd.copy': 'Copier',
@@ -1777,6 +1855,7 @@
         'feedback.voiceTooLarge': 'Clip vocal trop grand. Essayez plus court.',
         'feedback.moderationApproved': 'Soumission approuvee.',
         'feedback.moderationRejected': 'Soumission rejetee.',
+        'feedback.moderationDeleted': 'Soumission supprimee.',
         'feedback.submissionEdited': 'Soumission mise a jour.',
         'feedback.adminUnlocked': 'Acces admin active.',
         'feedback.adminLocked': 'Acces admin verrouille.',
@@ -1793,6 +1872,7 @@
         'moderation.action.rejected': 'Refusee',
         'moderation.action.edited': 'Modifiee',
         'moderation.action.flagged': 'Auto-signalee',
+        'moderation.action.deleted': 'Supprimee',
         'moderation.reason.unsafe': 'Contenu sensible',
         'moderation.reason.link': 'Liens ou spam',
         'moderation.reason.spam': 'Spam ou repetition',
@@ -1869,6 +1949,7 @@
         'buttons.edit': 'Editar',
         'buttons.unlock': 'Desbloquear',
         'buttons.lock': 'Bloquear',
+        'buttons.delete': 'Eliminar',
         'buttons.record': 'Grabar voz',
         'buttons.stop': 'Detener',
         'buttons.preview': 'Vista previa',
@@ -1944,6 +2025,21 @@
         'submit.textPlaceholder': 'Escribe un chiste corto (8-280 caracteres).',
         'submit.moderatorTitle': 'Modo moderador',
         'submit.pendingEmpty': 'No hay envios pendientes.',
+        'admin.title': 'Panel admin',
+        'admin.subtitle': 'Herramientas privadas del propietario.',
+        'admin.loginTitle': 'Ingreso admin',
+        'admin.loginNote': 'Ingresa la clave para desbloquear.',
+        'admin.keyPlaceholder': 'Clave admin',
+        'admin.statsTitle': 'Estadisticas',
+        'admin.queueTitle': 'Cola de aprobacion',
+        'admin.queueEmpty': 'No hay envios pendientes.',
+        'admin.stats.total': 'Total de envios',
+        'admin.stats.pending': 'Pendiente',
+        'admin.stats.flagged': 'Marcado',
+        'admin.stats.approved': 'Aprobado',
+        'admin.stats.rejected': 'Rechazado',
+        'admin.stats.flagRate': 'Tasa de marcado',
+        'admin.stats.reasons': 'Razones principales',
         'jotd.title': 'Chiste del dia',
         'jotd.play': 'Reproducir',
         'jotd.copy': 'Copiar',
@@ -2011,6 +2107,7 @@
         'feedback.voiceTooLarge': 'Audio demasiado grande. Prueba mas corto.',
         'feedback.moderationApproved': 'Envio aprobado.',
         'feedback.moderationRejected': 'Envio rechazado.',
+        'feedback.moderationDeleted': 'Envio eliminado.',
         'feedback.submissionEdited': 'Envio actualizado.',
         'feedback.adminUnlocked': 'Acceso admin activado.',
         'feedback.adminLocked': 'Acceso admin bloqueado.',
@@ -2027,6 +2124,7 @@
         'moderation.action.rejected': 'Rechazado',
         'moderation.action.edited': 'Editado',
         'moderation.action.flagged': 'Marcado auto',
+        'moderation.action.deleted': 'Eliminado',
         'moderation.reason.unsafe': 'Contenido inseguro',
         'moderation.reason.link': 'Enlaces o spam',
         'moderation.reason.spam': 'Spam o repeticion',
@@ -2103,6 +2201,7 @@
         'buttons.edit': 'تعديل',
         'buttons.unlock': 'فتح',
         'buttons.lock': 'قفل',
+        'buttons.delete': 'حذف',
         'buttons.record': 'تسجيل صوت',
         'buttons.stop': 'ايقاف',
         'buttons.preview': 'معاينة',
@@ -2178,6 +2277,21 @@
         'submit.textPlaceholder': 'اكتب نكتة لطيفة (8-280 حرف).',
         'submit.moderatorTitle': 'وضع المشرف',
         'submit.pendingEmpty': 'لا توجد طلبات.',
+        'admin.title': 'لوحة المشرف',
+        'admin.subtitle': 'ادوات خاصة بمالك الموقع.',
+        'admin.loginTitle': 'تسجيل دخول المشرف',
+        'admin.loginNote': 'ادخل الرمز لفتح اللوحة.',
+        'admin.keyPlaceholder': 'رمز المشرف',
+        'admin.statsTitle': 'الاحصاءات',
+        'admin.queueTitle': 'قائمة المراجعة',
+        'admin.queueEmpty': 'لا توجد طلبات.',
+        'admin.stats.total': 'اجمالي الارسالات',
+        'admin.stats.pending': 'قيد المراجعة',
+        'admin.stats.flagged': 'معلّم',
+        'admin.stats.approved': 'تمت الموافقة',
+        'admin.stats.rejected': 'تم الرفض',
+        'admin.stats.flagRate': 'نسبة العلامات',
+        'admin.stats.reasons': 'ابرز الاسباب',
         'jotd.title': 'نكتة اليوم',
         'jotd.play': 'تشغيل',
         'jotd.copy': 'نسخ',
@@ -2245,6 +2359,7 @@
         'feedback.voiceTooLarge': 'التسجيل كبير جدا.',
         'feedback.moderationApproved': 'تمت الموافقة.',
         'feedback.moderationRejected': 'تم الرفض.',
+        'feedback.moderationDeleted': 'تم حذف الارسال.',
         'feedback.submissionEdited': 'تم تحديث الارسال.',
         'feedback.adminUnlocked': 'تم تفعيل وصول المشرف.',
         'feedback.adminLocked': 'تم قفل وصول المشرف.',
@@ -2261,6 +2376,7 @@
         'moderation.action.rejected': 'تم الرفض',
         'moderation.action.edited': 'تم التعديل',
         'moderation.action.flagged': 'تلقائي',
+        'moderation.action.deleted': 'تم الحذف',
         'moderation.reason.unsafe': 'محتوى غير مناسب',
         'moderation.reason.link': 'روابط او سبام',
         'moderation.reason.spam': 'سبام او تكرار',
@@ -2337,6 +2453,7 @@
         'buttons.edit': 'Gyara',
         'buttons.unlock': 'Bude',
         'buttons.lock': 'Kulle',
+        'buttons.delete': 'Share',
         'buttons.record': 'Daukar murya',
         'buttons.stop': 'Tsaya',
         'buttons.preview': 'Duba',
@@ -2412,6 +2529,21 @@
         'submit.textPlaceholder': 'Rubuta barkwanci gajere (8-280).',
         'submit.moderatorTitle': 'Yanayin mai dubawa',
         'submit.pendingEmpty': 'Babu aikace-aikace.',
+        'admin.title': 'Dashboard admin',
+        'admin.subtitle': 'Kayayyaki na musamman ga mai shafi.',
+        'admin.loginTitle': 'Shigar admin',
+        'admin.loginNote': 'Shigar da lambar admin don budewa.',
+        'admin.keyPlaceholder': 'Lambar admin',
+        'admin.statsTitle': 'Kididdiga',
+        'admin.queueTitle': 'Jerin dubawa',
+        'admin.queueEmpty': 'Babu aikace-aikace.',
+        'admin.stats.total': 'Jimillar aikace-aikace',
+        'admin.stats.pending': 'Ana dubawa',
+        'admin.stats.flagged': 'An yi alama',
+        'admin.stats.approved': 'An amince',
+        'admin.stats.rejected': 'An ki',
+        'admin.stats.flagRate': 'Yawan alama',
+        'admin.stats.reasons': 'Babban dalilai',
         'jotd.title': 'Barkwancin yau',
         'jotd.play': 'Kunna',
         'jotd.copy': 'Kwafi',
@@ -2479,6 +2611,7 @@
         'feedback.voiceTooLarge': 'Murya ta yi girma.',
         'feedback.moderationApproved': 'An amince.',
         'feedback.moderationRejected': 'An ki.',
+        'feedback.moderationDeleted': 'An share aikawa.',
         'feedback.submissionEdited': 'An sabunta aikawa.',
         'feedback.adminUnlocked': 'An kunna shigar admin.',
         'feedback.adminLocked': 'An kulle shigar admin.',
@@ -2495,6 +2628,7 @@
         'moderation.action.rejected': 'An ki',
         'moderation.action.edited': 'An gyara',
         'moderation.action.flagged': 'An yi alama',
+        'moderation.action.deleted': 'An share',
         'moderation.reason.unsafe': 'Abu mara kyau',
         'moderation.reason.link': 'Link ko spam',
         'moderation.reason.spam': 'Spam ko maimaitawa',
@@ -2571,6 +2705,7 @@
         'buttons.edit': 'Editar',
         'buttons.unlock': 'Desbloquear',
         'buttons.lock': 'Bloquear',
+        'buttons.delete': 'Excluir',
         'buttons.record': 'Gravar voz',
         'buttons.stop': 'Parar',
         'buttons.preview': 'Previa',
@@ -2646,6 +2781,21 @@
         'submit.textPlaceholder': 'Escreva uma piada curta (8-280).',
         'submit.moderatorTitle': 'Modo moderador',
         'submit.pendingEmpty': 'Sem envios pendentes.',
+        'admin.title': 'Painel admin',
+        'admin.subtitle': 'Ferramentas privadas do proprietario.',
+        'admin.loginTitle': 'Login admin',
+        'admin.loginNote': 'Digite a chave admin para desbloquear.',
+        'admin.keyPlaceholder': 'Chave admin',
+        'admin.statsTitle': 'Estatisticas',
+        'admin.queueTitle': 'Fila de aprovacao',
+        'admin.queueEmpty': 'Sem envios pendentes.',
+        'admin.stats.total': 'Total de envios',
+        'admin.stats.pending': 'Pendente',
+        'admin.stats.flagged': 'Marcado',
+        'admin.stats.approved': 'Aprovado',
+        'admin.stats.rejected': 'Rejeitado',
+        'admin.stats.flagRate': 'Taxa de marcacao',
+        'admin.stats.reasons': 'Principais motivos',
         'jotd.title': 'Piada do dia',
         'jotd.play': 'Tocar',
         'jotd.copy': 'Copiar',
@@ -2713,6 +2863,7 @@
         'feedback.voiceTooLarge': 'Audio muito grande.',
         'feedback.moderationApproved': 'Envio aprovado.',
         'feedback.moderationRejected': 'Envio rejeitado.',
+        'feedback.moderationDeleted': 'Envio excluido.',
         'feedback.submissionEdited': 'Envio atualizado.',
         'feedback.adminUnlocked': 'Acesso admin ativado.',
         'feedback.adminLocked': 'Acesso admin bloqueado.',
@@ -2729,6 +2880,7 @@
         'moderation.action.rejected': 'Rejeitado',
         'moderation.action.edited': 'Editado',
         'moderation.action.flagged': 'Marcado auto',
+        'moderation.action.deleted': 'Excluido',
         'moderation.reason.unsafe': 'Conteudo inseguro',
         'moderation.reason.link': 'Links ou spam',
         'moderation.reason.spam': 'Spam ou repeticao',
@@ -3265,6 +3417,163 @@
       });
     }
 
+    function renderAdminStats() {
+      if (!dom.adminStats) {
+        return;
+      }
+      dom.adminStats.innerHTML = '';
+      const total = submissions.length;
+      const pending = submissions.filter((item) => item.status === 'pending').length;
+      const flagged = submissions.filter((item) => item.status === 'flagged').length;
+      const approved = submissions.filter((item) => item.status === 'approved').length;
+      const rejected = submissions.filter((item) => item.status === 'rejected').length;
+      const flagRate = total ? Math.round((flagged / total) * 100) : 0;
+      const statsItems = [
+        { label: t('admin.stats.total'), value: total },
+        { label: t('admin.stats.pending'), value: pending },
+        { label: t('admin.stats.flagged'), value: flagged },
+        { label: t('admin.stats.approved'), value: approved },
+        { label: t('admin.stats.rejected'), value: rejected },
+        { label: t('admin.stats.flagRate'), value: `${flagRate}%` }
+      ];
+      statsItems.forEach((item) => {
+        const row = document.createElement('div');
+        row.className = 'list-item';
+        const label = document.createElement('span');
+        label.textContent = item.label;
+        const value = document.createElement('span');
+        value.textContent = item.value;
+        row.appendChild(label);
+        row.appendChild(value);
+        dom.adminStats.appendChild(row);
+      });
+
+      const reasonCounts = {};
+      moderationLog.forEach((entry) => {
+        (entry.reasons || []).forEach((reason) => {
+          reasonCounts[reason] = (reasonCounts[reason] || 0) + 1;
+        });
+      });
+      const topReasons = Object.keys(reasonCounts)
+        .map((reason) => ({ reason, count: reasonCounts[reason] }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 3)
+        .map((item) => `${t(item.reason)} (${item.count})`)
+        .join(' · ');
+      if (topReasons) {
+        const row = document.createElement('div');
+        row.className = 'list-item';
+        const label = document.createElement('span');
+        label.textContent = t('admin.stats.reasons');
+        const value = document.createElement('span');
+        value.textContent = topReasons;
+        row.appendChild(label);
+        row.appendChild(value);
+        dom.adminStats.appendChild(row);
+      }
+    }
+
+    function renderAdminQueue() {
+      if (!dom.adminQueue) {
+        return;
+      }
+      dom.adminQueue.innerHTML = '';
+      if (!settings.adminUnlocked) {
+        const locked = document.createElement('div');
+        locked.className = 'list-item';
+        locked.textContent = t('submit.adminHint');
+        dom.adminQueue.appendChild(locked);
+        return;
+      }
+      const pending = submissions.filter(
+        (item) => item.status === 'pending' || item.status === 'flagged'
+      );
+      if (!pending.length) {
+        const empty = document.createElement('div');
+        empty.className = 'list-item';
+        empty.textContent = t('admin.queueEmpty');
+        dom.adminQueue.appendChild(empty);
+        return;
+      }
+      pending.forEach((item) => {
+        const row = document.createElement('div');
+        row.className = 'list-item';
+        const meta = `${t(`categories.${item.category}`)} · ${t(`languages.${item.lang}`)}`;
+        const textWrap = document.createElement('span');
+        const metaTag = document.createElement('em');
+        metaTag.className = 'muted';
+        metaTag.textContent = ` ${meta}`;
+        textWrap.textContent = sanitizeText(item.joke);
+        textWrap.appendChild(metaTag);
+        row.appendChild(textWrap);
+        const statusBadge = document.createElement('span');
+        statusBadge.className = 'badge';
+        statusBadge.textContent =
+          item.status === 'flagged' ? t('moderation.status.flagged') : t('moderation.status.pending');
+        row.appendChild(statusBadge);
+        if (item.flagReasons && item.flagReasons.length) {
+          const reasons = document.createElement('div');
+          reasons.className = 'muted';
+          reasons.textContent = item.flagReasons.map((reason) => t(reason)).join(' · ');
+          row.appendChild(reasons);
+        }
+        const actions = document.createElement('span');
+        const edit = document.createElement('button');
+        edit.textContent = t('buttons.edit');
+        edit.onclick = () => editSubmission(item.id);
+        const approve = document.createElement('button');
+        approve.textContent = t('buttons.approve');
+        approve.onclick = () => approveSubmission(item.id);
+        const reject = document.createElement('button');
+        reject.textContent = t('buttons.reject');
+        reject.onclick = () => rejectSubmission(item.id);
+        const remove = document.createElement('button');
+        remove.textContent = t('buttons.delete');
+        remove.onclick = () => deleteSubmission(item.id);
+        actions.appendChild(edit);
+        actions.appendChild(approve);
+        actions.appendChild(reject);
+        actions.appendChild(remove);
+        row.appendChild(actions);
+        dom.adminQueue.appendChild(row);
+      });
+    }
+
+    function renderAdminDashboard() {
+      if (!dom.adminDashboard || !dom.adminLoginCard) {
+        return;
+      }
+      dom.adminDashboard.hidden = !settings.adminUnlocked;
+      dom.adminLoginCard.hidden = settings.adminUnlocked;
+      if (settings.adminUnlocked) {
+        renderAdminStats();
+        renderAdminQueue();
+        renderModerationLogs();
+      }
+    }
+
+    function updateAdminAccessUI() {
+      if (dom.moderatorToggle) {
+        dom.moderatorToggle.checked = Boolean(settings.adminUnlocked);
+      }
+      renderAdminDashboard();
+    }
+
+    function setAdminUnlocked(isUnlocked, feedbackKey = null) {
+      settings.adminUnlocked = Boolean(isUnlocked);
+      saveSettings();
+      updateAdminAccessUI();
+      renderModeration();
+      if (feedbackKey) {
+        if (dom.adminFeedback) {
+          dom.adminFeedback.textContent = t(feedbackKey);
+        }
+        if (dom.adminLoginFeedback) {
+          dom.adminLoginFeedback.textContent = t(feedbackKey);
+        }
+      }
+    }
+
     function generateCategoryJokesLang(factory, category, count) {
       const templates = getCategoryTemplates(factory, category);
       const results = new Set();
@@ -3580,6 +3889,7 @@
       renderTrending();
       renderAchievements();
       renderModeration();
+      renderAdminDashboard();
       renderComments();
       applyTheme(settings.theme);
       updateNavActive(getRouteFromHash());
@@ -3843,7 +4153,8 @@
       'achievements',
       'about',
       'creator',
-      'contact'
+      'contact',
+      'admin'
     ];
 
     function getRouteFromHash() {
@@ -3896,6 +4207,9 @@
       if (!ROUTES.includes(route)) {
         location.hash = '#/jokes';
         return;
+      }
+      if (route === 'admin') {
+        updateAdminAccessUI();
       }
       showPageTransition();
       showView(route);
@@ -5186,19 +5500,20 @@
         moderationLog.length = 120;
       }
       saveModerationLog();
-      renderModerationLog();
+      renderModerationLogs();
+      renderAdminStats();
     }
 
-    function renderModerationLog() {
-      if (!dom.moderationLog) {
+    function renderModerationLog(target) {
+      if (!target) {
         return;
       }
-      dom.moderationLog.innerHTML = '';
+      target.innerHTML = '';
       if (!moderationLog.length) {
         const empty = document.createElement('div');
         empty.className = 'list-item';
         empty.textContent = t('moderation.logEmpty');
-        dom.moderationLog.appendChild(empty);
+        target.appendChild(empty);
         return;
       }
       moderationLog.slice(0, 20).forEach((entry) => {
@@ -5215,8 +5530,13 @@
         subtitle.textContent = reasonText ? `${reasonText} · ${when}` : when;
         row.appendChild(title);
         row.appendChild(subtitle);
-        dom.moderationLog.appendChild(row);
+        target.appendChild(row);
       });
+    }
+
+    function renderModerationLogs() {
+      renderModerationLog(dom.moderationLog);
+      renderModerationLog(dom.adminLog);
     }
 
     function renderModeration() {
@@ -5231,7 +5551,7 @@
         dom.moderationList.appendChild(locked);
         return;
       }
-      renderModerationLog();
+      renderModerationLogs();
       const pending = submissions.filter(
         (item) => item.status === 'pending' || item.status === 'flagged'
       );
@@ -5286,12 +5606,17 @@
         const reject = document.createElement('button');
         reject.textContent = t('buttons.reject');
         reject.onclick = () => rejectSubmission(item.id);
+        const remove = document.createElement('button');
+        remove.textContent = t('buttons.delete');
+        remove.onclick = () => deleteSubmission(item.id);
         actions.appendChild(edit);
         actions.appendChild(approve);
         actions.appendChild(reject);
+        actions.appendChild(remove);
         row.appendChild(actions);
         dom.moderationList.appendChild(row);
       });
+      renderAdminDashboard();
     }
 
     function approveSubmission(id) {
@@ -5321,6 +5646,7 @@
         delete state.languageSessionIds[item.lang];
       }
       renderModeration();
+      renderAdminDashboard();
       addModerationLog('approved', item, item.flagReasons || []);
       setFeedback('feedback.moderationApproved');
     }
@@ -5349,6 +5675,7 @@
       item.flagReasons = screened.reasons;
       saveSubmissions();
       renderModeration();
+      renderAdminDashboard();
       addModerationLog('edited', item, item.flagReasons || []);
       setFeedback('feedback.submissionEdited');
     }
@@ -5365,8 +5692,27 @@
       item.status = 'rejected';
       saveSubmissions();
       renderModeration();
+      renderAdminDashboard();
       addModerationLog('rejected', item, item.flagReasons || []);
       setFeedback('feedback.moderationRejected');
+    }
+
+    function deleteSubmission(id) {
+      if (!settings.adminUnlocked) {
+        setFeedback('feedback.adminLocked');
+        return;
+      }
+      const index = submissions.findIndex((entry) => entry.id === id);
+      if (index === -1) {
+        return;
+      }
+      const item = submissions[index];
+      submissions.splice(index, 1);
+      saveSubmissions();
+      renderModeration();
+      renderAdminDashboard();
+      addModerationLog('deleted', item, item.flagReasons || []);
+      setFeedback('feedback.moderationDeleted');
     }
 
     function initVoiceRecorder() {
@@ -5823,11 +6169,8 @@
       dom.adminUnlock.onclick = () => {
         const key = dom.adminKey.value.trim();
         if (key && key === ADMIN_CODE) {
-          settings.adminUnlocked = true;
-          saveSettings();
-          dom.adminFeedback.textContent = t('feedback.adminUnlocked');
+          setAdminUnlocked(true, 'feedback.adminUnlocked');
           dom.adminKey.value = '';
-          dom.moderatorToggle.checked = true;
           renderModeration();
         } else {
           dom.adminFeedback.textContent = t('feedback.adminDenied');
@@ -5836,18 +6179,34 @@
     }
     if (dom.adminLock) {
       dom.adminLock.onclick = () => {
-        settings.adminUnlocked = false;
-        saveSettings();
-        dom.adminFeedback.textContent = t('feedback.adminLocked');
+        setAdminUnlocked(false, 'feedback.adminLocked');
         dom.adminKey.value = '';
-        dom.moderatorToggle.checked = false;
         renderModeration();
+      };
+    }
+    if (dom.adminLogin) {
+      dom.adminLogin.onclick = () => {
+        const key = dom.adminLoginKey.value.trim();
+        if (key && key === ADMIN_CODE) {
+          setAdminUnlocked(true, 'feedback.adminUnlocked');
+          dom.adminLoginKey.value = '';
+        } else if (dom.adminLoginFeedback) {
+          dom.adminLoginFeedback.textContent = t('feedback.adminDenied');
+        }
+      };
+    }
+    if (dom.adminLogout) {
+      dom.adminLogout.onclick = () => {
+        setAdminUnlocked(false, 'feedback.adminLocked');
+        if (dom.adminLoginKey) {
+          dom.adminLoginKey.value = '';
+        }
       };
     }
     dom.moderatorToggle.onchange = () => renderModeration();
 
     state.currentCategory = dom.category.value;
-    dom.moderatorToggle.checked = Boolean(settings.adminUnlocked);
+    updateAdminAccessUI();
     initVoiceRecorder();
     if ('speechSynthesis' in window) {
       window.speechSynthesis.onvoiceschanged = warmUpVoices;
