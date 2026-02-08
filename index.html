@@ -1419,6 +1419,7 @@
       moderationLog: 'moderationLogV1',
       dailyIngest: 'dailyIngestV1',
       sessionProgress: 'sessionProgressV1',
+      viewed: 'viewedJokesV1',
       settings: 'jokeSettingsV1',
       stats: 'jokeStatsV1',
       comments: 'commentStoreV1',
@@ -4265,6 +4266,7 @@
     const progressStore = loadProgressStore();
     const sessionSeen = loadSessionSeen();
     const sessionProgress = loadSessionProgress();
+    const viewedStore = loadViewedStore();
 
     function t(key, params = {}) {
       const dict = translations[state.currentLang] || translations.en;
@@ -4364,6 +4366,47 @@
         remaining,
         limit: SESSION_JOKE_LIMIT
       });
+    }
+
+    function getViewerId() {
+      // Guest users use local storage; logged-in users can be wired to backend later.
+      return state.currentUserId ? `user:${state.currentUserId}` : 'guest';
+    }
+
+    function getViewedKey(lang, category) {
+      return `${getViewerId()}|${lang}|${category}`;
+    }
+
+    function getViewedSet(lang, category, ids) {
+      const key = getViewedKey(lang, category);
+      const list = viewedStore[key] || [];
+      const validIds = new Set(ids);
+      const filtered = list.filter((id) => validIds.has(id));
+      let set = new Set(filtered);
+      // Reset when all jokes are seen for this category/language.
+      if (ids.length && set.size >= ids.length) {
+        set = new Set();
+      }
+      viewedStore[key] = Array.from(set);
+      saveViewedStore();
+      return set;
+    }
+
+    function setViewedSet(lang, category, set) {
+      const key = getViewedKey(lang, category);
+      viewedStore[key] = Array.from(set);
+      saveViewedStore();
+      // Placeholder for backend sync when user accounts are added.
+    }
+
+    function getNextUnseenJokeId(ids, viewedSet) {
+      // Helper for picking the next unseen joke ID.
+      for (let i = 0; i < ids.length; i += 1) {
+        if (!viewedSet.has(ids[i])) {
+          return ids[i];
+        }
+      }
+      return null;
     }
 
     function applyLanguage(lang, options = {}) {
@@ -5164,8 +5207,12 @@
 
     function buildNextDeck(ids, seenIds, sessionSeenSet, avoidId = '', languageTotal = 0) {
       const seenSet = new Set(seenIds);
+      const viewedSet = getViewedSet(state.currentLang, state.currentCategory, ids);
       let remaining = ids.filter((id) => {
         if (seenSet.has(id)) {
+          return false;
+        }
+        if (viewedSet.has(id)) {
           return false;
         }
         if (sessionSeenSet) {
@@ -5184,7 +5231,14 @@
         if (languageTotal && sessionSeenSet && sessionSeenSet.size < languageTotal) {
           return { deck: [], seenIds: nextSeen };
         }
+        // Reset viewed history when all jokes are exhausted.
+        setViewedSet(state.currentLang, state.currentCategory, new Set());
         nextSeen = [];
+        remaining = [...ids];
+      }
+      const nextUnseen = getNextUnseenJokeId(remaining, viewedSet);
+      if (!nextUnseen) {
+        setViewedSet(state.currentLang, state.currentCategory, new Set());
         remaining = [...ids];
       }
       const deck = shuffleArray(remaining).slice(0, MAX_JOKES_PER_BATCH);
@@ -5214,6 +5268,9 @@
       const seenSet = new Set(progress.seenIds);
       seenSet.add(id);
       progress.seenIds = Array.from(seenSet);
+      const viewedSet = getViewedSet(state.currentLang, state.currentCategory, state.allJokeIds);
+      viewedSet.add(id);
+      setViewedSet(state.currentLang, state.currentCategory, viewedSet);
       const sessionSet = getSessionSeenSet(state.currentLang);
       const sessionId = buildSessionJokeId(state.jokeIndex[id], state.currentLang);
       const languageIds = getLanguageSessionIds(state.currentLang);
@@ -6810,6 +6867,15 @@
 
     function saveSubmissions() {
       localStorage.setItem(STORAGE_KEYS.submissions, JSON.stringify(submissions));
+    }
+
+    function loadViewedStore() {
+      const stored = JSON.parse(localStorage.getItem(STORAGE_KEYS.viewed) || '{}');
+      return stored && typeof stored === 'object' ? stored : {};
+    }
+
+    function saveViewedStore() {
+      localStorage.setItem(STORAGE_KEYS.viewed, JSON.stringify(viewedStore));
     }
 
     function loadDailyIngest() {
