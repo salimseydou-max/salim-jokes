@@ -364,6 +364,29 @@
       text-align: center;
       white-space: pre-line;
     }
+    .joke-text.is-collapsed {
+      max-height: 8.5rem;
+      overflow: hidden;
+      position: relative;
+    }
+    .joke-text.is-collapsed::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 3rem;
+      background: linear-gradient(transparent, var(--card));
+    }
+    .joke-toggle {
+      margin: 0.6rem auto 0;
+      display: inline-flex;
+    }
+    .session-progress {
+      text-align: center;
+      margin-top: 0.5rem;
+      font-size: 0.95rem;
+    }
     .joke-meta {
       display: flex;
       flex-wrap: wrap;
@@ -973,10 +996,14 @@
           <div class="skeleton-line short"></div>
         </div>
         <div id="joke" class="joke-text">Loading joke...</div>
+        <button id="joke-toggle" class="ghost joke-toggle" type="button" data-i18n="buttons.readMore" hidden>
+          Read More
+        </button>
         <div class="joke-meta">
           <span id="joke-category" class="badge"></span>
           <span id="joke-language" class="badge"></span>
         </div>
+        <div id="session-progress" class="muted session-progress" aria-live="polite"></div>
         <div class="buttons">
           <button id="previous" data-i18n="buttons.previous">Previous Joke</button>
           <button id="next" data-i18n="buttons.next">Next Joke</button>
@@ -1303,9 +1330,11 @@
       voiceSpeed: document.getElementById('voice-speed'),
       jokeCard: document.getElementById('joke-card'),
       jokeText: document.getElementById('joke'),
+      jokeToggle: document.getElementById('joke-toggle'),
       jokeSkeleton: document.getElementById('joke-skeleton'),
       jokeCategory: document.getElementById('joke-category'),
       jokeLanguage: document.getElementById('joke-language'),
+      sessionProgress: document.getElementById('session-progress'),
       feedback: document.getElementById('feedback'),
       previous: document.getElementById('previous'),
       next: document.getElementById('next'),
@@ -1389,6 +1418,7 @@
       approved: 'approvedJokesV1',
       moderationLog: 'moderationLogV1',
       dailyIngest: 'dailyIngestV1',
+      sessionProgress: 'sessionProgressV1',
       settings: 'jokeSettingsV1',
       stats: 'jokeStatsV1',
       comments: 'commentStoreV1',
@@ -1429,7 +1459,8 @@
       'roast'
     ];
     const MAX_JOKE_LENGTH = 280;
-    const MAX_JOKES_PER_BATCH = 100;
+    const SESSION_JOKE_LIMIT = 50;
+    const MAX_JOKES_PER_BATCH = SESSION_JOKE_LIMIT;
     const ADMIN_CODE = 'salim-admin'; // Replace with a private admin key in production.
     const SAFE_CATEGORIES = [
       'random',
@@ -1554,6 +1585,8 @@
         'buttons.dislike': 'Dislike',
         'buttons.expand': 'Expand',
         'buttons.collapse': 'Collapse',
+        'buttons.readMore': 'Read More',
+        'buttons.readLess': 'Read Less',
         'actions.title': 'Quick Actions',
         'buttons.save': 'Save Joke',
         'buttons.unsave': 'Remove Saved',
@@ -1714,6 +1747,7 @@
         'feedback.noNext': 'No newer jokes yet.',
         'feedback.noJoke': 'Load a joke first.',
         'feedback.selectCategory': 'Select a category to start.',
+        'feedback.sessionProgress': 'You have {remaining}/{limit} jokes left.',
         'feedback.copy': 'Copied to clipboard.',
         'feedback.shareTip': 'Copied. Paste it on {platform}.',
         'feedback.reactionThanks': 'Thanks for your reaction!',
@@ -1822,6 +1856,8 @@
         'buttons.dislike': 'Je n aime pas',
         'buttons.expand': 'Afficher',
         'buttons.collapse': 'Masquer',
+        'buttons.readMore': 'Lire plus',
+        'buttons.readLess': 'Lire moins',
         'actions.title': 'Actions rapides',
         'buttons.save': 'Sauvegarder',
         'buttons.unsave': 'Retirer',
@@ -1982,6 +2018,7 @@
         'feedback.noNext': 'Pas de blague suivante.',
         'feedback.noJoke': 'Chargez une blague.',
         'feedback.selectCategory': 'Choisissez une categorie pour commencer.',
+        'feedback.sessionProgress': 'Il reste {remaining}/{limit} blagues.',
         'feedback.copy': 'Copie dans le presse papier.',
         'feedback.shareTip': 'Copie. Collez sur {platform}.',
         'feedback.reactionThanks': 'Merci pour la reaction !',
@@ -2089,6 +2126,8 @@
         'buttons.dislike': 'No me gusta',
         'buttons.expand': 'Mostrar',
         'buttons.collapse': 'Ocultar',
+        'buttons.readMore': 'Leer mas',
+        'buttons.readLess': 'Leer menos',
         'actions.title': 'Acciones rapidas',
         'buttons.save': 'Guardar',
         'buttons.unsave': 'Quitar',
@@ -2249,6 +2288,7 @@
         'feedback.noNext': 'Sin chistes siguientes.',
         'feedback.noJoke': 'Carga un chiste primero.',
         'feedback.selectCategory': 'Selecciona una categoria para empezar.',
+        'feedback.sessionProgress': 'Te quedan {remaining}/{limit} chistes.',
         'feedback.copy': 'Copiado al portapapeles.',
         'feedback.shareTip': 'Copiado. Pegalo en {platform}.',
         'feedback.reactionThanks': 'Gracias por reaccionar.',
@@ -2356,6 +2396,8 @@
         'buttons.dislike': 'لم يعجبني',
         'buttons.expand': 'عرض',
         'buttons.collapse': 'اخفاء',
+        'buttons.readMore': 'اقرأ المزيد',
+        'buttons.readLess': 'اقرأ اقل',
         'actions.title': 'اجراءات سريعة',
         'buttons.save': 'حفظ النكتة',
         'buttons.unsave': 'ازالة',
@@ -2516,6 +2558,7 @@
         'feedback.noNext': 'لا توجد نكات جديدة.',
         'feedback.noJoke': 'حمّل نكتة اولا.',
         'feedback.selectCategory': 'اختر فئة للبدء.',
+        'feedback.sessionProgress': 'متبقي {remaining}/{limit} نكات.',
         'feedback.copy': 'تم النسخ.',
         'feedback.shareTip': 'تم النسخ. الصق في {platform}.',
         'feedback.reactionThanks': 'شكرا للتفاعل!',
@@ -2623,6 +2666,8 @@
         'buttons.dislike': 'Ban so ba',
         'buttons.expand': 'Nuna',
         'buttons.collapse': 'Boye',
+        'buttons.readMore': 'Kara karatu',
+        'buttons.readLess': 'Rage karatu',
         'actions.title': 'Ayyuka masu sauri',
         'buttons.save': 'Ajiye',
         'buttons.unsave': 'Cire',
@@ -2783,6 +2828,7 @@
         'feedback.noNext': 'Babu na gaba.',
         'feedback.noJoke': 'Da farko ka dauko barkwanci.',
         'feedback.selectCategory': 'Zabi rukuni don farawa.',
+        'feedback.sessionProgress': 'Sauran {remaining}/{limit} barkwanci.',
         'feedback.copy': 'An kwafa.',
         'feedback.shareTip': 'An kwafa. Ka manna a {platform}.',
         'feedback.reactionThanks': 'Mun gode da martani.',
@@ -2890,6 +2936,8 @@
         'buttons.dislike': 'Nao gostei',
         'buttons.expand': 'Mostrar',
         'buttons.collapse': 'Ocultar',
+        'buttons.readMore': 'Ler mais',
+        'buttons.readLess': 'Ler menos',
         'actions.title': 'Acoes rapidas',
         'buttons.save': 'Salvar',
         'buttons.unsave': 'Remover',
@@ -3050,6 +3098,7 @@
         'feedback.noNext': 'Sem piada seguinte.',
         'feedback.noJoke': 'Carregue uma piada primeiro.',
         'feedback.selectCategory': 'Escolha uma categoria para comecar.',
+        'feedback.sessionProgress': 'Faltam {remaining}/{limit} piadas.',
         'feedback.copy': 'Copiado.',
         'feedback.shareTip': 'Copiado. Cole em {platform}.',
         'feedback.reactionThanks': 'Obrigado pela reacao.',
@@ -4189,6 +4238,7 @@
       currentIndex: -1,
       lastJokeId: '',
       languageSessionIds: {},
+      jokeExpanded: false,
       searchQuery: '',
       replyTo: null,
       currentUserId: null,
@@ -4214,6 +4264,7 @@
     const notificationPrefs = loadNotifications();
     const progressStore = loadProgressStore();
     const sessionSeen = loadSessionSeen();
+    const sessionProgress = loadSessionProgress();
 
     function t(key, params = {}) {
       const dict = translations[state.currentLang] || translations.en;
@@ -4271,6 +4322,48 @@
     function getCategoryLabel(category) {
       const key = CATEGORY_I18N_KEYS[category] || category;
       return t(`categories.${key}`);
+    }
+
+    function getSessionProgressKey() {
+      return `${state.currentLang}|${state.currentCategory || 'none'}`;
+    }
+
+    function getSessionCount() {
+      const key = getSessionProgressKey();
+      return sessionProgress.countsByKey[key] || 0;
+    }
+
+    function setSessionCount(count) {
+      const key = getSessionProgressKey();
+      sessionProgress.countsByKey[key] = count;
+      saveSessionProgress();
+    }
+
+    function isSessionResetReady() {
+      const key = getSessionProgressKey();
+      return Boolean(sessionProgress.resetByKey[key]);
+    }
+
+    function setSessionResetReady(value) {
+      const key = getSessionProgressKey();
+      sessionProgress.resetByKey[key] = Boolean(value);
+      saveSessionProgress();
+    }
+
+    function updateSessionProgressUI() {
+      if (!dom.sessionProgress) {
+        return;
+      }
+      if (!state.currentCategory) {
+        dom.sessionProgress.textContent = '';
+        return;
+      }
+      const count = getSessionCount();
+      const remaining = Math.max(SESSION_JOKE_LIMIT - count, 0);
+      dom.sessionProgress.textContent = t('feedback.sessionProgress', {
+        remaining,
+        limit: SESSION_JOKE_LIMIT
+      });
     }
 
     function applyLanguage(lang, options = {}) {
@@ -4898,6 +4991,7 @@
     function showJoke(joke) {
       state.currentJoke = joke;
       dom.jokeText.textContent = joke;
+      state.jokeExpanded = false;
       dom.jokeCategory.textContent = state.currentCategory
         ? getCategoryLabel(state.currentCategory)
         : '';
@@ -4905,6 +4999,22 @@
       updateSavedControls();
       updateReactionUI();
       renderComments();
+      updateJokeToggle();
+      updateSessionProgressUI();
+    }
+
+    function updateJokeToggle() {
+      if (!dom.jokeToggle) {
+        return;
+      }
+      const text = state.currentJoke || '';
+      const lineCount = text.split('\n').length;
+      const shouldCollapse = text.length > 180 || lineCount > 3;
+      dom.jokeToggle.hidden = !shouldCollapse;
+      dom.jokeText.classList.toggle('is-collapsed', shouldCollapse && !state.jokeExpanded);
+      if (shouldCollapse) {
+        dom.jokeToggle.textContent = t(state.jokeExpanded ? 'buttons.readLess' : 'buttons.readMore');
+      }
     }
 
     function showJokeMessage(message) {
@@ -4915,6 +5025,10 @@
       updateSavedControls();
       updateReactionUI();
       renderComments();
+      if (dom.jokeToggle) {
+        dom.jokeToggle.hidden = true;
+      }
+      updateSessionProgressUI();
     }
 
     function hasPunchlineMarkers(text, lang = state.currentLang) {
@@ -5102,12 +5216,22 @@
       progress.seenIds = Array.from(seenSet);
       const sessionSet = getSessionSeenSet(state.currentLang);
       const sessionId = buildSessionJokeId(state.jokeIndex[id], state.currentLang);
-      sessionSet.add(sessionId);
       const languageIds = getLanguageSessionIds(state.currentLang);
-      if (languageIds.length && sessionSet.size >= languageIds.length) {
-        sessionSet.clear();
+      const wasSeen = sessionSet.has(sessionId);
+      if (!wasSeen) {
+        sessionSet.add(sessionId);
+        const count = getSessionCount() + 1;
+        setSessionCount(count);
+        if (count >= SESSION_JOKE_LIMIT) {
+          setSessionResetReady(true);
+        }
       }
-      updateSessionSeen(state.currentLang, sessionSet);
+      if (languageIds.length && sessionSet.size >= languageIds.length) {
+        resetSessionCycle();
+      } else {
+        updateSessionSeen(state.currentLang, sessionSet);
+        updateSessionProgressUI();
+      }
       progress.deck = state.jokeOrder;
       progress.index = state.currentIndex;
       persistProgressState(key, progress);
@@ -5133,15 +5257,21 @@
       showJokeAt(0);
     }
 
+    function resetSessionCycle() {
+      const sessionSet = getSessionSeenSet(state.currentLang);
+      sessionSet.clear();
+      updateSessionSeen(state.currentLang, sessionSet);
+      setSessionCount(0);
+      setSessionResetReady(false);
+      updateSessionProgressUI();
+    }
+
     function setJokeList() {
       if (!state.currentCategory) {
-        state.jokeList = [];
-        state.jokeOrder = [];
-        state.jokeIndex = {};
-        state.currentIndex = -1;
-        showJoke(t('feedback.selectCategory'));
-        updateNavButtons();
-        return;
+        state.currentCategory = 'random';
+        if (dom.category) {
+          dom.category.value = 'random';
+        }
       }
       const ordered = buildOrderedList(state.currentLang, state.currentCategory);
       state.jokeList = ordered;
@@ -5156,8 +5286,9 @@
       if (!ids.length) {
         state.currentIndex = -1;
         state.jokeOrder = [];
-        showJoke(state.searchQuery.trim() ? t('feedback.noResults') : t('feedback.fallback'));
+        showJokeMessage(state.searchQuery.trim() ? t('feedback.noResults') : t('feedback.fallback'));
         updateNavButtons();
+        updateSessionProgressUI();
         return;
       }
 
@@ -5184,7 +5315,7 @@
       if (!deck.length) {
         state.jokeOrder = [];
         state.currentIndex = -1;
-        showJoke(t('feedback.noNext'));
+        showJokeMessage(t('feedback.noNext'));
         updateNavButtons();
         return;
       }
@@ -5194,6 +5325,7 @@
       persistProgressState(key, { deck: state.jokeOrder, index: state.currentIndex, seenIds });
       showJokeAt(state.currentIndex);
       updateNavButtons();
+      updateSessionProgressUI();
     }
 
     function showJokeAt(index) {
@@ -5216,6 +5348,12 @@
       dom.jokeText.textContent = getLoadingMessage();
       setTimeout(() => {
         if (direction === 'next') {
+          if (!state.searchQuery.trim() && isSessionResetReady()) {
+            resetSessionCycle();
+            rotateDeck();
+            setLoading(false);
+            return;
+          }
           if (state.currentIndex < state.jokeOrder.length - 1) {
             showJokeAt(state.currentIndex + 1);
           } else if (!state.searchQuery.trim()) {
@@ -6605,6 +6743,23 @@
       localStorage.setItem(STORAGE_KEYS.sessionSeen, JSON.stringify(sessionSeen));
     }
 
+    function loadSessionProgress() {
+      const stored = JSON.parse(localStorage.getItem(STORAGE_KEYS.sessionProgress) || '{}');
+      const sessionId = getSessionId();
+      if (!stored || stored.sessionId !== sessionId) {
+        return { sessionId, countsByKey: {}, resetByKey: {} };
+      }
+      return {
+        sessionId,
+        countsByKey: stored.countsByKey || {},
+        resetByKey: stored.resetByKey || {}
+      };
+    }
+
+    function saveSessionProgress() {
+      localStorage.setItem(STORAGE_KEYS.sessionProgress, JSON.stringify(sessionProgress));
+    }
+
     function loadSeenStore() {
       const stored = JSON.parse(localStorage.getItem(STORAGE_KEYS.seen) || '{}');
       if (stored && typeof stored === 'object' && !Array.isArray(stored)) {
@@ -6707,6 +6862,12 @@
       }
       copyToClipboard(state.currentJoke);
     };
+    if (dom.jokeToggle) {
+      dom.jokeToggle.onclick = () => {
+        state.jokeExpanded = !state.jokeExpanded;
+        updateJokeToggle();
+      };
+    }
     if (dom.saveImage) {
       dom.saveImage.onclick = () => saveJokeImage();
     }
