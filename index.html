@@ -39,6 +39,7 @@
       --bg-gradient: none;
       --bg-watermark: none;
       --bg-pattern: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Crect width='160' height='160' fill='none'/%3E%3Ctext x='12' y='42' font-size='28' opacity='0.12'%3E%F0%9F%98%82%3C/text%3E%3Ctext x='92' y='88' font-size='28' opacity='0.12'%3E%F0%9F%A4%A3%3C/text%3E%3Ctext x='40' y='132' font-size='28' opacity='0.12'%3E%F0%9F%98%9C%3C/text%3E%3C/svg%3E");
+      --media-overlay: rgba(255, 255, 255, 0.92);
     }
     [data-theme="dark"] {
       --bg: #141414;
@@ -53,6 +54,7 @@
       --button-text: #1f1f1f;
       --bg-gradient: none;
       --bg-watermark: none;
+      --media-overlay: rgba(20, 20, 20, 0.85);
       --bg-pattern: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Crect width='160' height='160' fill='none'/%3E%3Ctext x='12' y='42' font-size='28' opacity='0.08' fill='%23ffffff'%3E%F0%9F%98%82%3C/text%3E%3Ctext x='92' y='88' font-size='28' opacity='0.08' fill='%23ffffff'%3E%F0%9F%A4%A3%3C/text%3E%3Ctext x='40' y='132' font-size='28' opacity='0.08' fill='%23ffffff'%3E%F0%9F%98%9C%3C/text%3E%3C/svg%3E");
     }
     * {
@@ -455,6 +457,61 @@
     .image-preview img {
       max-width: 100%;
       border-radius: 12px;
+    }
+    .joke-media {
+      margin-top: 1rem;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      background: var(--bg-soft);
+      position: relative;
+    }
+    .joke-media img,
+    .joke-media video {
+      width: 100%;
+      display: block;
+      border-radius: 16px;
+    }
+    .media-overlay {
+      position: absolute;
+      bottom: 10px;
+      right: 10px;
+      background: var(--media-overlay);
+      border-radius: 999px;
+      padding: 0.2rem 0.6rem;
+      font-size: 0.75rem;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+    .media-icons {
+      display: inline-flex;
+      gap: 0.2rem;
+      font-size: 0.8rem;
+    }
+    .media-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 18px;
+      height: 18px;
+      border-radius: 999px;
+      font-size: 0.6rem;
+      font-weight: 700;
+      color: #ffffff;
+    }
+    .site-watermark {
+      position: fixed;
+      bottom: 12px;
+      right: 12px;
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      opacity: 0.35;
+      pointer-events: none;
+      z-index: 2;
     }
     .reaction-counts {
       font-size: 0.9rem;
@@ -971,6 +1028,15 @@
             <option value="sleep" data-i18n="categories.sleep">Sleep</option>
             <option value="food" data-i18n="categories.food">Food</option>
             <option value="phone-addiction" data-i18n="categories.phoneAddiction">Phone Addiction</option>
+            <option value="relatable" data-i18n="categories.relatable">Relatable Humor</option>
+            <option value="memes" data-i18n="categories.memes">Internet Memes</option>
+            <option value="tiktok-genz" data-i18n="categories.tiktokGenz">TikTok / Gen Z</option>
+            <option value="caption" data-i18n="categories.caption">Caption Style</option>
+            <option value="pov-genz" data-i18n="categories.povGenz">Gen Z POV</option>
+            <option value="pov-school" data-i18n="categories.povSchool">School POV</option>
+            <option value="pov-relationship" data-i18n="categories.povRelationship">Relationship POV</option>
+            <option value="pov-dark" data-i18n="categories.povDark">Dark Humor POV</option>
+            <option value="pov-story" data-i18n="categories.povStory">Story-style POV</option>
             <option value="tech" data-i18n="categories.tech">Technology</option>
             <option value="short" data-i18n="categories.short">Short Jokes</option>
             <option value="relationship" data-i18n="categories.relationship">Relationship</option>
@@ -1004,6 +1070,7 @@
           <span id="joke-language" class="badge"></span>
         </div>
         <div id="session-progress" class="muted session-progress" aria-live="polite"></div>
+        <div id="joke-media" class="joke-media" hidden></div>
         <div class="buttons">
           <button id="previous" data-i18n="buttons.previous">Previous Joke</button>
           <button id="next" data-i18n="buttons.next">Next Joke</button>
@@ -1130,6 +1197,15 @@
               <option value="sleep" data-i18n="categories.sleep">Sleep</option>
               <option value="food" data-i18n="categories.food">Food</option>
               <option value="phone-addiction" data-i18n="categories.phoneAddiction">Phone Addiction</option>
+              <option value="relatable" data-i18n="categories.relatable">Relatable Humor</option>
+              <option value="memes" data-i18n="categories.memes">Internet Memes</option>
+              <option value="tiktok-genz" data-i18n="categories.tiktokGenz">TikTok / Gen Z</option>
+              <option value="caption" data-i18n="categories.caption">Caption Style</option>
+              <option value="pov-genz" data-i18n="categories.povGenz">Gen Z POV</option>
+              <option value="pov-school" data-i18n="categories.povSchool">School POV</option>
+              <option value="pov-relationship" data-i18n="categories.povRelationship">Relationship POV</option>
+              <option value="pov-dark" data-i18n="categories.povDark">Dark Humor POV</option>
+              <option value="pov-story" data-i18n="categories.povStory">Story-style POV</option>
               <option value="tech" data-i18n="categories.tech">Technology</option>
               <option value="short" data-i18n="categories.short">Short Jokes</option>
               <option value="relationship" data-i18n="categories.relationship">Relationship</option>
@@ -1191,6 +1267,12 @@
       <div id="admin-dashboard" class="grid-2" hidden>
         <div class="card">
           <h3 data-i18n="admin.statsTitle">Statistics</h3>
+          <div class="form-row">
+            <label class="toggle" for="media-watermark-toggle">
+              <input id="media-watermark-toggle" type="checkbox" />
+              <span data-i18n="admin.mediaWatermark">Show watermark</span>
+            </label>
+          </div>
           <div id="admin-stats" class="list admin-stats"></div>
         </div>
         <div class="card">
@@ -1321,6 +1403,7 @@
       </script>
       <script src="https://www.highperformanceformat.com/44737517597e4d4fd2582ae54ae399b2/invoke.js"></script>
     </div>
+    <div id="site-watermark" class="site-watermark" aria-hidden="true">Salim Jokes</div>
   </main>
   <script>
     const dom = {
@@ -1335,6 +1418,7 @@
       jokeCategory: document.getElementById('joke-category'),
       jokeLanguage: document.getElementById('joke-language'),
       sessionProgress: document.getElementById('session-progress'),
+      jokeMedia: document.getElementById('joke-media'),
       feedback: document.getElementById('feedback'),
       previous: document.getElementById('previous'),
       next: document.getElementById('next'),
@@ -1402,6 +1486,8 @@
       adminQueue: document.getElementById('admin-queue'),
       adminStats: document.getElementById('admin-stats'),
       adminLog: document.getElementById('admin-log'),
+      mediaWatermarkToggle: document.getElementById('media-watermark-toggle'),
+      siteWatermark: document.getElementById('site-watermark'),
       moderationList: document.getElementById('moderation-list'),
       moderationLog: document.getElementById('moderation-log'),
       progressBar: document.getElementById('progress-bar'),
@@ -1420,6 +1506,7 @@
       dailyIngest: 'dailyIngestV1',
       sessionProgress: 'sessionProgressV1',
       viewed: 'viewedJokesV1',
+      media: 'mediaStoreV1',
       settings: 'jokeSettingsV1',
       stats: 'jokeStatsV1',
       comments: 'commentStoreV1',
@@ -1444,15 +1531,24 @@
       'one-line',
       'qa',
       'school-life',
+      'sleep',
+      'food',
+      'parents',
+      'phone-addiction',
+      'daily-struggles',
+      'single-life',
+      'relatable',
+      'memes',
+      'tiktok-genz',
+      'caption',
+      'pov-genz',
+      'pov-school',
+      'pov-relationship',
+      'pov-dark',
+      'pov-story',
       'dad',
       'pun',
       'school',
-      'parents',
-      'single-life',
-      'daily-struggles',
-      'sleep',
-      'food',
-      'phone-addiction',
       'tech',
       'short',
       'relationship',
@@ -1476,6 +1572,15 @@
       'phone-addiction',
       'daily-struggles',
       'single-life',
+      'relatable',
+      'memes',
+      'tiktok-genz',
+      'caption',
+      'pov-genz',
+      'pov-school',
+      'pov-relationship',
+      'pov-dark',
+      'pov-story',
       'dad',
       'pun',
       'school',
@@ -1493,7 +1598,16 @@
       food: ['food', 'snack', 'pizza', 'sandwich', 'taco', 'cuisine', 'comida', 'abinci', 'طعام'],
       'phone-addiction': ['phone', 'mobile', 'scroll', 'screen', 'telefono', 'telemovel', 'waya', 'هاتف'],
       'single-life': ['single', 'solo', 'celib', 'soltera', 'rashin aure', 'عزوبة'],
-      'daily-struggles': ['struggle', 'daily', 'routine', 'stress', 'galere', 'dificil', 'wahala', 'ضغوط']
+      'daily-struggles': ['struggle', 'daily', 'routine', 'stress', 'galere', 'dificil', 'wahala', 'ضغوط'],
+      relatable: ['relatable', 'same', 'mood', 'me too', 'pareil', 'igual'],
+      memes: ['meme', 'internet', 'viral', 'meme'],
+      'tiktok-genz': ['tiktok', 'gen z', 'viral', 'trend'],
+      caption: ['caption', 'subtitle', 'titulo'],
+      'pov-genz': ['pov', 'gen z', 'mood'],
+      'pov-school': ['pov', 'school', 'class'],
+      'pov-relationship': ['pov', 'relationship', 'love'],
+      'pov-dark': ['pov', 'dark'],
+      'pov-story': ['pov', 'story']
     };
     const CATEGORY_ALIASES = {
       'school-life': 'school',
@@ -1501,7 +1615,16 @@
       'phone-addiction': 'tech',
       'daily-struggles': 'random',
       'single-life': 'relationship',
-      classic: 'random'
+      classic: 'random',
+      relatable: 'random',
+      memes: 'random',
+      'tiktok-genz': 'random',
+      caption: 'random',
+      'pov-genz': 'random',
+      'pov-school': 'school',
+      'pov-relationship': 'relationship',
+      'pov-dark': 'dark',
+      'pov-story': 'story'
     };
     const BRANDING = {
       site: 'Salim Jokes',
@@ -1570,6 +1693,15 @@
         'categories.sleep': 'Sleep',
         'categories.food': 'Food',
         'categories.phoneAddiction': 'Phone Addiction',
+        'categories.relatable': 'Relatable Humor',
+        'categories.memes': 'Internet Memes',
+        'categories.tiktokGenz': 'TikTok / Gen Z',
+        'categories.caption': 'Caption Style',
+        'categories.povGenz': 'Gen Z POV',
+        'categories.povSchool': 'School POV',
+        'categories.povRelationship': 'Relationship POV',
+        'categories.povDark': 'Dark Humor POV',
+        'categories.povStory': 'Story-style POV',
         'categories.tech': 'Technology',
         'categories.short': 'Short Jokes',
         'categories.relationship': 'Relationship',
@@ -1598,6 +1730,8 @@
         'buttons.approve': 'Approve',
         'buttons.reject': 'Reject',
         'buttons.edit': 'Edit',
+        'buttons.media': 'Media',
+        'buttons.tags': 'Tags',
         'buttons.unlock': 'Unlock',
         'buttons.lock': 'Lock',
         'buttons.delete': 'Delete',
@@ -1679,6 +1813,10 @@
         'admin.loginNote': 'Enter your admin key to unlock the dashboard.',
         'admin.keyPlaceholder': 'Admin key',
         'admin.statsTitle': 'Statistics',
+        'admin.mediaWatermark': 'Show watermark',
+        'admin.mediaPrompt': 'Paste image or video URL (leave empty to remove):',
+        'admin.mediaTypePrompt': 'Media type: image or video',
+        'admin.categoryPrompt': 'Extra categories (comma-separated):',
         'admin.queueTitle': 'Approval Queue',
         'admin.queueEmpty': 'No submissions waiting.',
         'admin.stats.total': 'Total submissions',
@@ -1770,6 +1908,7 @@
         'feedback.imageSaved': 'Image saved.',
         'feedback.imageFailed': 'Could not generate image.',
         'feedback.shareUnsupported': 'Sharing is not supported here.',
+        'feedback.invalidMediaUrl': 'Please provide a valid media URL.',
         'moderation.logTitle': 'Moderation Log',
         'moderation.logEmpty': 'No moderation actions yet.',
         'moderation.status.pending': 'Pending',
@@ -1841,6 +1980,15 @@
         'categories.sleep': 'Sommeil',
         'categories.food': 'Cuisine',
         'categories.phoneAddiction': 'Addiction au telephone',
+        'categories.relatable': 'Humour relatable',
+        'categories.memes': 'Memes internet',
+        'categories.tiktokGenz': 'TikTok / Gen Z',
+        'categories.caption': 'Style legende',
+        'categories.povGenz': 'POV Gen Z',
+        'categories.povSchool': 'POV ecole',
+        'categories.povRelationship': 'POV relations',
+        'categories.povDark': 'POV humour noir',
+        'categories.povStory': 'POV style histoire',
         'categories.tech': 'Technologie',
         'categories.short': 'Blagues courtes',
         'categories.relationship': 'Relations',
@@ -1869,6 +2017,8 @@
         'buttons.approve': 'Approuver',
         'buttons.reject': 'Refuser',
         'buttons.edit': 'Modifier',
+        'buttons.media': 'Media',
+        'buttons.tags': 'Tags',
         'buttons.unlock': 'Debloquer',
         'buttons.lock': 'Verrouiller',
         'buttons.delete': 'Supprimer',
@@ -1954,6 +2104,10 @@
         'admin.loginNote': 'Entrez la cle admin pour deverrouiller.',
         'admin.keyPlaceholder': 'Cle admin',
         'admin.statsTitle': 'Statistiques',
+        'admin.mediaWatermark': 'Afficher le filigrane',
+        'admin.mediaPrompt': 'Collez l\'URL de l\'image ou de la video (laisser vide pour supprimer) :',
+        'admin.mediaTypePrompt': 'Type de media : image ou video',
+        'admin.categoryPrompt': 'Categories extra (separees par des virgules) :',
         'admin.queueTitle': 'File de validation',
         'admin.queueEmpty': 'Aucune soumission en attente.',
         'admin.stats.total': 'Total des soumissions',
@@ -2041,6 +2195,7 @@
         'feedback.imageSaved': 'Image enregistree.',
         'feedback.imageFailed': 'Impossible de creer l image.',
         'feedback.shareUnsupported': 'Partage non pris en charge.',
+        'feedback.invalidMediaUrl': 'Veuillez fournir une URL media valide.',
         'moderation.logTitle': 'Journal de moderation',
         'moderation.logEmpty': 'Aucune action de moderation.',
         'moderation.status.pending': 'En attente',
@@ -2111,6 +2266,15 @@
         'categories.sleep': 'Sueno',
         'categories.food': 'Comida',
         'categories.phoneAddiction': 'Adiccion al telefono',
+        'categories.relatable': 'Humor relatable',
+        'categories.memes': 'Memes de internet',
+        'categories.tiktokGenz': 'TikTok / Gen Z',
+        'categories.caption': 'Estilo de caption',
+        'categories.povGenz': 'POV Gen Z',
+        'categories.povSchool': 'POV escuela',
+        'categories.povRelationship': 'POV relaciones',
+        'categories.povDark': 'POV humor oscuro',
+        'categories.povStory': 'POV estilo historia',
         'categories.tech': 'Tecnologia',
         'categories.short': 'Chistes cortos',
         'categories.relationship': 'Relaciones',
@@ -2139,6 +2303,8 @@
         'buttons.approve': 'Aprobar',
         'buttons.reject': 'Rechazar',
         'buttons.edit': 'Editar',
+        'buttons.media': 'Media',
+        'buttons.tags': 'Etiquetas',
         'buttons.unlock': 'Desbloquear',
         'buttons.lock': 'Bloquear',
         'buttons.delete': 'Eliminar',
@@ -2224,6 +2390,10 @@
         'admin.loginNote': 'Ingresa la clave para desbloquear.',
         'admin.keyPlaceholder': 'Clave admin',
         'admin.statsTitle': 'Estadisticas',
+        'admin.mediaWatermark': 'Mostrar marca de agua',
+        'admin.mediaPrompt': 'Pega la URL de la imagen o el video (dejar vacio para quitar):',
+        'admin.mediaTypePrompt': 'Tipo de medio: imagen o video',
+        'admin.categoryPrompt': 'Categorias extra (separadas por comas):',
         'admin.queueTitle': 'Cola de aprobacion',
         'admin.queueEmpty': 'No hay envios pendientes.',
         'admin.stats.total': 'Total de envios',
@@ -2311,6 +2481,7 @@
         'feedback.imageSaved': 'Imagen guardada.',
         'feedback.imageFailed': 'No se pudo crear la imagen.',
         'feedback.shareUnsupported': 'Compartir no compatible.',
+        'feedback.invalidMediaUrl': 'Proporciona una URL de media valida.',
         'moderation.logTitle': 'Registro de moderacion',
         'moderation.logEmpty': 'Sin acciones de moderacion.',
         'moderation.status.pending': 'Pendiente',
@@ -2381,6 +2552,15 @@
         'categories.sleep': 'النوم',
         'categories.food': 'الطعام',
         'categories.phoneAddiction': 'ادمان الهاتف',
+        'categories.relatable': 'دعابة قابلة للتصديق',
+        'categories.memes': 'ميمز الانترنت',
+        'categories.tiktokGenz': 'تيك توك / جيل زد',
+        'categories.caption': 'نكات كابشن',
+        'categories.povGenz': 'وجهة نظر جيل زد',
+        'categories.povSchool': 'وجهة نظر المدرسة',
+        'categories.povRelationship': 'وجهة نظر العلاقات',
+        'categories.povDark': 'وجهة نظر دعابة داكنة',
+        'categories.povStory': 'وجهة نظر قصة',
         'categories.tech': 'تقنية',
         'categories.short': 'نكات قصيرة',
         'categories.relationship': 'العلاقات',
@@ -2409,6 +2589,8 @@
         'buttons.approve': 'موافقة',
         'buttons.reject': 'رفض',
         'buttons.edit': 'تعديل',
+        'buttons.media': 'وسائط',
+        'buttons.tags': 'وسوم',
         'buttons.unlock': 'فتح',
         'buttons.lock': 'قفل',
         'buttons.delete': 'حذف',
@@ -2494,6 +2676,10 @@
         'admin.loginNote': 'ادخل الرمز لفتح اللوحة.',
         'admin.keyPlaceholder': 'رمز المشرف',
         'admin.statsTitle': 'الاحصاءات',
+        'admin.mediaWatermark': 'اظهار العلامة المائية',
+        'admin.mediaPrompt': 'الصق رابط الصورة او الفيديو (اتركه فارغا للحذف):',
+        'admin.mediaTypePrompt': 'نوع الوسائط: صورة او فيديو',
+        'admin.categoryPrompt': 'فئات اضافية (مفصولة بفواصل):',
         'admin.queueTitle': 'قائمة المراجعة',
         'admin.queueEmpty': 'لا توجد طلبات.',
         'admin.stats.total': 'اجمالي الارسالات',
@@ -2581,6 +2767,7 @@
         'feedback.imageSaved': 'تم حفظ الصورة.',
         'feedback.imageFailed': 'تعذر انشاء الصورة.',
         'feedback.shareUnsupported': 'المشاركة غير مدعومة.',
+        'feedback.invalidMediaUrl': 'يرجى ادخال رابط وسائط صالح.',
         'moderation.logTitle': 'سجل الاشراف',
         'moderation.logEmpty': 'لا توجد قرارات بعد.',
         'moderation.status.pending': 'قيد المراجعة',
@@ -2651,6 +2838,15 @@
         'categories.sleep': 'Barci',
         'categories.food': 'Abinci',
         'categories.phoneAddiction': 'Dogaro da waya',
+        'categories.relatable': 'Abin dariya na kowa',
+        'categories.memes': 'Memes na intanet',
+        'categories.tiktokGenz': 'TikTok / Gen Z',
+        'categories.caption': 'Salon rubutu',
+        'categories.povGenz': 'POV Gen Z',
+        'categories.povSchool': 'POV makaranta',
+        'categories.povRelationship': 'POV alaka',
+        'categories.povDark': 'POV dariya mai duhu',
+        'categories.povStory': 'POV labari',
         'categories.tech': 'Fasaha',
         'categories.short': 'Gajerun barkwanci',
         'categories.relationship': 'Alaka',
@@ -2679,6 +2875,8 @@
         'buttons.approve': 'Amince',
         'buttons.reject': 'Kihe',
         'buttons.edit': 'Gyara',
+        'buttons.media': 'Media',
+        'buttons.tags': 'Tags',
         'buttons.unlock': 'Bude',
         'buttons.lock': 'Kulle',
         'buttons.delete': 'Goge',
@@ -2764,6 +2962,10 @@
         'admin.loginNote': 'Shigar da lambar admin don budewa.',
         'admin.keyPlaceholder': 'Lambar admin',
         'admin.statsTitle': 'Kididdiga',
+        'admin.mediaWatermark': 'Nuna alamar ruwa',
+        'admin.mediaPrompt': 'Shigar da URL na hoto ko bidiyo (bar komai don cirewa):',
+        'admin.mediaTypePrompt': 'Nau\'in kafofin watsa labarai: hoto ko bidiyo',
+        'admin.categoryPrompt': 'Rukuni na kari (a raba da koma):',
         'admin.queueTitle': 'Jerin dubawa',
         'admin.queueEmpty': 'Babu aikace-aikace.',
         'admin.stats.total': 'Jimillar aikace-aikace',
@@ -2851,6 +3053,7 @@
         'feedback.imageSaved': 'An ajiye hoto.',
         'feedback.imageFailed': 'Ba a iya kirkirar hoto.',
         'feedback.shareUnsupported': 'Raba baya aiki a nan.',
+        'feedback.invalidMediaUrl': 'Da fatan a shigar da ingantaccen URL na media.',
         'moderation.logTitle': 'Rijistar dubawa',
         'moderation.logEmpty': 'Babu wani aiki.',
         'moderation.status.pending': 'Ana dubawa',
@@ -2921,6 +3124,15 @@
         'categories.sleep': 'Sono',
         'categories.food': 'Comida',
         'categories.phoneAddiction': 'Vicio em telefone',
+        'categories.relatable': 'Humor relatable',
+        'categories.memes': 'Memes da internet',
+        'categories.tiktokGenz': 'TikTok / Gen Z',
+        'categories.caption': 'Estilo legenda',
+        'categories.povGenz': 'POV Gen Z',
+        'categories.povSchool': 'POV escola',
+        'categories.povRelationship': 'POV relacionamento',
+        'categories.povDark': 'POV humor negro',
+        'categories.povStory': 'POV estilo historia',
         'categories.tech': 'Tecnologia',
         'categories.short': 'Piadas curtas',
         'categories.relationship': 'Relacionamento',
@@ -2949,6 +3161,8 @@
         'buttons.approve': 'Aprovar',
         'buttons.reject': 'Rejeitar',
         'buttons.edit': 'Editar',
+        'buttons.media': 'Media',
+        'buttons.tags': 'Tags',
         'buttons.unlock': 'Desbloquear',
         'buttons.lock': 'Bloquear',
         'buttons.delete': 'Excluir',
@@ -3034,6 +3248,10 @@
         'admin.loginNote': 'Digite a chave admin para desbloquear.',
         'admin.keyPlaceholder': 'Chave admin',
         'admin.statsTitle': 'Estatisticas',
+        'admin.mediaWatermark': 'Mostrar marca d\'agua',
+        'admin.mediaPrompt': 'Cole a URL da imagem ou do video (deixe vazio para remover):',
+        'admin.mediaTypePrompt': 'Tipo de midia: imagem ou video',
+        'admin.categoryPrompt': 'Categorias extra (separadas por virgulas):',
         'admin.queueTitle': 'Fila de aprovacao',
         'admin.queueEmpty': 'Sem envios pendentes.',
         'admin.stats.total': 'Total de envios',
@@ -3121,6 +3339,7 @@
         'feedback.imageSaved': 'Imagem salva.',
         'feedback.imageFailed': 'Nao foi possivel criar a imagem.',
         'feedback.shareUnsupported': 'Compartilhamento nao suportado.',
+        'feedback.invalidMediaUrl': 'Forneca uma URL de midia valida.',
         'moderation.logTitle': 'Registro de moderacao',
         'moderation.logEmpty': 'Sem acoes de moderacao.',
         'moderation.status.pending': 'Pendente',
@@ -3807,7 +4026,7 @@
       pending.forEach((item) => {
         const row = document.createElement('div');
         row.className = 'list-item';
-        const meta = `${getCategoryLabel(item.category)} · ${t(`languages.${item.lang}`)}`;
+        const meta = `${getCategoryLabel(item.category)}${formatExtraCategories(item)} · ${t(`languages.${item.lang}`)}`;
         const textWrap = document.createElement('span');
         const metaTag = document.createElement('em');
         metaTag.className = 'muted';
@@ -3830,6 +4049,12 @@
         const edit = document.createElement('button');
         edit.textContent = t('buttons.edit');
         edit.onclick = () => editSubmission(item.id);
+        const media = document.createElement('button');
+        media.textContent = t('buttons.media');
+        media.onclick = () => setSubmissionMedia(item.id);
+        const tags = document.createElement('button');
+        tags.textContent = t('buttons.tags');
+        tags.onclick = () => setSubmissionCategories(item.id);
         const approve = document.createElement('button');
         approve.textContent = t('buttons.approve');
         approve.onclick = () => approveSubmission(item.id);
@@ -3840,6 +4065,8 @@
         remove.textContent = t('buttons.delete');
         remove.onclick = () => deleteSubmission(item.id);
         actions.appendChild(edit);
+        actions.appendChild(media);
+        actions.appendChild(tags);
         actions.appendChild(approve);
         actions.appendChild(reject);
         actions.appendChild(remove);
@@ -3864,6 +4091,10 @@
     function updateAdminAccessUI() {
       if (dom.moderatorToggle) {
         dom.moderatorToggle.checked = Boolean(settings.adminUnlocked);
+      }
+      if (dom.mediaWatermarkToggle) {
+        dom.mediaWatermarkToggle.checked = Boolean(settings.mediaWatermark);
+        dom.mediaWatermarkToggle.disabled = !settings.adminUnlocked;
       }
       renderAdminDashboard();
     }
@@ -4260,6 +4491,7 @@
     const submissions = loadSubmissions();
     const approvedJokes = loadApprovedJokes();
     const moderationLog = loadModerationLog();
+    const mediaStore = loadMediaStore();
     const dailyIngest = loadDailyIngest();
     const commentStore = loadComments();
     const notificationPrefs = loadNotifications();
@@ -4311,6 +4543,7 @@
       applyTheme(settings.theme);
       updateNavActive(getRouteFromHash());
       initCollapsibles();
+      renderJokeMedia();
     }
 
     const CATEGORY_I18N_KEYS = {
@@ -4318,7 +4551,13 @@
       'phone-addiction': 'phoneAddiction',
       'daily-struggles': 'dailyStruggles',
       'single-life': 'singleLife',
-      'one-line': 'oneLine'
+      'one-line': 'oneLine',
+      'tiktok-genz': 'tiktokGenz',
+      'pov-genz': 'povGenz',
+      'pov-school': 'povSchool',
+      'pov-relationship': 'povRelationship',
+      'pov-dark': 'povDark',
+      'pov-story': 'povStory'
     };
 
     function getCategoryLabel(category) {
@@ -5044,6 +5283,7 @@
       renderComments();
       updateJokeToggle();
       updateSessionProgressUI();
+      renderJokeMedia();
     }
 
     function updateJokeToggle() {
@@ -5072,6 +5312,7 @@
         dom.jokeToggle.hidden = true;
       }
       updateSessionProgressUI();
+      renderJokeMedia();
     }
 
     function hasPunchlineMarkers(text, lang = state.currentLang) {
@@ -5456,10 +5697,23 @@
 
     function getLocalJokes(lang, category) {
       const base = localJokes[lang] || localJokes.en;
-      const list = base[category] || base.random || [];
-      const community = approvedJokes.filter(
-        (item) => item.lang === lang && item.category === category
-      ).map((item) => sanitizeText(item.joke));
+      const alias = CATEGORY_ALIASES[category] || category;
+      const list = base[alias] || base.random || [];
+      const community = approvedJokes.filter((item) => {
+        if (item.lang !== lang) {
+          return false;
+        }
+        if (item.category === category || item.category === alias) {
+          return true;
+        }
+        if (
+          Array.isArray(item.extraCategories) &&
+          (item.extraCategories.includes(category) || item.extraCategories.includes(alias))
+        ) {
+          return true;
+        }
+        return false;
+      }).map((item) => sanitizeText(item.joke));
       const combined = [...list, ...community];
       return combined.length ? combined : (base.random || localJokes.en.random);
     }
@@ -6187,6 +6441,103 @@
       return reactionStore[id] || null;
     }
 
+    function loadMediaStore() {
+      return loadFromStorage(STORAGE_KEYS.media, {});
+    }
+
+    function saveMediaStore() {
+      saveToStorage(STORAGE_KEYS.media, mediaStore);
+    }
+
+    function buildMediaId(joke, lang) {
+      const text = `${lang}|${joke}`;
+      let hash = 0;
+      for (let i = 0; i < text.length; i += 1) {
+        hash = (hash << 5) - hash + text.charCodeAt(i);
+        hash |= 0;
+      }
+      return `media-${Math.abs(hash)}`;
+    }
+
+    function getMediaForJoke(joke, lang) {
+      if (!joke) {
+        return null;
+      }
+      const normalized = ensureSetupPunchline(joke, lang || state.currentLang);
+      const id = buildMediaId(normalized, lang || state.currentLang);
+      return mediaStore[id] || null;
+    }
+
+    function renderJokeMedia() {
+      if (!dom.jokeMedia) {
+        return;
+      }
+      const media = getMediaForJoke(state.currentJoke, state.currentLang);
+      dom.jokeMedia.innerHTML = '';
+      if (!media || !media.url) {
+        dom.jokeMedia.hidden = true;
+        updateSiteWatermark();
+        return;
+      }
+      const container = document.createElement('div');
+      container.className = 'joke-media-content';
+      if (media.type === 'video') {
+        const video = document.createElement('video');
+        video.src = media.url;
+        video.muted = true;
+        video.loop = true;
+        video.playsInline = true;
+        video.preload = 'none';
+        video.setAttribute('playsinline', 'playsinline');
+        video.setAttribute('muted', 'muted');
+        video.setAttribute('controls', 'controls');
+        container.appendChild(video);
+      } else {
+        const img = document.createElement('img');
+        img.src = media.url;
+        img.alt = t('image.shareAlt', { site: BRANDING.site });
+        img.loading = 'lazy';
+        img.decoding = 'async';
+        container.appendChild(img);
+      }
+      const overlay = document.createElement('div');
+      overlay.className = 'media-overlay';
+      const follow = document.createElement('span');
+      follow.textContent = t('image.followMe', { handle: BRANDING.followHandle });
+      const iconsWrap = document.createElement('span');
+      iconsWrap.className = 'media-icons';
+      const icons = [
+        { label: 'IG', color: '#E1306C' },
+        { label: 'TT', color: '#111111' },
+        { label: 'WA', color: '#25D366' },
+        { label: 'X', color: '#111111' }
+      ];
+      icons.forEach((icon) => {
+        const span = document.createElement('span');
+        span.className = 'media-icon';
+        span.textContent = icon.label;
+        span.style.backgroundColor = icon.color;
+        iconsWrap.appendChild(span);
+      });
+      overlay.appendChild(follow);
+      overlay.appendChild(iconsWrap);
+      if (!settings.mediaWatermark) {
+        overlay.style.display = 'none';
+      }
+      dom.jokeMedia.appendChild(container);
+      dom.jokeMedia.appendChild(overlay);
+      dom.jokeMedia.hidden = false;
+      updateSiteWatermark();
+    }
+
+    function updateSiteWatermark() {
+      if (!dom.siteWatermark) {
+        return;
+      }
+      dom.siteWatermark.textContent = BRANDING.site;
+      dom.siteWatermark.style.display = settings.mediaWatermark ? 'block' : 'none';
+    }
+
     function validateSubmission(text) {
       const trimmed = sanitizeText(text);
       if (trimmed.length < 8 || trimmed.length > 280) {
@@ -6282,6 +6633,7 @@
         name: safeName || getCurrentUserName(),
         userId: state.currentUserId,
         category,
+        extraCategories: [],
         lang: langOverride || state.currentLang,
         voiceDataUrl,
         status,
@@ -6349,6 +6701,14 @@
       renderModerationLog(dom.adminLog);
     }
 
+    function formatExtraCategories(item) {
+      if (!Array.isArray(item.extraCategories) || !item.extraCategories.length) {
+        return '';
+      }
+      const labels = item.extraCategories.map((category) => getCategoryLabel(category)).join(', ');
+      return ` + ${labels}`;
+    }
+
     function renderModeration() {
       dom.moderationList.innerHTML = '';
       if (!dom.moderatorToggle.checked) {
@@ -6381,7 +6741,7 @@
       pending.forEach((item) => {
         const row = document.createElement('div');
         row.className = 'list-item';
-        const meta = `${getCategoryLabel(item.category)} · ${t(`languages.${item.lang}`)}`;
+        const meta = `${getCategoryLabel(item.category)}${formatExtraCategories(item)} · ${t(`languages.${item.lang}`)}`;
         const textWrap = document.createElement('span');
         const metaTag = document.createElement('em');
         metaTag.className = 'muted';
@@ -6410,6 +6770,12 @@
         const edit = document.createElement('button');
         edit.textContent = t('buttons.edit');
         edit.onclick = () => editSubmission(item.id);
+        const media = document.createElement('button');
+        media.textContent = t('buttons.media');
+        media.onclick = () => setSubmissionMedia(item.id);
+        const tags = document.createElement('button');
+        tags.textContent = t('buttons.tags');
+        tags.onclick = () => setSubmissionCategories(item.id);
         const approve = document.createElement('button');
         approve.textContent = t('buttons.approve');
         approve.onclick = () => approveSubmission(item.id);
@@ -6420,12 +6786,85 @@
         remove.textContent = t('buttons.delete');
         remove.onclick = () => deleteSubmission(item.id);
         actions.appendChild(edit);
+        actions.appendChild(media);
+        actions.appendChild(tags);
         actions.appendChild(approve);
         actions.appendChild(reject);
         actions.appendChild(remove);
         row.appendChild(actions);
         dom.moderationList.appendChild(row);
       });
+      renderAdminDashboard();
+    }
+
+    function setSubmissionMedia(id) {
+      if (!settings.adminUnlocked) {
+        setFeedback('feedback.adminLocked');
+        return;
+      }
+      const item = submissions.find((entry) => entry.id === id);
+      if (!item) {
+        return;
+      }
+      const current = getMediaForJoke(item.joke, item.lang);
+      const urlInput = window.prompt(
+        t('admin.mediaPrompt'),
+        current?.url || ''
+      );
+      if (urlInput === null) {
+        return;
+      }
+      const trimmed = urlInput.trim();
+      const normalizedJoke = ensureSetupPunchline(item.joke, item.lang);
+      const mediaId = buildMediaId(normalizedJoke, item.lang);
+      if (!trimmed) {
+        delete mediaStore[mediaId];
+        saveMediaStore();
+        renderJokeMedia();
+        return;
+      }
+      if (!/^https?:\/\/.+/i.test(trimmed)) {
+        showToast(t('feedback.invalidMediaUrl'));
+        return;
+      }
+      const ext = trimmed.split('?')[0].split('#')[0].split('.').pop().toLowerCase();
+      const defaultType = ['mp4', 'webm', 'mov'].includes(ext) ? 'video' : 'image';
+      const typeInput = window.prompt(t('admin.mediaTypePrompt'), defaultType);
+      if (typeInput === null) {
+        return;
+      }
+      const finalType = typeInput.trim().toLowerCase() === 'video' ? 'video' : 'image';
+      mediaStore[mediaId] = {
+        url: trimmed,
+        type: finalType,
+        updatedAt: new Date().toISOString()
+      };
+      saveMediaStore();
+      renderJokeMedia();
+    }
+
+    function setSubmissionCategories(id) {
+      if (!settings.adminUnlocked) {
+        setFeedback('feedback.adminLocked');
+        return;
+      }
+      const item = submissions.find((entry) => entry.id === id);
+      if (!item) {
+        return;
+      }
+      const current = Array.isArray(item.extraCategories) ? item.extraCategories.join(', ') : '';
+      const input = window.prompt(t('admin.categoryPrompt'), current);
+      if (input === null) {
+        return;
+      }
+      const cleaned = input
+        .split(',')
+        .map((value) => value.trim())
+        .filter((value) => value);
+      const allowed = cleaned.filter((value) => categories.includes(value) && value !== item.category);
+      item.extraCategories = Array.from(new Set(allowed));
+      saveSubmissions();
+      renderModeration();
       renderAdminDashboard();
     }
 
@@ -6448,7 +6887,8 @@
       approvedJokes.push({
         joke: item.joke,
         category: item.category,
-        lang: item.lang
+        lang: item.lang,
+        extraCategories: Array.isArray(item.extraCategories) ? item.extraCategories : []
       });
       saveSubmissions();
       saveApprovedJokes();
@@ -6638,7 +7078,8 @@
         language: stored.language || 'en',
         theme: stored.theme || 'light',
         lastSubmission: stored.lastSubmission || 0,
-        adminUnlocked: Boolean(stored.adminUnlocked)
+        adminUnlocked: Boolean(stored.adminUnlocked),
+        mediaWatermark: stored.mediaWatermark !== false
       };
     }
 
@@ -7115,6 +7556,13 @@
         if (dom.adminLoginKey) {
           dom.adminLoginKey.value = '';
         }
+      };
+    }
+    if (dom.mediaWatermarkToggle) {
+      dom.mediaWatermarkToggle.onchange = () => {
+        settings.mediaWatermark = dom.mediaWatermarkToggle.checked;
+        saveSettings();
+        renderJokeMedia();
       };
     }
     dom.moderatorToggle.onchange = () => renderModeration();
