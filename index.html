@@ -365,6 +365,8 @@
       min-height: 96px;
       text-align: center;
       white-space: pre-line;
+      overflow-wrap: anywhere;
+      word-break: break-word;
     }
     .joke-text.is-collapsed {
       max-height: 8.5rem;
@@ -1909,6 +1911,8 @@
         'feedback.imageFailed': 'Could not generate image.',
         'feedback.shareUnsupported': 'Sharing is not supported here.',
         'feedback.invalidMediaUrl': 'Please provide a valid media URL.',
+        'feedback.jokeLoadError': 'We could not load jokes right now.',
+        'feedback.noJokesAvailable': 'No jokes available yet.',
         'moderation.logTitle': 'Moderation Log',
         'moderation.logEmpty': 'No moderation actions yet.',
         'moderation.status.pending': 'Pending',
@@ -2196,6 +2200,8 @@
         'feedback.imageFailed': 'Impossible de creer l image.',
         'feedback.shareUnsupported': 'Partage non pris en charge.',
         'feedback.invalidMediaUrl': 'Veuillez fournir une URL media valide.',
+        'feedback.jokeLoadError': 'Impossible de charger les blagues.',
+        'feedback.noJokesAvailable': 'Aucune blague disponible pour l instant.',
         'moderation.logTitle': 'Journal de moderation',
         'moderation.logEmpty': 'Aucune action de moderation.',
         'moderation.status.pending': 'En attente',
@@ -2482,6 +2488,8 @@
         'feedback.imageFailed': 'No se pudo crear la imagen.',
         'feedback.shareUnsupported': 'Compartir no compatible.',
         'feedback.invalidMediaUrl': 'Proporciona una URL de media valida.',
+        'feedback.jokeLoadError': 'No se pudieron cargar los chistes.',
+        'feedback.noJokesAvailable': 'No hay chistes disponibles.',
         'moderation.logTitle': 'Registro de moderacion',
         'moderation.logEmpty': 'Sin acciones de moderacion.',
         'moderation.status.pending': 'Pendiente',
@@ -2768,6 +2776,8 @@
         'feedback.imageFailed': 'تعذر انشاء الصورة.',
         'feedback.shareUnsupported': 'المشاركة غير مدعومة.',
         'feedback.invalidMediaUrl': 'يرجى ادخال رابط وسائط صالح.',
+        'feedback.jokeLoadError': 'تعذر تحميل النكات حاليا.',
+        'feedback.noJokesAvailable': 'لا توجد نكات متاحة حاليا.',
         'moderation.logTitle': 'سجل الاشراف',
         'moderation.logEmpty': 'لا توجد قرارات بعد.',
         'moderation.status.pending': 'قيد المراجعة',
@@ -3054,6 +3064,8 @@
         'feedback.imageFailed': 'Ba a iya kirkirar hoto.',
         'feedback.shareUnsupported': 'Raba baya aiki a nan.',
         'feedback.invalidMediaUrl': 'Da fatan a shigar da ingantaccen URL na media.',
+        'feedback.jokeLoadError': 'Ba a iya dauko barkwanci yanzu ba.',
+        'feedback.noJokesAvailable': 'Babu barkwanci a yanzu.',
         'moderation.logTitle': 'Rijistar dubawa',
         'moderation.logEmpty': 'Babu wani aiki.',
         'moderation.status.pending': 'Ana dubawa',
@@ -3340,6 +3352,8 @@
         'feedback.imageFailed': 'Nao foi possivel criar a imagem.',
         'feedback.shareUnsupported': 'Compartilhamento nao suportado.',
         'feedback.invalidMediaUrl': 'Forneca uma URL de midia valida.',
+        'feedback.jokeLoadError': 'Nao foi possivel carregar as piadas.',
+        'feedback.noJokesAvailable': 'Nao ha piadas disponiveis.',
         'moderation.logTitle': 'Registro de moderacao',
         'moderation.logEmpty': 'Sem acoes de moderacao.',
         'moderation.status.pending': 'Pendente',
@@ -5335,13 +5349,17 @@
 
     function buildOrderedList(lang, category) {
       const list = getLocalJokes(lang, category);
+      if (!Array.isArray(list)) {
+        console.error('Joke list is not an array', { lang, category, list });
+        return [];
+      }
       const query = state.searchQuery.trim().toLowerCase();
       const categoryLabel = getCategoryLabel(category).toLowerCase();
       const languageLabel = t(`languages.${lang}`).toLowerCase();
       const unique = [];
       const seen = new Set();
       list.forEach((joke) => {
-        const formatted = ensureSetupPunchline(joke, lang);
+        const formatted = ensureSetupPunchline(coerceJokeText(joke), lang);
         if (!formatted || seen.has(formatted)) {
           return;
         }
@@ -5565,65 +5583,75 @@
     }
 
     function setJokeList() {
-      if (!state.currentCategory) {
-        state.currentCategory = 'random';
-        if (dom.category) {
-          dom.category.value = 'random';
+      setLoading(true);
+      try {
+        if (!state.currentCategory) {
+          state.currentCategory = 'random';
+          if (dom.category) {
+            dom.category.value = 'random';
+          }
         }
-      }
-      const ordered = buildOrderedList(state.currentLang, state.currentCategory);
-      state.jokeList = ordered;
-      state.jokeIndex = {};
-      const ids = ordered.map((joke) => {
-        const id = buildJokeId(joke, state.currentLang, state.currentCategory);
-        state.jokeIndex[id] = joke;
-        return id;
-      });
-      state.allJokeIds = ids;
+        const ordered = buildOrderedList(state.currentLang, state.currentCategory);
+        state.jokeList = ordered;
+        state.jokeIndex = {};
+        const ids = ordered.map((joke) => {
+          const id = buildJokeId(joke, state.currentLang, state.currentCategory);
+          state.jokeIndex[id] = joke;
+          return id;
+        });
+        state.allJokeIds = ids;
 
-      if (!ids.length) {
-        state.currentIndex = -1;
-        state.jokeOrder = [];
-        showJokeMessage(state.searchQuery.trim() ? t('feedback.noResults') : t('feedback.fallback'));
+        if (!ids.length) {
+          state.currentIndex = -1;
+          state.jokeOrder = [];
+          showJokeMessage(
+            state.searchQuery.trim() ? t('feedback.noResults') : t('feedback.noJokesAvailable')
+          );
+          updateNavButtons();
+          updateSessionProgressUI();
+          return;
+        }
+
+        const key = getProgressKey();
+        if (state.searchQuery.trim()) {
+          state.jokeOrder = ids;
+          state.currentIndex = 0;
+          showJokeAt(0);
+          updateNavButtons();
+          return;
+        }
+
+        const progress = normalizeProgressState(key, ids);
+        let { deck, index, seenIds } = progress;
+        const sessionSeenSet = getSessionSeenSet(state.currentLang);
+        const languageTotal = getLanguageSessionIds(state.currentLang).length;
+        if (!deck.length || index >= deck.length) {
+          const next = buildNextDeck(ids, seenIds, sessionSeenSet, state.lastJokeId, languageTotal);
+          deck = next.deck;
+          seenIds = next.seenIds;
+          index = 0;
+        }
+
+        if (!deck.length) {
+          state.jokeOrder = [];
+          state.currentIndex = -1;
+          showJokeMessage(t('feedback.noNext'));
+          updateNavButtons();
+          return;
+        }
+
+        state.jokeOrder = deck;
+        state.currentIndex = Math.min(index, state.jokeOrder.length - 1);
+        persistProgressState(key, { deck: state.jokeOrder, index: state.currentIndex, seenIds });
+        showJokeAt(state.currentIndex);
         updateNavButtons();
         updateSessionProgressUI();
-        return;
+      } catch (error) {
+        console.error('Failed to build joke list', error);
+        showJokeMessage(t('feedback.jokeLoadError'));
+      } finally {
+        setLoading(false);
       }
-
-      const key = getProgressKey();
-      if (state.searchQuery.trim()) {
-        state.jokeOrder = ids;
-        state.currentIndex = 0;
-        showJokeAt(0);
-        updateNavButtons();
-        return;
-      }
-
-      const progress = normalizeProgressState(key, ids);
-      let { deck, index, seenIds } = progress;
-      const sessionSeenSet = getSessionSeenSet(state.currentLang);
-      const languageTotal = getLanguageSessionIds(state.currentLang).length;
-      if (!deck.length || index >= deck.length) {
-        const next = buildNextDeck(ids, seenIds, sessionSeenSet, state.lastJokeId, languageTotal);
-        deck = next.deck;
-        seenIds = next.seenIds;
-        index = 0;
-      }
-
-      if (!deck.length) {
-        state.jokeOrder = [];
-        state.currentIndex = -1;
-        showJokeMessage(t('feedback.noNext'));
-        updateNavButtons();
-        return;
-      }
-
-      state.jokeOrder = deck;
-      state.currentIndex = Math.min(index, state.jokeOrder.length - 1);
-      persistProgressState(key, { deck: state.jokeOrder, index: state.currentIndex, seenIds });
-      showJokeAt(state.currentIndex);
-      updateNavButtons();
-      updateSessionProgressUI();
     }
 
     function showJokeAt(index) {
@@ -5770,7 +5798,7 @@
               return { joke, source: 'api', wasRepeat: false };
             }
           } catch (error) {
-            // Fall back to local list.
+            console.error('Joke API fetch failed', { lang, category, error });
           }
         }
       }
@@ -6412,6 +6440,24 @@
         return '';
       }
       return value.replace(/[<>]/g, '').replace(/\s+/g, ' ').trim();
+    }
+
+    function coerceJokeText(value) {
+      if (!value) {
+        return '';
+      }
+      if (typeof value === 'string') {
+        return value;
+      }
+      if (typeof value === 'object') {
+        if (value.joke) {
+          return value.joke;
+        }
+        if (value.setup && value.punchline) {
+          return `${value.setup}\n\n${value.punchline}`;
+        }
+      }
+      return String(value);
     }
 
     function sanitizeTextWithLines(value) {
