@@ -6487,6 +6487,27 @@
       return reactionStore[id] || null;
     }
 
+    function loadFromStorage(key, fallback) {
+      try {
+        const stored = JSON.parse(localStorage.getItem(key));
+        if (stored === null || stored === undefined) {
+          return fallback;
+        }
+        return stored;
+      } catch (error) {
+        console.error('Failed to load storage key', key, error);
+        return fallback;
+      }
+    }
+
+    function saveToStorage(key, value) {
+      try {
+        localStorage.setItem(key, JSON.stringify(value));
+      } catch (error) {
+        console.error('Failed to save storage key', key, error);
+      }
+    }
+
     function loadMediaStore() {
       return loadFromStorage(STORAGE_KEYS.media, {});
     }
