@@ -4904,7 +4904,7 @@
     }
 
     window.jokeAuth = {
-      async signUp(email, password, extras = {}) {
+      async signup(email, password, extras = {}) {
         let timezone = extras.timezone || '';
         try {
           if (typeof Intl !== 'undefined' && Intl.DateTimeFormat) {
@@ -4926,7 +4926,7 @@
         applyAuthenticatedUser(payload.user || null);
         return payload;
       },
-      async logIn(email, password) {
+      async login(email, password) {
         const payload = await authRequest(AUTH_ENDPOINTS.login, {
           method: 'POST',
           body: { email, password }
@@ -4934,7 +4934,7 @@
         applyAuthenticatedUser(payload.user || null);
         return payload;
       },
-      async logOut() {
+      async logout() {
         const payload = await authRequest(AUTH_ENDPOINTS.logout, { method: 'POST' });
         applyAuthenticatedUser(null);
         return payload;
@@ -4943,6 +4943,9 @@
         return refreshAuthSession();
       }
     };
+    window.jokeAuth.signUp = window.jokeAuth.signup;
+    window.jokeAuth.logIn = window.jokeAuth.login;
+    window.jokeAuth.logOut = window.jokeAuth.logout;
 
     function showToast(message) {
       if (!dom.toastContainer || !message) {
