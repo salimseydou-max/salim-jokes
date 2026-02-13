@@ -1586,6 +1586,10 @@
     const MAX_JOKE_LENGTH = 280;
     const SESSION_JOKE_LIMIT = 50;
     const MAX_JOKES_PER_BATCH = SESSION_JOKE_LIMIT;
+    const DUPLICATE_CHECK_ENDPOINT = '/api/check-duplicate-joke';
+    const DUPLICATE_CHECK_CANDIDATE_LIMIT = 12;
+    const DUPLICATE_WARNING_THRESHOLD = 75;
+    const DUPLICATE_BLOCK_THRESHOLD = 90;
     const ADMIN_CODE = 'salim-admin'; // Replace with a private admin key in production.
     const SAFE_CATEGORIES = [
       'random',
@@ -1922,6 +1926,9 @@
         'feedback.submissionFlagged': 'Submission received and flagged for review.',
         'feedback.submissionCooldown': 'Please wait a bit before submitting again.',
         'feedback.submissionInvalid': 'Please enter a friendly joke without links.',
+        'feedback.duplicateChecking': 'Checking if this joke is too similar to existing jokes...',
+        'feedback.duplicateWarn': 'This joke is very similar ({score}%). Please rewrite it and try again.',
+        'feedback.duplicateBlocked': 'This joke is a duplicate ({score}%) and cannot be submitted.',
         'feedback.noResults': 'No jokes found for that search.',
         'feedback.voiceUnsupported': 'Voice recording is not supported in this browser.',
         'feedback.voiceTooLarge': 'Voice clip is too large. Try a shorter recording.',
@@ -6705,6 +6712,122 @@
       return false;
     }
 
+    function addDuplicateCandidate(candidates, seen, newJokeNormalized, value) {
+      if (candidates.length >= DUPLICATE_CHECK_CANDIDATE_LIMIT) {
+        return true;
+      }
+      const safe = sanitizeText(coerceJokeText(value));
+      if (!safe) {
+        return false;
+      }
+      const normalized = safe.toLowerCase();
+      if (normalized === newJokeNormalized || seen.has(normalized)) {
+        return false;
+      }
+      seen.add(normalized);
+      candidates.push(safe);
+      return candidates.length >= DUPLICATE_CHECK_CANDIDATE_LIMIT;
+    }
+
+    function collectDuplicateCandidates(jokeText, lang, category) {
+      const normalizedNew = sanitizeText(jokeText).toLowerCase();
+      const candidates = [];
+      const seen = new Set();
+      const byNewest = (a, b) => {
+        const left = Date.parse(a?.createdAt || '') || 0;
+        const right = Date.parse(b?.createdAt || '') || 0;
+        return right - left;
+      };
+
+      const sameLanguageRecent = submissions
+        .filter((item) => item?.joke && item.lang === lang && item.status !== 'rejected')
+        .sort(byNewest);
+      for (let i = 0; i < sameLanguageRecent.length; i += 1) {
+        if (addDuplicateCandidate(candidates, seen, normalizedNew, sameLanguageRecent[i].joke)) {
+          return candidates;
+        }
+      }
+
+      for (let i = approvedJokes.length - 1; i >= 0; i -= 1) {
+        const item = approvedJokes[i];
+        if (!item?.joke || item.lang !== lang) {
+          continue;
+        }
+        if (addDuplicateCandidate(candidates, seen, normalizedNew, item.joke)) {
+          return candidates;
+        }
+      }
+
+      const localCategory = getLocalJokes(lang, category);
+      for (let i = 0; i < localCategory.length; i += 1) {
+        if (addDuplicateCandidate(candidates, seen, normalizedNew, localCategory[i])) {
+          return candidates;
+        }
+      }
+
+      if (category !== 'random') {
+        const localRandom = getLocalJokes(lang, 'random');
+        for (let i = 0; i < localRandom.length; i += 1) {
+          if (addDuplicateCandidate(candidates, seen, normalizedNew, localRandom[i])) {
+            return candidates;
+          }
+        }
+      }
+
+      const crossLanguageRecent = submissions
+        .filter((item) => item?.joke && item.lang !== lang && item.status !== 'rejected')
+        .sort(byNewest);
+      for (let i = 0; i < crossLanguageRecent.length; i += 1) {
+        if (addDuplicateCandidate(candidates, seen, normalizedNew, crossLanguageRecent[i].joke)) {
+          return candidates;
+        }
+      }
+
+      return candidates;
+    }
+
+    async function checkDuplicateJokeSimilarity(jokeText, lang, category) {
+      const safeJoke = sanitizeText(jokeText);
+      if (!safeJoke) {
+        return { decision: 'allow', similarityScore: 0, aiCheckFailed: false };
+      }
+      const existingJokes = collectDuplicateCandidates(safeJoke, lang, category);
+      if (!existingJokes.length) {
+        return { decision: 'allow', similarityScore: 0, aiCheckFailed: false };
+      }
+      try {
+        const response = await fetch(DUPLICATE_CHECK_ENDPOINT, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            jokeText: safeJoke,
+            lang,
+            category,
+            existingJokes
+          })
+        });
+        if (!response.ok) {
+          throw new Error(`Duplicate check failed with status ${response.status}`);
+        }
+        const data = await response.json();
+        const decision =
+          data && ['allow', 'warn', 'block'].includes(data.decision) ? data.decision : 'allow';
+        const similarityScore = Number.isFinite(Number(data?.similarityScore))
+          ? Number(data.similarityScore)
+          : 0;
+        return {
+          decision,
+          similarityScore,
+          aiCheckFailed: Boolean(data?.aiCheckFailed)
+        };
+      } catch (error) {
+        console.error('Duplicate check request failed:', error);
+        return { decision: 'allow', similarityScore: 0, aiCheckFailed: true };
+      }
+    }
+
     function screenSubmission(text) {
       const trimmed = sanitizeText(text);
       if (trimmed.length < 8 || trimmed.length > 280) {
@@ -7118,6 +7241,10 @@
         const category = inferCategoryFromJoke(safeJoke);
         const screen = screenSubmission(safeJoke);
         if (screen.status !== 'pending') {
+          continue;
+        }
+        const duplicateCheck = await checkDuplicateJokeSimilarity(safeJoke, lang, category);
+        if (duplicateCheck.decision !== 'allow') {
           continue;
         }
         addSubmission(safeJoke, 'Auto', category, null, 'pending', [], 'auto', lang);
@@ -7590,7 +7717,7 @@
         shareJoke(shareButton.dataset.share);
       }
     });
-    dom.submissionForm.onsubmit = (event) => {
+    dom.submissionForm.onsubmit = async (event) => {
       event.preventDefault();
       if (dom.submissionWebsite.value) {
         setSubmissionFeedback('feedback.submissionInvalid');
@@ -7611,10 +7738,42 @@
         setSubmissionFeedback('feedback.submissionCooldown');
         return;
       }
+      const safeText = text.trim();
+      if (isDuplicateJoke(safeText, state.currentLang)) {
+        setSubmissionFeedback('feedback.duplicateBlocked', { score: 100 });
+        return;
+      }
+      setSubmissionFeedback('feedback.duplicateChecking');
+      const duplicateCheck = await checkDuplicateJokeSimilarity(
+        safeText,
+        state.currentLang,
+        dom.submissionCategory.value
+      );
+      if (duplicateCheck.decision === 'block') {
+        setSubmissionFeedback('feedback.duplicateBlocked', {
+          score: Math.max(
+            DUPLICATE_BLOCK_THRESHOLD,
+            Math.round(duplicateCheck.similarityScore || DUPLICATE_BLOCK_THRESHOLD)
+          )
+        });
+        return;
+      }
+      if (duplicateCheck.decision === 'warn') {
+        setSubmissionFeedback('feedback.duplicateWarn', {
+          score: Math.max(
+            DUPLICATE_WARNING_THRESHOLD,
+            Math.round(duplicateCheck.similarityScore || DUPLICATE_WARNING_THRESHOLD)
+          )
+        });
+        return;
+      }
+      if (duplicateCheck.aiCheckFailed) {
+        console.error('Duplicate AI check failed. Allowing submission.');
+      }
       settings.lastSubmission = now;
       saveSettings();
       addSubmission(
-        text.trim(),
+        safeText,
         dom.submissionName.value.trim(),
         dom.submissionCategory.value,
         state.voiceDataUrl,
