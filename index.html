@@ -5014,6 +5014,107 @@
       dom.jokeText.style.opacity = isLoading ? '0.35' : '1';
     }
 
+    let jokeApiRequestCount = 0;
+
+    function ensureJokeApiLoader() {
+      if (!dom.jokeCard) {
+        return null;
+      }
+      let loader = document.getElementById('joke-api-loader');
+      if (loader) {
+        return loader;
+      }
+      loader = document.createElement('div');
+      loader.id = 'joke-api-loader';
+      loader.className = 'skeleton';
+      loader.hidden = true;
+      loader.setAttribute('aria-hidden', 'true');
+
+      const lineA = document.createElement('div');
+      lineA.className = 'skeleton-line';
+      const lineB = document.createElement('div');
+      lineB.className = 'skeleton-line medium';
+      const lineC = document.createElement('div');
+      lineC.className = 'skeleton-line short';
+      loader.appendChild(lineA);
+      loader.appendChild(lineB);
+      loader.appendChild(lineC);
+
+      if (dom.jokeText && dom.jokeText.parentNode === dom.jokeCard) {
+        dom.jokeCard.insertBefore(loader, dom.jokeText);
+      } else {
+        dom.jokeCard.appendChild(loader);
+      }
+      return loader;
+    }
+
+    function ensureJokeApiError() {
+      if (!dom.jokeCard) {
+        return null;
+      }
+      let errorNode = document.getElementById('joke-api-error');
+      if (errorNode) {
+        return errorNode;
+      }
+      errorNode = document.createElement('small');
+      errorNode.id = 'joke-api-error';
+      errorNode.className = 'muted';
+      errorNode.hidden = true;
+      errorNode.setAttribute('aria-live', 'polite');
+      dom.jokeCard.appendChild(errorNode);
+      return errorNode;
+    }
+
+    function hideJokeApiError() {
+      const errorNode = ensureJokeApiError();
+      if (!errorNode) {
+        return;
+      }
+      errorNode.hidden = true;
+      errorNode.textContent = '';
+    }
+
+    function showJokeApiError() {
+      const errorNode = ensureJokeApiError();
+      if (!errorNode) {
+        return;
+      }
+      errorNode.textContent = t('feedback.jokeLoadError');
+      errorNode.hidden = false;
+    }
+
+    function showJokeApiLoader() {
+      const loader = ensureJokeApiLoader();
+      if (!loader) {
+        return;
+      }
+      loader.hidden = false;
+    }
+
+    function hideJokeApiLoader() {
+      const loader = ensureJokeApiLoader();
+      if (!loader) {
+        return;
+      }
+      loader.hidden = true;
+    }
+
+    function startJokeApiRequest() {
+      jokeApiRequestCount += 1;
+      hideJokeApiError();
+      showJokeApiLoader();
+    }
+
+    function finishJokeApiRequest(hasError = false) {
+      jokeApiRequestCount = Math.max(0, jokeApiRequestCount - 1);
+      if (jokeApiRequestCount === 0) {
+        hideJokeApiLoader();
+      }
+      if (hasError) {
+        showJokeApiError();
+      }
+    }
+
     const ROUTES = [
       'jokes',
       'saved',
@@ -5801,16 +5902,25 @@
     }
 
     async function fetchJokeFromApi(apiLang, category) {
-      const url = buildApiUrl(apiLang, category);
-      const resp = await fetch(url);
-      if (!resp.ok) {
-        throw new Error('Joke request failed');
+      startJokeApiRequest();
+      let hasError = false;
+      try {
+        const url = buildApiUrl(apiLang, category);
+        const resp = await fetch(url);
+        if (!resp.ok) {
+          throw new Error('Joke request failed');
+        }
+        const data = await resp.json();
+        if (data.error) {
+          throw new Error(data.message || 'Joke request failed');
+        }
+        return data;
+      } catch (error) {
+        hasError = true;
+        throw error;
+      } finally {
+        finishJokeApiRequest(hasError);
       }
-      const data = await resp.json();
-      if (data.error) {
-        throw new Error(data.message || 'Joke request failed');
-      }
-      return data;
     }
 
     function buildJoke(data) {
