@@ -26,8 +26,11 @@ export default async function handler(req, res) {
   try {
     const body = parseBody(req);
     const auth = await getAuthenticatedUserFromRequest(req);
-    const userId = body.userId || auth?.user?.id || "";
+    const userId = auth?.user?.id || "";
     const jokeId = body.jokeId || "";
+    if (!userId) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
     if (!userId || !jokeId) {
       return res.status(400).json({ error: "Missing like data" });
     }

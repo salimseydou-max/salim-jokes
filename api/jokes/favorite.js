@@ -25,16 +25,18 @@ export default async function handler(req, res) {
 
   try {
     const body = parseBody(req);
-    let sessionUserId = "";
+    let userId = "";
     try {
       const auth = await getAuthenticatedUserFromRequest(req);
-      sessionUserId = auth?.user?.id || "";
+      userId = auth?.user?.id || "";
     } catch (authError) {
       console.error("Auth session lookup failed in /api/jokes/favorite:", authError);
     }
 
-    const userId = body.userId || sessionUserId;
-    if (!userId || !body.jokeId) {
+    if (!userId) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+    if (!body.jokeId) {
       return res.status(400).json({ error: "Missing favorite data" });
     }
 

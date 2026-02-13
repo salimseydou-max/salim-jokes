@@ -67,7 +67,7 @@
       color: var(--text);
     }
     body {
-      padding-top: 170px;
+      padding-top: 190px;
       background-color: var(--bg);
       background-image: var(--bg-pattern);
       background-repeat: repeat;
@@ -196,6 +196,65 @@
     }
     .top-actions select {
       min-width: 150px;
+    }
+    .auth-nav {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.45rem;
+    }
+    .auth-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 40px;
+      padding: 0.45rem 0.9rem;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: var(--accent-strong);
+      box-shadow: var(--shadow);
+      font-weight: 700;
+      font-size: 0.92rem;
+      transition: transform 0.1s ease, background 0.2s ease;
+      text-align: center;
+      white-space: nowrap;
+    }
+    .auth-link:hover {
+      background: var(--accent);
+      transform: translateY(-1px);
+    }
+    .auth-link.ghost-link {
+      background: transparent;
+      color: var(--text);
+    }
+    .auth-link.active {
+      background: var(--accent);
+      border-width: 2px;
+    }
+    .auth-panel {
+      max-width: 620px;
+      margin: 0 auto;
+      display: grid;
+      gap: 1rem;
+    }
+    .auth-footnote {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+    .profile-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1rem;
+    }
+    .profile-list {
+      display: grid;
+      gap: 0.55rem;
+      margin-top: 0.7rem;
+    }
+    .profile-list .list-item {
+      font-size: 0.9rem;
+      align-items: flex-start;
     }
     .saved-count {
       font-weight: 600;
@@ -900,7 +959,7 @@
       100% { transform: scale(1); }
     }
     @media (max-width: 900px) {
-      body { padding-top: 210px; }
+      body { padding-top: 230px; }
       .top-bar-row {
         justify-content: center;
       }
@@ -913,7 +972,7 @@
       }
     }
     @media (max-width: 600px) {
-      body { padding-top: 230px; }
+      body { padding-top: 260px; }
       .hero {
         text-align: center;
       }
@@ -922,6 +981,14 @@
       }
       .top-actions select {
         min-width: 120px;
+      }
+      .top-actions button,
+      .auth-nav button,
+      .auth-link {
+        width: auto;
+      }
+      .auth-nav {
+        justify-content: center;
       }
       .joke-text {
         font-size: 1.1rem;
@@ -965,6 +1032,39 @@
           <option value="pt" data-i18n="languages.pt">Portuguese</option>
         </select>
         <button id="dark-toggle" class="ghost" data-i18n="buttons.dark">Dark Mode</button>
+        <div id="auth-nav" class="auth-nav" aria-label="Account">
+          <a
+            id="nav-login-link"
+            class="auth-link ghost-link"
+            href="#/login"
+            data-auth-route="login"
+            data-i18n="auth.login"
+          >
+            Log In
+          </a>
+          <a
+            id="nav-signup-link"
+            class="auth-link"
+            href="#/signup"
+            data-auth-route="signup"
+            data-i18n="auth.signup"
+          >
+            Sign Up
+          </a>
+          <a
+            id="nav-profile-link"
+            class="auth-link ghost-link"
+            href="#/profile"
+            data-auth-route="profile"
+            data-i18n="auth.profile"
+            hidden
+          >
+            Profile
+          </a>
+          <button id="nav-logout-button" type="button" class="ghost" data-i18n="auth.logout" hidden>
+            Log Out
+          </button>
+        </div>
       </div>
     </div>
     <div class="top-bar-row tabs-row">
@@ -1003,6 +1103,140 @@
         </div>
       </div>
     </header>
+
+    <section id="login" class="section view-section" data-view="login" data-emoji="🔐" data-collapsible="false" hidden>
+      <div class="auth-panel">
+        <h2 data-i18n="auth.loginTitle">Log In</h2>
+        <p data-i18n="auth.loginSubtitle">Access your account to sync favorites and likes.</p>
+        <form id="login-form" class="card form-card">
+          <label for="login-email" data-i18n="auth.email">Email</label>
+          <input
+            id="login-email"
+            type="email"
+            autocomplete="email"
+            required
+            data-i18n-placeholder="auth.emailPlaceholder"
+          />
+          <label for="login-password" data-i18n="auth.password">Password</label>
+          <input
+            id="login-password"
+            type="password"
+            autocomplete="current-password"
+            required
+            data-i18n-placeholder="auth.passwordPlaceholder"
+          />
+          <div class="form-actions">
+            <button type="submit" data-i18n="auth.loginCta">Log In</button>
+          </div>
+          <div id="login-feedback" class="feedback" aria-live="polite"></div>
+        </form>
+        <p class="auth-footnote">
+          <a href="#/signup" id="login-switch-link" data-i18n="auth.switchToSignup">Need an account? Sign up</a>
+        </p>
+      </div>
+    </section>
+
+    <section id="signup" class="section view-section" data-view="signup" data-emoji="📝" data-collapsible="false" hidden>
+      <div class="auth-panel">
+        <h2 data-i18n="auth.signupTitle">Sign Up</h2>
+        <p data-i18n="auth.signupSubtitle">Create your account with email and password.</p>
+        <form id="signup-form" class="card form-card">
+          <label for="signup-name" data-i18n="auth.displayNameOptional">Display name (optional)</label>
+          <input
+            id="signup-name"
+            type="text"
+            maxlength="80"
+            autocomplete="name"
+            data-i18n-placeholder="auth.displayNamePlaceholder"
+          />
+          <label for="signup-email" data-i18n="auth.email">Email</label>
+          <input
+            id="signup-email"
+            type="email"
+            autocomplete="email"
+            required
+            data-i18n-placeholder="auth.emailPlaceholder"
+          />
+          <label for="signup-password" data-i18n="auth.password">Password</label>
+          <input
+            id="signup-password"
+            type="password"
+            autocomplete="new-password"
+            required
+            data-i18n-placeholder="auth.passwordPlaceholder"
+          />
+          <p class="auth-footnote" data-i18n="auth.passwordRules">
+            Password must be at least 8 characters and include upper/lower letters and a number.
+          </p>
+          <div class="form-actions">
+            <button type="submit" data-i18n="auth.signupCta">Create Account</button>
+          </div>
+          <div id="signup-feedback" class="feedback" aria-live="polite"></div>
+        </form>
+        <p class="auth-footnote">
+          <a href="#/login" id="signup-switch-link" data-i18n="auth.switchToLogin">Already have an account? Log in</a>
+        </p>
+      </div>
+    </section>
+
+    <section id="profile" class="section view-section" data-view="profile" data-emoji="👤" data-collapsible="false" hidden>
+      <div class="auth-panel">
+        <h2 data-i18n="auth.profileTitle">My Account</h2>
+        <p data-i18n="auth.profileSubtitle">View your profile, favorites, and liked jokes.</p>
+        <div class="profile-grid">
+          <div class="card">
+            <h3 data-i18n="auth.accountDetails">Account Details</h3>
+            <div class="list">
+              <div class="list-item">
+                <span data-i18n="auth.displayName">Display name</span>
+                <strong id="profile-display-name">--</strong>
+              </div>
+              <div class="list-item">
+                <span data-i18n="auth.email">Email</span>
+                <strong id="profile-email">--</strong>
+              </div>
+              <div class="list-item">
+                <span data-i18n="auth.memberSince">Member since</span>
+                <strong id="profile-created-at">--</strong>
+              </div>
+            </div>
+            <div class="form-actions">
+              <button type="button" id="profile-refresh" class="ghost" data-i18n="auth.refresh">
+                Refresh
+              </button>
+            </div>
+          </div>
+          <div class="card">
+            <h3 data-i18n="auth.activity">Activity</h3>
+            <div class="list">
+              <div class="list-item">
+                <span data-i18n="auth.profileFavorites">Favorites</span>
+                <strong id="profile-favorites-count">0</strong>
+              </div>
+              <div class="list-item">
+                <span data-i18n="auth.profileLikes">Liked jokes</span>
+                <strong id="profile-liked-count">0</strong>
+              </div>
+              <div class="list-item">
+                <span data-i18n="auth.profileSavedOnDevice">Saved on this device</span>
+                <strong id="profile-saved-count">0</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="profile-grid">
+          <div class="card">
+            <h3 data-i18n="auth.profileFavorites">Favorites</h3>
+            <div id="profile-favorites-list" class="profile-list"></div>
+          </div>
+          <div class="card">
+            <h3 data-i18n="auth.profileLikes">Liked jokes</h3>
+            <div id="profile-liked-list" class="profile-list"></div>
+          </div>
+        </div>
+        <div id="profile-feedback" class="feedback" aria-live="polite"></div>
+      </div>
+    </section>
 
     <section id="about" class="section view-section" data-view="about" data-emoji="📘" hidden>
       <h2 data-i18n="about.title">About</h2>
@@ -1436,6 +1670,10 @@
     const dom = {
       language: document.getElementById('language'),
       darkToggle: document.getElementById('dark-toggle'),
+      navLoginLink: document.getElementById('nav-login-link'),
+      navSignupLink: document.getElementById('nav-signup-link'),
+      navProfileLink: document.getElementById('nav-profile-link'),
+      navLogoutButton: document.getElementById('nav-logout-button'),
       category: document.getElementById('category-select'),
       voiceSpeed: document.getElementById('voice-speed'),
       jokeCard: document.getElementById('joke-card'),
@@ -1520,7 +1758,26 @@
       moderationLog: document.getElementById('moderation-log'),
       progressBar: document.getElementById('progress-bar'),
       progressText: document.getElementById('progress-text'),
-      badgeList: document.getElementById('badge-list')
+      badgeList: document.getElementById('badge-list'),
+      loginForm: document.getElementById('login-form'),
+      loginEmail: document.getElementById('login-email'),
+      loginPassword: document.getElementById('login-password'),
+      loginFeedback: document.getElementById('login-feedback'),
+      signupForm: document.getElementById('signup-form'),
+      signupName: document.getElementById('signup-name'),
+      signupEmail: document.getElementById('signup-email'),
+      signupPassword: document.getElementById('signup-password'),
+      signupFeedback: document.getElementById('signup-feedback'),
+      profileRefresh: document.getElementById('profile-refresh'),
+      profileDisplayName: document.getElementById('profile-display-name'),
+      profileEmail: document.getElementById('profile-email'),
+      profileCreatedAt: document.getElementById('profile-created-at'),
+      profileFavoritesCount: document.getElementById('profile-favorites-count'),
+      profileLikedCount: document.getElementById('profile-liked-count'),
+      profileSavedCount: document.getElementById('profile-saved-count'),
+      profileFavoritesList: document.getElementById('profile-favorites-list'),
+      profileLikedList: document.getElementById('profile-liked-list'),
+      profileFeedback: document.getElementById('profile-feedback')
     };
 
     const STORAGE_KEYS = {
@@ -1885,20 +2142,50 @@
         'footer.copyright': '© 2026 Voice Joke Club',
         'footer.rights': 'All rights reserved.',
         'footer.social': 'Follow',
-        'auth.login': 'Login',
+        'auth.login': 'Log In',
         'auth.signup': 'Sign Up',
-        'auth.logout': 'Logout',
-        'auth.loginTitle': 'Login',
+        'auth.profile': 'Profile',
+        'auth.logout': 'Log Out',
+        'auth.loginTitle': 'Log In',
         'auth.signupTitle': 'Sign Up',
-        'auth.username': 'Username',
+        'auth.loginSubtitle': 'Access your account to sync favorites and likes.',
+        'auth.signupSubtitle': 'Create your account with email and password.',
+        'auth.username': 'Email',
+        'auth.email': 'Email',
+        'auth.emailPlaceholder': 'name@example.com',
         'auth.password': 'Password',
+        'auth.passwordPlaceholder': 'Enter your password',
+        'auth.displayName': 'Display name',
+        'auth.displayNameOptional': 'Display name (optional)',
+        'auth.displayNamePlaceholder': 'How should we call you?',
+        'auth.loginCta': 'Log In',
+        'auth.signupCta': 'Create Account',
+        'auth.switchToSignup': 'Need an account? Sign up',
+        'auth.switchToLogin': 'Already have an account? Log in',
+        'auth.profileTitle': 'My Account',
+        'auth.profileSubtitle': 'View your profile, favorites, and liked jokes.',
+        'auth.accountDetails': 'Account Details',
+        'auth.memberSince': 'Member since',
+        'auth.activity': 'Activity',
+        'auth.profileFavorites': 'Favorites',
+        'auth.profileLikes': 'Liked jokes',
+        'auth.profileSavedOnDevice': 'Saved on this device',
+        'auth.profileEmptyFavorites': 'No favorites yet.',
+        'auth.profileEmptyLikes': 'No liked jokes yet.',
+        'auth.moreItems': '+{count} more items',
+        'auth.refresh': 'Refresh',
+        'auth.refreshing': 'Refreshing account...',
+        'auth.profileRefreshed': 'Account updated.',
+        'auth.loginRequired': 'Please log in to access your profile.',
+        'auth.passwordRules': 'Password must be at least 8 characters and include upper/lower letters and a number.',
         'auth.welcome': 'Hi, {name}',
         'auth.guest': 'Guest',
-        'auth.error': 'Please check your details.',
-        'auth.exists': 'Username already exists.',
+        'auth.error': 'Please check your email and password.',
+        'auth.exists': 'An account with this email already exists.',
         'auth.created': 'Account created. You are logged in.',
+        'auth.loginSuccess': 'Logged in successfully.',
         'auth.loggedOut': 'Logged out.',
-        'auth.short': 'Use at least 4 characters for username and 6 for password.',
+        'auth.short': 'Use at least 8 characters with upper/lower letters and a number.',
         'contact.enabled': 'Notifications enabled.',
         'contact.disabled': 'Notifications disabled.',
         'contact.denied': 'Permission denied.',
@@ -4531,6 +4818,8 @@
       currentUserId: null,
       currentUserEmail: '',
       currentUserName: '',
+      currentUserProfile: null,
+      authRedirectRoute: 'jokes',
       notificationInterval: null,
       voices: [],
       recorder: null,
@@ -4544,6 +4833,7 @@
     state.currentUserId = null;
     state.currentUserEmail = '';
     state.currentUserName = '';
+    state.currentUserProfile = null;
     const seenStore = loadSeenStore();
     const reactionStore = loadReactions();
     const userReactions = loadUserReactions();
@@ -4592,6 +4882,8 @@
       });
       updateSavedControls();
       renderSavedSection();
+      updateAuthUI();
+      renderProfileSection();
       renderTopRated();
       renderLeaderboard();
       renderTrending();
@@ -4817,6 +5109,157 @@
       dom.submissionFeedback.textContent = t(key, params);
     }
 
+    function normalizeRouteValue(route) {
+      const safe = String(route || '')
+        .toLowerCase()
+        .replace(/[^a-z-]/g, '');
+      return safe || 'jokes';
+    }
+
+    function setAuthRedirectRoute(route) {
+      const safe = normalizeRouteValue(route);
+      if (safe === 'login' || safe === 'signup') {
+        return;
+      }
+      state.authRedirectRoute = safe;
+    }
+
+    function consumeAuthRedirectRoute() {
+      const route = normalizeRouteValue(state.authRedirectRoute || 'jokes');
+      state.authRedirectRoute = 'jokes';
+      if (route === 'login' || route === 'signup') {
+        return 'jokes';
+      }
+      if (Array.isArray(ROUTES) && ROUTES.includes(route)) {
+        return route;
+      }
+      return 'jokes';
+    }
+
+    function appendProfileJokeId(field, jokeId) {
+      if (!state.currentUserProfile || !jokeId) {
+        return;
+      }
+      if (!state.currentUserProfile.profile || typeof state.currentUserProfile.profile !== 'object') {
+        state.currentUserProfile.profile = {};
+      }
+      const list = Array.isArray(state.currentUserProfile.profile[field])
+        ? state.currentUserProfile.profile[field]
+        : [];
+      if (!list.includes(jokeId)) {
+        list.push(jokeId);
+        state.currentUserProfile.profile[field] = list;
+        renderProfileSection();
+      }
+    }
+
+    function updateAuthUI() {
+      const isAuthenticated = Boolean(state.currentUserId);
+      if (dom.navLoginLink) {
+        dom.navLoginLink.hidden = isAuthenticated;
+      }
+      if (dom.navSignupLink) {
+        dom.navSignupLink.hidden = isAuthenticated;
+      }
+      if (dom.navProfileLink) {
+        dom.navProfileLink.hidden = !isAuthenticated;
+      }
+      if (dom.navLogoutButton) {
+        dom.navLogoutButton.hidden = !isAuthenticated;
+      }
+      updateAuthNavActive(getRouteFromHash());
+    }
+
+    function renderProfileCollection(target, ids, emptyKey) {
+      if (!target) {
+        return;
+      }
+      target.innerHTML = '';
+      const normalized = Array.isArray(ids)
+        ? ids.filter((id) => typeof id === 'string' && id.trim())
+        : [];
+      if (!normalized.length) {
+        const empty = document.createElement('div');
+        empty.className = 'list-item';
+        empty.textContent = t(emptyKey);
+        target.appendChild(empty);
+        return;
+      }
+      normalized.slice(0, 12).forEach((id) => {
+        const row = document.createElement('div');
+        row.className = 'list-item';
+        row.textContent = id;
+        target.appendChild(row);
+      });
+      if (normalized.length > 12) {
+        const more = document.createElement('div');
+        more.className = 'list-item';
+        more.textContent = t('auth.moreItems', { count: normalized.length - 12 });
+        target.appendChild(more);
+      }
+    }
+
+    function renderProfileSection() {
+      if (!dom.profileDisplayName || !dom.profileEmail || !dom.profileCreatedAt) {
+        return;
+      }
+      if (!state.currentUserProfile || !state.currentUserId) {
+        dom.profileDisplayName.textContent = '--';
+        dom.profileEmail.textContent = '--';
+        dom.profileCreatedAt.textContent = '--';
+        if (dom.profileFavoritesCount) {
+          dom.profileFavoritesCount.textContent = '0';
+        }
+        if (dom.profileLikedCount) {
+          dom.profileLikedCount.textContent = '0';
+        }
+        if (dom.profileSavedCount) {
+          dom.profileSavedCount.textContent = String(getSavedJokesList().length);
+        }
+        renderProfileCollection(dom.profileFavoritesList, [], 'auth.profileEmptyFavorites');
+        renderProfileCollection(dom.profileLikedList, [], 'auth.profileEmptyLikes');
+        return;
+      }
+
+      const profile = state.currentUserProfile.profile || {};
+      const displayName = profile.displayName || state.currentUserName || t('auth.guest');
+      const favorites = Array.isArray(profile.favorites) ? profile.favorites : [];
+      const likedJokes = Array.isArray(profile.likedJokes) ? profile.likedJokes : [];
+      const createdAt = state.currentUserProfile.createdAt || '';
+      const createdDate = createdAt ? new Date(createdAt) : null;
+      const createdText =
+        createdDate && !Number.isNaN(createdDate.getTime())
+          ? createdDate.toLocaleDateString(state.currentLang)
+          : '--';
+
+      dom.profileDisplayName.textContent = displayName;
+      dom.profileEmail.textContent = state.currentUserEmail || '--';
+      dom.profileCreatedAt.textContent = createdText;
+      if (dom.profileFavoritesCount) {
+        dom.profileFavoritesCount.textContent = String(favorites.length);
+      }
+      if (dom.profileLikedCount) {
+        dom.profileLikedCount.textContent = String(likedJokes.length);
+      }
+      if (dom.profileSavedCount) {
+        dom.profileSavedCount.textContent = String(getSavedJokesList().length);
+      }
+      renderProfileCollection(dom.profileFavoritesList, favorites, 'auth.profileEmptyFavorites');
+      renderProfileCollection(dom.profileLikedList, likedJokes, 'auth.profileEmptyLikes');
+    }
+
+    function isStrongPassword(password) {
+      const value = String(password || '').trim();
+      return value.length >= 8 && /[A-Z]/.test(value) && /[a-z]/.test(value) && /\d/.test(value);
+    }
+
+    function getAuthErrorMessage(error) {
+      if (error && typeof error.message === 'string' && error.message.trim()) {
+        return error.message;
+      }
+      return t('auth.error');
+    }
+
     async function authRequest(url, options = {}) {
       const response = await fetch(url, {
         method: options.method || 'GET',
@@ -4847,24 +5290,30 @@
         state.currentUserId = user.id;
         state.currentUserEmail = user.email || '';
         state.currentUserName = user?.profile?.displayName || user.email || '';
+        state.currentUserProfile = user;
       } else {
         state.currentUserId = null;
         state.currentUserEmail = '';
         state.currentUserName = '';
+        state.currentUserProfile = null;
       }
       updateSavedControls();
       renderSavedSection();
       updateSessionProgressUI();
+      updateAuthUI();
+      renderProfileSection();
     }
 
     async function refreshAuthSession() {
       try {
         const payload = await authRequest(AUTH_ENDPOINTS.me, { method: 'GET' });
         applyAuthenticatedUser(payload.authenticated ? payload.user : null);
+        handleRouteChange();
         return payload;
       } catch (error) {
         console.error('Auth session refresh failed:', error);
         applyAuthenticatedUser(null);
+        handleRouteChange();
         return { authenticated: false, user: null };
       }
     }
@@ -4884,6 +5333,7 @@
             createdAt: entry.savedAt
           }
         });
+        appendProfileJokeId('favorites', entry.id);
       } catch (error) {
         console.error('Favorite sync failed:', error);
       }
@@ -4898,6 +5348,7 @@
           method: 'POST',
           body: { jokeId }
         });
+        appendProfileJokeId('likedJokes', jokeId);
       } catch (error) {
         console.error('Like sync failed:', error);
       }
@@ -4946,6 +5397,11 @@
     window.jokeAuth.signUp = window.jokeAuth.signup;
     window.jokeAuth.logIn = window.jokeAuth.login;
     window.jokeAuth.logOut = window.jokeAuth.logout;
+
+    function redirectAfterAuthSuccess() {
+      const target = consumeAuthRedirectRoute();
+      location.hash = `#/${target}`;
+    }
 
     function showToast(message) {
       if (!dom.toastContainer || !message) {
@@ -5272,8 +5728,13 @@
       'about',
       'creator',
       'contact',
-      'admin'
+      'admin',
+      'login',
+      'signup',
+      'profile'
     ];
+    const AUTH_FORM_ROUTES = ['login', 'signup'];
+    const PROTECTED_ROUTES = ['profile'];
 
     function getRouteFromHash() {
       const raw = location.hash.replace('#', '');
@@ -5293,6 +5754,25 @@
       });
     }
 
+    function updateAuthNavActive(route) {
+      [
+        { link: dom.navLoginLink, route: 'login' },
+        { link: dom.navSignupLink, route: 'signup' },
+        { link: dom.navProfileLink, route: 'profile' }
+      ].forEach((item) => {
+        if (!item.link) {
+          return;
+        }
+        const isActive = item.route === route;
+        item.link.classList.toggle('active', isActive);
+        if (isActive) {
+          item.link.setAttribute('aria-current', 'page');
+        } else {
+          item.link.removeAttribute('aria-current');
+        }
+      });
+    }
+
     function showView(route) {
       document.querySelectorAll('[data-view]').forEach((section) => {
         const isActive = section.dataset.view === route;
@@ -5304,6 +5784,10 @@
         }
       });
       updateNavActive(route);
+      updateAuthNavActive(route);
+      if (route === 'profile') {
+        renderProfileSection();
+      }
     }
 
     function showPageTransition() {
@@ -5324,6 +5808,18 @@
       const route = getRouteFromHash();
       if (!ROUTES.includes(route)) {
         location.hash = '#/jokes';
+        return;
+      }
+      if (AUTH_FORM_ROUTES.includes(route) && state.currentUserId) {
+        location.hash = '#/profile';
+        return;
+      }
+      if (PROTECTED_ROUTES.includes(route) && !state.currentUserId) {
+        setAuthRedirectRoute(route);
+        if (dom.loginFeedback) {
+          dom.loginFeedback.textContent = t('auth.loginRequired');
+        }
+        location.hash = '#/login';
         return;
       }
       if (route === 'admin') {
@@ -5403,6 +5899,9 @@
       const hasJoke = Boolean(state.currentJoke);
       dom.save.disabled = !hasJoke || isJokeSaved(state.currentJoke, state.currentLang, state.currentCategory);
       dom.unsave.disabled = !hasJoke || !isJokeSaved(state.currentJoke, state.currentLang, state.currentCategory);
+      if (dom.profileSavedCount) {
+        dom.profileSavedCount.textContent = String(list.length);
+      }
     }
 
     function formatSavedDate(value) {
@@ -8088,6 +8587,130 @@
         setAdminUnlocked(false, 'feedback.adminLocked');
         if (dom.adminLoginKey) {
           dom.adminLoginKey.value = '';
+        }
+      };
+    }
+    if (dom.navLoginLink) {
+      dom.navLoginLink.onclick = () => {
+        setAuthRedirectRoute(getRouteFromHash());
+      };
+    }
+    if (dom.navSignupLink) {
+      dom.navSignupLink.onclick = () => {
+        setAuthRedirectRoute(getRouteFromHash());
+      };
+    }
+    if (dom.navLogoutButton) {
+      dom.navLogoutButton.onclick = async () => {
+        dom.navLogoutButton.disabled = true;
+        if (dom.profileFeedback) {
+          dom.profileFeedback.textContent = '';
+        }
+        try {
+          await window.jokeAuth.logout();
+          showToast(t('auth.loggedOut'));
+          const route = getRouteFromHash();
+          if (PROTECTED_ROUTES.includes(route)) {
+            location.hash = '#/jokes';
+          } else {
+            handleRouteChange();
+          }
+        } catch (error) {
+          if (dom.profileFeedback) {
+            dom.profileFeedback.textContent = getAuthErrorMessage(error);
+          }
+        } finally {
+          dom.navLogoutButton.disabled = false;
+        }
+      };
+    }
+    if (dom.loginForm) {
+      dom.loginForm.onsubmit = async (event) => {
+        event.preventDefault();
+        if (dom.loginFeedback) {
+          dom.loginFeedback.textContent = '';
+        }
+        const email = (dom.loginEmail?.value || '').trim();
+        const password = dom.loginPassword?.value || '';
+        if (!email || !password) {
+          if (dom.loginFeedback) {
+            dom.loginFeedback.textContent = t('auth.error');
+          }
+          return;
+        }
+        const submitButton = dom.loginForm.querySelector('button[type="submit"]');
+        if (submitButton) {
+          submitButton.disabled = true;
+        }
+        try {
+          await window.jokeAuth.login(email, password);
+          if (dom.loginPassword) {
+            dom.loginPassword.value = '';
+          }
+          showToast(t('auth.loginSuccess'));
+          redirectAfterAuthSuccess();
+        } catch (error) {
+          if (dom.loginFeedback) {
+            dom.loginFeedback.textContent = getAuthErrorMessage(error);
+          }
+        } finally {
+          if (submitButton) {
+            submitButton.disabled = false;
+          }
+        }
+      };
+    }
+    if (dom.signupForm) {
+      dom.signupForm.onsubmit = async (event) => {
+        event.preventDefault();
+        if (dom.signupFeedback) {
+          dom.signupFeedback.textContent = '';
+        }
+        const displayName = (dom.signupName?.value || '').trim();
+        const email = (dom.signupEmail?.value || '').trim();
+        const password = dom.signupPassword?.value || '';
+        if (!email || !password) {
+          if (dom.signupFeedback) {
+            dom.signupFeedback.textContent = t('auth.error');
+          }
+          return;
+        }
+        if (!isStrongPassword(password)) {
+          if (dom.signupFeedback) {
+            dom.signupFeedback.textContent = t('auth.passwordRules');
+          }
+          return;
+        }
+        const submitButton = dom.signupForm.querySelector('button[type="submit"]');
+        if (submitButton) {
+          submitButton.disabled = true;
+        }
+        try {
+          await window.jokeAuth.signup(email, password, { displayName });
+          if (dom.signupPassword) {
+            dom.signupPassword.value = '';
+          }
+          showToast(t('auth.created'));
+          redirectAfterAuthSuccess();
+        } catch (error) {
+          if (dom.signupFeedback) {
+            dom.signupFeedback.textContent = getAuthErrorMessage(error);
+          }
+        } finally {
+          if (submitButton) {
+            submitButton.disabled = false;
+          }
+        }
+      };
+    }
+    if (dom.profileRefresh) {
+      dom.profileRefresh.onclick = async () => {
+        if (dom.profileFeedback) {
+          dom.profileFeedback.textContent = t('auth.refreshing');
+        }
+        await refreshAuthSession();
+        if (dom.profileFeedback) {
+          dom.profileFeedback.textContent = t('auth.profileRefreshed');
         }
       };
     }
