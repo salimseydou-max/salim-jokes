@@ -263,7 +263,7 @@
       gap: 0.35rem;
       min-height: 40px;
       min-width: 40px;
-      padding: 0.45rem;
+      padding: 0.32rem;
     }
     .nav-menu-icon {
       font-size: 1.15rem;
@@ -282,8 +282,8 @@
       border: 0;
     }
     .nav-avatar {
-      width: 26px;
-      height: 26px;
+      width: 30px;
+      height: 30px;
       border-radius: 999px;
       border: 1px solid var(--border);
       object-fit: cover;
@@ -973,6 +973,34 @@
       justify-content: space-between;
       gap: 0.8rem;
     }
+    .auth-required-modal {
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.18s ease;
+    }
+    .auth-required-modal .auth-required-content {
+      max-width: 520px;
+      transform: translateY(-8px) scale(0.98);
+      transition: transform 0.18s ease;
+    }
+    .auth-required-modal.is-open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .auth-required-modal.is-open .auth-required-content {
+      transform: translateY(0) scale(1);
+    }
+    .auth-required-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+      justify-content: flex-end;
+      margin-top: 0.4rem;
+    }
+    .auth-required-actions .ghost {
+      background: transparent;
+      color: var(--text);
+    }
     .skeleton {
       display: grid;
       gap: 0.6rem;
@@ -1279,6 +1307,10 @@
         right: 0;
         left: auto;
       }
+      .auth-required-actions {
+        flex-direction: column;
+        align-items: stretch;
+      }
       .joke-text {
         font-size: 1.1rem;
       }
@@ -1376,8 +1408,13 @@
               aria-haspopup="menu"
               aria-label="Account menu"
             >
-              <span id="nav-menu-icon" class="nav-menu-icon" aria-hidden="true">⋯</span>
-              <img id="nav-profile-avatar" class="nav-avatar" alt="Profile" hidden />
+              <span id="nav-menu-icon" class="nav-menu-icon" aria-hidden="true" hidden>⋯</span>
+              <img
+                id="nav-profile-avatar"
+                class="nav-avatar"
+                alt="Profile avatar"
+                src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='96' viewBox='0 0 96 96'%3E%3Crect width='96' height='96' rx='48' fill='%23dfe7ff'/%3E%3Ccircle cx='48' cy='37' r='17' fill='%23657899'/%3E%3Cpath d='M20 82c3-16 14-26 28-26s25 10 28 26' fill='%23657899'/%3E%3C/svg%3E"
+              />
               <span id="nav-profile-label" class="visually-hidden" data-i18n="auth.accountMenu">Account menu</span>
             </button>
             <div id="nav-profile-dropdown" class="profile-dropdown card" role="menu" hidden>
@@ -1420,14 +1457,14 @@
                 Favorites / Saved
               </a>
               <a
-                id="nav-achievements-link"
-                href="#/achievements"
+                id="nav-settings-link"
+                href="#/settings"
                 class="profile-dropdown-item"
                 role="menuitem"
-                data-i18n="nav.achievements"
+                data-i18n="auth.menuSettings"
                 hidden
               >
-                Achievements
+                Settings
               </a>
               <button
                 id="nav-logout-button"
@@ -2124,6 +2161,32 @@
       </div>
     </div>
 
+    <div
+      id="auth-required-modal"
+      class="modal auth-required-modal"
+      hidden
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="auth-required-title"
+    >
+      <div class="modal-content auth-required-content">
+        <div class="modal-header">
+          <h3 id="auth-required-title" data-i18n="authPrompt.title">Save your progress with an account</h3>
+          <button id="auth-required-close" class="ghost" type="button" data-i18n="buttons.close">Close</button>
+        </div>
+        <p id="auth-required-message" data-i18n="authPrompt.message">
+          Sign in to save jokes, react, submit content, and join community interactions.
+        </p>
+        <div class="auth-required-actions">
+          <button id="auth-required-login" type="button" data-i18n="auth.login">Log In</button>
+          <button id="auth-required-signup" type="button" class="ghost" data-i18n="auth.signup">Sign Up</button>
+          <button id="auth-required-continue" type="button" class="ghost" data-i18n="authPrompt.continue">
+            Continue browsing
+          </button>
+        </div>
+      </div>
+    </div>
+
     <div id="toast-container" class="toast-container" aria-live="polite"></div>
     <div id="page-transition" class="page-transition" aria-hidden="true">
       <div class="skeleton">
@@ -2168,9 +2231,15 @@
       navProfileLabel: document.getElementById('nav-profile-label'),
       navProfileLink: document.getElementById('nav-profile-link'),
       navSavedLink: document.getElementById('nav-saved-link'),
-      navAchievementsLink: document.getElementById('nav-achievements-link'),
+      navSettingsLink: document.getElementById('nav-settings-link'),
       navProfileDropdown: document.getElementById('nav-profile-dropdown'),
       navLogoutButton: document.getElementById('nav-logout-button'),
+      authRequiredModal: document.getElementById('auth-required-modal'),
+      authRequiredClose: document.getElementById('auth-required-close'),
+      authRequiredLogin: document.getElementById('auth-required-login'),
+      authRequiredSignup: document.getElementById('auth-required-signup'),
+      authRequiredContinue: document.getElementById('auth-required-continue'),
+      authRequiredMessage: document.getElementById('auth-required-message'),
       category: document.getElementById('category-select'),
       voiceSpeed: document.getElementById('voice-speed'),
       jokeCard: document.getElementById('joke-card'),
@@ -2438,6 +2507,8 @@
       followHandle: 'lolwith_salim',
       url: 'https://salim-jokes.vercel.app'
     };
+    const DEFAULT_GUEST_AVATAR =
+      "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='96' viewBox='0 0 96 96'%3E%3Crect width='96' height='96' rx='48' fill='%23dfe7ff'/%3E%3Ccircle cx='48' cy='37' r='17' fill='%23657899'/%3E%3Cpath d='M20 82c3-16 14-26 28-26s25 10 28 26' fill='%23657899'/%3E%3C/svg%3E";
     const BLOCKED_PATTERNS = [
       /\b(hate|kill|murder|rape|terror|nazi|racist|genocide)\b/i,
       /\b(sex|porn|xxx|nude|explicit|nsfw)\b/i,
@@ -2723,6 +2794,13 @@
         'auth.loginSuccess': 'Logged in successfully.',
         'auth.loggedOut': 'Logged out.',
         'auth.short': 'Use at least 8 characters with upper/lower letters and a number.',
+        'authPrompt.title': 'Save your progress with an account',
+        'authPrompt.message': 'Sign in to save jokes, react, submit content, and join community interactions.',
+        'authPrompt.continue': 'Continue browsing',
+        'authPrompt.loginToSave': 'Log in to save this joke and keep it on your account.',
+        'authPrompt.loginToReact': 'Log in to react and unlock community features.',
+        'authPrompt.loginToSubmit': 'Log in to submit jokes to the community.',
+        'authPrompt.loginToComment': 'Log in to comment and interact with the community.',
         'contact.enabled': 'Notifications enabled.',
         'contact.disabled': 'Notifications disabled.',
         'contact.denied': 'Permission denied.',
@@ -5363,6 +5441,8 @@
       isSettingsMenuOpen: false,
       isPrimaryNavOpen: false,
       openJokeActionMenu: '',
+      isAuthPromptOpen: false,
+      pendingAuthAction: null,
       notificationInterval: null,
       voices: [],
       recorder: null,
@@ -5441,6 +5521,7 @@
       if (dom.moreActionsToggle) {
         dom.moreActionsToggle.setAttribute('aria-label', t('actions.more'));
       }
+      updateAuthPromptMessage();
       updateSavedControls();
       renderSavedSection();
       updateAuthUI();
@@ -5774,6 +5855,88 @@
       setSettingsMenuOpen(false);
     }
 
+    function getAuthPromptMessageKey(actionType = '') {
+      const map = {
+        'save-joke': 'authPrompt.loginToSave',
+        'remove-saved': 'authPrompt.loginToSave',
+        reaction: 'authPrompt.loginToReact',
+        'submit-joke': 'authPrompt.loginToSubmit',
+        'comment-add': 'authPrompt.loginToComment',
+        'comment-react': 'authPrompt.loginToComment',
+        'comment-reply': 'authPrompt.loginToComment'
+      };
+      return map[actionType] || 'authPrompt.message';
+    }
+
+    function updateAuthPromptMessage() {
+      if (!dom.authRequiredMessage) {
+        return;
+      }
+      const actionType = state.pendingAuthAction?.type || '';
+      dom.authRequiredMessage.textContent = t(getAuthPromptMessageKey(actionType));
+    }
+
+    function setAuthPromptOpen(isOpen) {
+      if (!dom.authRequiredModal) {
+        return;
+      }
+      const next = Boolean(isOpen);
+      if (next === state.isAuthPromptOpen) {
+        if (next) {
+          updateAuthPromptMessage();
+        }
+        return;
+      }
+      state.isAuthPromptOpen = next;
+      if (next) {
+        closeProfileMenu();
+        closeSettingsMenu();
+        closeJokeActionMenus();
+        updateAuthPromptMessage();
+        dom.authRequiredModal.hidden = false;
+        requestAnimationFrame(() => {
+          if (state.isAuthPromptOpen) {
+            dom.authRequiredModal.classList.add('is-open');
+            if (dom.authRequiredLogin) {
+              dom.authRequiredLogin.focus();
+            }
+          }
+        });
+        return;
+      }
+      dom.authRequiredModal.classList.remove('is-open');
+      const hideTask = () => {
+        if (!state.isAuthPromptOpen) {
+          dom.authRequiredModal.hidden = true;
+        }
+      };
+      if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        hideTask();
+      } else {
+        setTimeout(hideTask, 180);
+      }
+    }
+
+    function closeAuthPrompt(options = {}) {
+      const clearPending = Boolean(options.clearPending);
+      if (clearPending) {
+        state.pendingAuthAction = null;
+      }
+      setAuthPromptOpen(false);
+    }
+
+    function requireAuthForAction(type, payload = {}) {
+      if (state.currentUserId) {
+        return true;
+      }
+      state.pendingAuthAction = {
+        type: String(type || ''),
+        payload: payload && typeof payload === 'object' ? { ...payload } : {}
+      };
+      setAuthPromptOpen(true);
+      return false;
+    }
+
     function isMobileViewport() {
       return Boolean(window.matchMedia && window.matchMedia('(max-width: 900px)').matches);
     }
@@ -5893,26 +6056,25 @@
       if (dom.navSavedLink) {
         dom.navSavedLink.hidden = !isAuthenticated;
       }
-      if (dom.navAchievementsLink) {
-        dom.navAchievementsLink.hidden = !isAuthenticated;
+      if (dom.navSettingsLink) {
+        dom.navSettingsLink.hidden = !isAuthenticated;
       }
       if (dom.navLogoutButton) {
         dom.navLogoutButton.hidden = !isAuthenticated;
       }
       if (dom.navMenuIcon) {
-        dom.navMenuIcon.hidden = isAuthenticated;
+        dom.navMenuIcon.hidden = true;
       }
       if (dom.navProfileAvatar) {
-        dom.navProfileAvatar.hidden = !isAuthenticated;
+        dom.navProfileAvatar.hidden = false;
+        const fallbackAvatar = DEFAULT_GUEST_AVATAR;
         if (isAuthenticated) {
-          const avatar = getUserAvatarUrl();
-          if (avatar) {
-            dom.navProfileAvatar.src = avatar;
-          } else {
-            dom.navProfileAvatar.removeAttribute('src');
-          }
+          const avatar = getUserAvatarUrl() || fallbackAvatar;
+          dom.navProfileAvatar.src = avatar;
+          dom.navProfileAvatar.alt = t('auth.profile');
         } else {
-          dom.navProfileAvatar.removeAttribute('src');
+          dom.navProfileAvatar.src = fallbackAvatar;
+          dom.navProfileAvatar.alt = t('auth.guest');
         }
       }
       updateAuthNavActive(getRouteFromHash());
@@ -6203,9 +6365,90 @@
     window.jokeAuth.logIn = window.jokeAuth.login;
     window.jokeAuth.logOut = window.jokeAuth.logout;
 
+    function openAuthRouteFromPrompt(route) {
+      if (route !== 'login' && route !== 'signup') {
+        return;
+      }
+      setAuthRedirectRoute(getRouteFromHash());
+      setAuthPromptOpen(false);
+      location.hash = `#/${route}`;
+    }
+
+    function executePendingAuthAction() {
+      const pending = state.pendingAuthAction;
+      if (!pending || !state.currentUserId) {
+        return false;
+      }
+      state.pendingAuthAction = null;
+      const type = String(pending.type || '');
+      const payload = pending.payload && typeof pending.payload === 'object' ? pending.payload : {};
+
+      if (type === 'save-joke') {
+        saveCurrentJoke({ skipAuthCheck: true });
+        return true;
+      }
+      if (type === 'remove-saved') {
+        removeCurrentSavedJoke({ skipAuthCheck: true });
+        return true;
+      }
+      if (type === 'reaction') {
+        addReaction(payload.reactionType, { skipAuthCheck: true });
+        return true;
+      }
+      if (type === 'comment-add') {
+        addComment(payload.text || dom.commentText?.value || '', { skipAuthCheck: true });
+        return true;
+      }
+      if (type === 'comment-react') {
+        reactToComment(payload.commentId, payload.reactionType, { skipAuthCheck: true });
+        return true;
+      }
+      if (type === 'comment-reply') {
+        if (!payload.commentId) {
+          return false;
+        }
+        state.replyTo = payload.commentId;
+        if (dom.cancelReply) {
+          dom.cancelReply.hidden = false;
+        }
+        if (dom.commentText) {
+          dom.commentText.focus();
+        }
+        return true;
+      }
+      if (type === 'submit-joke') {
+        if (dom.submissionText && typeof payload.text === 'string') {
+          dom.submissionText.value = payload.text;
+        }
+        if (dom.submissionName && typeof payload.name === 'string') {
+          dom.submissionName.value = payload.name;
+        }
+        if (dom.submissionCategory && typeof payload.category === 'string' && payload.category) {
+          dom.submissionCategory.value = payload.category;
+        }
+        if (typeof payload.voiceDataUrl === 'string') {
+          state.voiceDataUrl = payload.voiceDataUrl;
+        }
+        if (dom.submissionForm) {
+          if (typeof dom.submissionForm.requestSubmit === 'function') {
+            dom.submissionForm.requestSubmit();
+          } else {
+            dom.submissionForm.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+          }
+        }
+        return true;
+      }
+      return false;
+    }
+
     function redirectAfterAuthSuccess() {
       const target = consumeAuthRedirectRoute();
       location.hash = `#/${target}`;
+      if (state.pendingAuthAction) {
+        setTimeout(() => {
+          executePendingAuthAction();
+        }, 0);
+      }
     }
 
     function showToast(message) {
@@ -6304,6 +6547,9 @@
         reply.type = 'button';
         reply.textContent = t('comments.reply');
         reply.onclick = () => {
+          if (!requireAuthForAction('comment-reply', { commentId: item.id })) {
+            return;
+          }
           state.replyTo = item.id;
           dom.cancelReply.hidden = false;
           dom.commentText.focus();
@@ -6332,7 +6578,13 @@
       });
     }
 
-    function addComment(text) {
+    function addComment(text, options = {}) {
+      if (!options.skipAuthCheck && !requireAuthForAction('comment-add', { text })) {
+        if (dom.commentFeedback) {
+          dom.commentFeedback.textContent = t('authPrompt.loginToComment');
+        }
+        return;
+      }
       if (!state.currentJoke) {
         dom.commentFeedback.textContent = t('feedback.noJoke');
         return;
@@ -6365,7 +6617,10 @@
       renderTrending();
     }
 
-    function reactToComment(commentId, type) {
+    function reactToComment(commentId, type, options = {}) {
+      if (!options.skipAuthCheck && !requireAuthForAction('comment-react', { commentId, reactionType: type })) {
+        return;
+      }
       const list = getCommentsForJoke();
       const item = list.find((comment) => comment.id === commentId);
       if (!item) {
@@ -6561,7 +6816,7 @@
     }
 
     function updateAuthNavActive(route) {
-      const isAccountRoute = ['login', 'signup', 'profile', 'saved'].includes(route);
+      const isAccountRoute = ['login', 'signup', 'profile', 'saved', 'settings'].includes(route);
       const isSettingsRoute = ['settings', 'achievements', 'about', 'creator', 'contact'].includes(route);
       if (dom.navProfileToggle) {
         dom.navProfileToggle.classList.toggle('active', isAccountRoute);
@@ -6574,7 +6829,7 @@
         { link: dom.navSignupLink, route: 'signup' },
         { link: dom.navProfileLink, route: 'profile' },
         { link: dom.navSavedLink, route: 'saved' },
-        { link: dom.navAchievementsLink, route: 'achievements' }
+        { link: dom.navSettingsLink, route: 'settings' }
       ].forEach((item) => {
         if (!item.link) {
           return;
@@ -6640,6 +6895,9 @@
       }
       if (route === 'admin') {
         updateAdminAccessUI();
+      }
+      if (state.isAuthPromptOpen) {
+        setAuthPromptOpen(false);
       }
       closeProfileMenu();
       closeSettingsMenu();
@@ -6777,7 +7035,11 @@
       return getSavedJokesList().some((entry) => entry.id === id);
     }
 
-    function saveCurrentJoke() {
+    function saveCurrentJoke(options = {}) {
+      if (!options.skipAuthCheck && !requireAuthForAction('save-joke')) {
+        setFeedback('authPrompt.loginToSave');
+        return;
+      }
       if (!state.currentJoke) {
         setFeedback('feedback.noJoke');
         return;
@@ -6817,7 +7079,11 @@
       }
     }
 
-    function removeCurrentSavedJoke() {
+    function removeCurrentSavedJoke(options = {}) {
+      if (!options.skipAuthCheck && !requireAuthForAction('remove-saved')) {
+        setFeedback('authPrompt.loginToSave');
+        return;
+      }
       if (!state.currentJoke) {
         setFeedback('feedback.noJoke');
         return;
@@ -8031,7 +8297,11 @@
       }
     }
 
-    function addReaction(type) {
+    function addReaction(type, options = {}) {
+      if (!options.skipAuthCheck && !requireAuthForAction('reaction', { reactionType: type })) {
+        setFeedback('authPrompt.loginToReact');
+        return;
+      }
       if (!state.currentJoke) {
         setFeedback('feedback.noJoke');
         return;
@@ -9491,6 +9761,17 @@
     });
     dom.submissionForm.onsubmit = async (event) => {
       event.preventDefault();
+      if (
+        !requireAuthForAction('submit-joke', {
+          text: dom.submissionText.value,
+          name: dom.submissionName.value,
+          category: dom.submissionCategory.value,
+          voiceDataUrl: state.voiceDataUrl || ''
+        })
+      ) {
+        setSubmissionFeedback('authPrompt.loginToSubmit');
+        return;
+      }
       if (dom.submissionWebsite.value) {
         setSubmissionFeedback('feedback.submissionInvalid');
         return;
@@ -9644,6 +9925,26 @@
         setAuthRedirectRoute(getRouteFromHash());
       };
     }
+    if (dom.authRequiredLogin) {
+      dom.authRequiredLogin.onclick = () => {
+        openAuthRouteFromPrompt('login');
+      };
+    }
+    if (dom.authRequiredSignup) {
+      dom.authRequiredSignup.onclick = () => {
+        openAuthRouteFromPrompt('signup');
+      };
+    }
+    if (dom.authRequiredContinue) {
+      dom.authRequiredContinue.onclick = () => {
+        closeAuthPrompt({ clearPending: true });
+      };
+    }
+    if (dom.authRequiredClose) {
+      dom.authRequiredClose.onclick = () => {
+        closeAuthPrompt({ clearPending: true });
+      };
+    }
     if (dom.navProfileToggle) {
       dom.navProfileToggle.onclick = (event) => {
         event.preventDefault();
@@ -9704,6 +10005,7 @@
         }
         try {
           await window.jokeAuth.login(email, password);
+          closeAuthPrompt();
           if (dom.loginPassword) {
             dom.loginPassword.value = '';
           }
@@ -9747,6 +10049,7 @@
         }
         try {
           await window.jokeAuth.signup(email, password, { displayName });
+          closeAuthPrompt();
           if (dom.signupPassword) {
             dom.signupPassword.value = '';
           }
@@ -9850,6 +10153,9 @@
       if (state.openJokeActionMenu && dom.jokeActions && !dom.jokeActions.contains(event.target)) {
         closeJokeActionMenus();
       }
+      if (state.isAuthPromptOpen && dom.authRequiredModal && event.target === dom.authRequiredModal) {
+        closeAuthPrompt({ clearPending: true });
+      }
       if (state.isPrimaryNavOpen && dom.topBar && !dom.topBar.contains(event.target)) {
         setPrimaryNavOpen(false);
       }
@@ -9869,6 +10175,9 @@
       }
       if (state.openJokeActionMenu) {
         closeJokeActionMenus();
+      }
+      if (state.isAuthPromptOpen) {
+        closeAuthPrompt({ clearPending: true });
       }
     });
     if (dom.mediaWatermarkToggle) {
