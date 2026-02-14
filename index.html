@@ -605,18 +605,113 @@
       margin-top: 1rem;
       justify-content: center;
     }
-    .reactions,
-    .share-buttons {
+    .joke-actions {
       margin-top: 1rem;
       display: grid;
       gap: 0.6rem;
     }
-    .reaction-buttons,
-    .share-buttons {
+    .joke-action-primary {
       display: flex;
       flex-wrap: wrap;
       gap: 0.6rem;
+      align-items: center;
       justify-content: center;
+    }
+    .action-menu {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      min-width: 0;
+    }
+    .action-primary-button,
+    .action-menu-toggle {
+      min-height: 42px;
+      padding: 0.55rem 0.95rem;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--accent-strong);
+      color: var(--button-text);
+      font-weight: 700;
+      font-size: 0.92rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.35rem;
+      box-shadow: var(--shadow);
+      white-space: nowrap;
+    }
+    .action-menu-toggle.more-toggle {
+      width: 44px;
+      min-width: 44px;
+      padding: 0.5rem;
+      font-size: 1.2rem;
+      line-height: 1;
+    }
+    .action-menu-toggle.active {
+      background: var(--accent);
+      border-width: 2px;
+    }
+    .action-dropdown {
+      position: absolute;
+      top: calc(100% + 0.35rem);
+      right: 0;
+      z-index: 35;
+      min-width: 220px;
+      max-width: min(92vw, 340px);
+      padding: 0.45rem;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: var(--card);
+      box-shadow: var(--shadow);
+      display: grid;
+      gap: 0.2rem;
+      opacity: 0;
+      transform: translateY(-4px);
+      pointer-events: none;
+      transition: opacity 0.16s ease, transform 0.16s ease;
+    }
+    .action-dropdown.is-open {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+    .action-menu-item {
+      width: 100%;
+      border-radius: 10px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--text);
+      text-align: left;
+      justify-content: flex-start;
+      padding: 0.52rem 0.62rem;
+      min-height: 40px;
+      box-shadow: none;
+      font-size: 0.9rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      white-space: nowrap;
+    }
+    .action-menu-item:hover {
+      background: var(--bg-soft);
+      transform: none;
+    }
+    .share-dropdown {
+      min-width: 280px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.28rem;
+    }
+    .share-dropdown .action-menu-item {
+      white-space: normal;
+      padding: 0.5rem;
+      min-height: 44px;
+    }
+    .share-option-icon {
+      width: 1.25rem;
+      text-align: center;
+      font-size: 1rem;
+      line-height: 1;
+      flex-shrink: 0;
     }
     .image-share {
       margin-top: 1rem;
@@ -729,6 +824,7 @@
       display: flex;
       flex-wrap: wrap;
       gap: 0.8rem;
+      justify-content: center;
     }
     .section-label {
       font-weight: 700;
@@ -738,12 +834,6 @@
       margin-top: 1rem;
       display: grid;
       gap: 0.6rem;
-    }
-    .quick-buttons {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.6rem;
-      justify-content: center;
     }
     .comment-section {
       margin-top: 1.2rem;
@@ -1088,6 +1178,14 @@
       left: 0;
       right: auto;
     }
+    .rtl .action-dropdown {
+      left: 0;
+      right: auto;
+    }
+    .rtl .action-menu-item {
+      text-align: right;
+      justify-content: flex-end;
+    }
     @keyframes pulse {
       0% { transform: scale(1); }
       50% { transform: scale(1.01); }
@@ -1125,6 +1223,10 @@
       .top-actions {
         margin-left: 0;
       }
+      .joke-action-primary {
+        width: 100%;
+        justify-content: center;
+      }
       .joke-card {
         margin: 1.2rem auto;
         padding: 1.2rem;
@@ -1151,6 +1253,20 @@
       .auth-link,
       .mobile-nav-toggle {
         width: auto;
+      }
+      .joke-action-primary {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.5rem;
+      }
+      .joke-action-primary .action-menu,
+      .joke-action-primary .action-primary-button,
+      .joke-action-primary .action-menu-toggle {
+        width: 100%;
+      }
+      .share-dropdown {
+        min-width: 240px;
+        grid-template-columns: 1fr;
       }
       .auth-nav {
         justify-content: flex-end;
@@ -1605,34 +1721,123 @@
           <button id="previous" data-i18n="buttons.previous">Previous Joke</button>
           <button id="next" data-i18n="buttons.next">Next Joke</button>
         </div>
-        <div class="quick-actions">
+        <div id="joke-actions" class="joke-actions">
           <span class="section-label" data-i18n="actions.title">Quick Actions</span>
-          <div class="quick-buttons">
-            <button id="play" data-i18n="buttons.play">Play</button>
-            <button id="replay" data-i18n="buttons.replay">Replay</button>
-            <button id="copy-joke" data-i18n="buttons.copyJoke">Copy Joke</button>
-            <button id="save-joke" data-i18n="buttons.save">Save Joke</button>
-            <button id="unsave-joke" data-i18n="buttons.unsave">Remove Saved</button>
-            <span id="saved-count" class="badge saved-count">0 saved</span>
-            <button data-reaction="funny" data-i18n="buttons.like">Like</button>
-            <button data-reaction="notFunny" data-i18n="buttons.dislike">Dislike</button>
+          <div class="joke-action-primary" role="group" aria-label="Joke interaction controls">
+            <div class="action-menu">
+              <button
+                id="reaction-toggle"
+                type="button"
+                class="action-menu-toggle"
+                aria-expanded="false"
+                aria-haspopup="menu"
+                data-i18n="actions.reaction"
+              >
+                Reaction
+              </button>
+              <div id="reaction-dropdown" class="action-dropdown card" role="menu" hidden>
+                <button type="button" class="action-menu-item" data-reaction="funny" role="menuitem">
+                  <span class="share-option-icon" aria-hidden="true">😂</span>
+                  <span data-i18n="reactions.funny">Funny</span>
+                </button>
+                <button type="button" class="action-menu-item" data-reaction="veryFunny" role="menuitem">
+                  <span class="share-option-icon" aria-hidden="true">🤣</span>
+                  <span data-i18n="reactions.veryFunny">Very Funny</span>
+                </button>
+                <button type="button" class="action-menu-item" data-reaction="notFunny" role="menuitem">
+                  <span class="share-option-icon" aria-hidden="true">🙃</span>
+                  <span data-i18n="reactions.notFunny">Not Funny</span>
+                </button>
+              </div>
+            </div>
+            <button id="save-joke" type="button" class="action-primary-button">Save (0)</button>
+            <div class="action-menu">
+              <button
+                id="share-toggle"
+                type="button"
+                class="action-menu-toggle"
+                aria-expanded="false"
+                aria-haspopup="menu"
+                data-i18n="actions.share"
+              >
+                Share
+              </button>
+              <div id="share-dropdown" class="action-dropdown share-dropdown card" role="menu" hidden>
+                <button type="button" class="action-menu-item" data-share="whatsapp" role="menuitem">
+                  <span class="share-option-icon" aria-hidden="true">💬</span>
+                  <span data-i18n="share.whatsapp">WhatsApp</span>
+                </button>
+                <button type="button" class="action-menu-item" data-share="instagram" role="menuitem">
+                  <span class="share-option-icon" aria-hidden="true">📸</span>
+                  <span data-i18n="share.instagram">Instagram</span>
+                </button>
+                <button type="button" class="action-menu-item" data-share="tiktok" role="menuitem">
+                  <span class="share-option-icon" aria-hidden="true">🎵</span>
+                  <span data-i18n="share.tiktok">TikTok</span>
+                </button>
+                <button type="button" class="action-menu-item" data-share="facebook" role="menuitem">
+                  <span class="share-option-icon" aria-hidden="true">📘</span>
+                  <span data-i18n="share.facebook">Facebook</span>
+                </button>
+                <button type="button" class="action-menu-item" data-share="x" role="menuitem">
+                  <span class="share-option-icon" aria-hidden="true">𝕏</span>
+                  <span data-i18n="share.x">X (Twitter)</span>
+                </button>
+                <button type="button" class="action-menu-item" data-share="snapchat" role="menuitem">
+                  <span class="share-option-icon" aria-hidden="true">👻</span>
+                  <span data-i18n="share.snapchat">Snapchat</span>
+                </button>
+                <button type="button" class="action-menu-item" data-share="telegram" role="menuitem">
+                  <span class="share-option-icon" aria-hidden="true">✈️</span>
+                  <span data-i18n="share.telegram">Telegram</span>
+                </button>
+                <button type="button" class="action-menu-item" data-share="reddit" role="menuitem">
+                  <span class="share-option-icon" aria-hidden="true">👽</span>
+                  <span data-i18n="share.reddit">Reddit</span>
+                </button>
+                <button type="button" class="action-menu-item" data-share="discord" role="menuitem">
+                  <span class="share-option-icon" aria-hidden="true">🎮</span>
+                  <span data-i18n="share.discord">Discord</span>
+                </button>
+                <button type="button" class="action-menu-item" data-share="email" role="menuitem">
+                  <span class="share-option-icon" aria-hidden="true">✉️</span>
+                  <span data-i18n="share.email">Email</span>
+                </button>
+                <button type="button" class="action-menu-item" data-share="copy" role="menuitem">
+                  <span class="share-option-icon" aria-hidden="true">🔗</span>
+                  <span data-i18n="share.copy">Copy Link</span>
+                </button>
+              </div>
+            </div>
+            <button id="play" type="button" class="action-primary-button" data-i18n="buttons.play">Play</button>
+            <div class="action-menu">
+              <button
+                id="more-actions-toggle"
+                type="button"
+                class="action-menu-toggle more-toggle"
+                aria-expanded="false"
+                aria-haspopup="menu"
+                aria-label="More actions"
+              >
+                ⋯
+              </button>
+              <div id="more-actions-dropdown" class="action-dropdown card" role="menu" hidden>
+                <button id="replay" type="button" class="action-menu-item" role="menuitem" data-i18n="buttons.replay">
+                  Replay
+                </button>
+                <button id="copy-joke" type="button" class="action-menu-item" role="menuitem" data-i18n="buttons.copyJoke">
+                  Copy Joke
+                </button>
+                <button id="unsave-joke" type="button" class="action-menu-item" role="menuitem" data-i18n="buttons.unsave">
+                  Remove Saved
+                </button>
+                <button id="more-share-url" type="button" class="action-menu-item" role="menuitem" data-i18n="image.shareUrl">
+                  Share URL
+                </button>
+              </div>
+            </div>
           </div>
-        </div>
-        <div class="reactions">
-          <span class="section-label" data-i18n="reactions.title">Reactions</span>
-          <div class="reaction-buttons">
-            <button data-reaction="funny" data-i18n="reactions.funny">Funny</button>
-            <button data-reaction="veryFunny" data-i18n="reactions.veryFunny">Very Funny</button>
-            <button data-reaction="notFunny" data-i18n="reactions.notFunny">Not Funny</button>
-          </div>
-          <div id="reaction-counts" class="reaction-counts"></div>
-        </div>
-        <div class="share-buttons">
-          <span class="section-label" data-i18n="share.title">Share</span>
-          <button data-share="whatsapp" data-i18n="share.whatsapp">WhatsApp</button>
-          <button data-share="tiktok" data-i18n="share.tiktok">TikTok</button>
-          <button data-share="instagram" data-i18n="share.instagram">Instagram</button>
-          <button data-share="copy" data-i18n="share.copy">Copy Link</button>
+          <div id="reaction-counts" class="reaction-counts" aria-live="polite"></div>
         </div>
         <div class="image-share">
           <span class="section-label" data-i18n="image.title">Joke Image</span>
@@ -1982,6 +2187,14 @@
       play: document.getElementById('play'),
       replay: document.getElementById('replay'),
       copyJoke: document.getElementById('copy-joke'),
+      jokeActions: document.getElementById('joke-actions'),
+      reactionToggle: document.getElementById('reaction-toggle'),
+      reactionDropdown: document.getElementById('reaction-dropdown'),
+      shareToggle: document.getElementById('share-toggle'),
+      shareDropdown: document.getElementById('share-dropdown'),
+      moreActionsToggle: document.getElementById('more-actions-toggle'),
+      moreActionsDropdown: document.getElementById('more-actions-dropdown'),
+      moreShareUrl: document.getElementById('more-share-url'),
       categorySuggestions: document.getElementById('category-suggestions'),
       searchInput: document.getElementById('search-input'),
       heroStart: document.getElementById('hero-start'),
@@ -1992,7 +2205,6 @@
       jotdCopy: document.getElementById('jotd-copy'),
       save: document.getElementById('save-joke'),
       unsave: document.getElementById('unsave-joke'),
-      savedCount: document.getElementById('saved-count'),
       savedSearch: document.getElementById('saved-search'),
       savedTotal: document.getElementById('saved-total'),
       savedSectionList: document.getElementById('saved-section-list'),
@@ -2315,6 +2527,12 @@
         'buttons.readMore': 'Read More',
         'buttons.readLess': 'Read Less',
         'actions.title': 'Quick Actions',
+        'actions.reaction': 'Reaction',
+        'actions.share': 'Share',
+        'actions.more': 'More actions',
+        'actions.saveWithCount': 'Save ({count})',
+        'actions.removeSavedWithCount': 'Remove Saved ({count})',
+        'actions.reacted': 'Reaction: {reaction}',
         'buttons.save': 'Save Joke',
         'buttons.unsave': 'Remove Saved',
         'buttons.showSaved': 'Show Saved',
@@ -2350,6 +2568,13 @@
         'share.whatsapp': 'WhatsApp',
         'share.tiktok': 'TikTok',
         'share.instagram': 'Instagram',
+        'share.facebook': 'Facebook',
+        'share.x': 'X (Twitter)',
+        'share.snapchat': 'Snapchat',
+        'share.telegram': 'Telegram',
+        'share.reddit': 'Reddit',
+        'share.discord': 'Discord',
+        'share.email': 'Email',
         'share.copy': 'Copy Link',
         'image.title': 'Joke Image',
         'image.includeQr': 'Include QR code',
@@ -2527,6 +2752,7 @@
         'feedback.selectCategory': 'Select a category to start.',
         'feedback.sessionProgress': 'You have {remaining}/{limit} jokes left.',
         'feedback.copy': 'Copied to clipboard.',
+        'feedback.linkCopied': 'Link copied. Ready to share.',
         'feedback.shareTip': 'Copied. Paste it on {platform}.',
         'feedback.reactionThanks': 'Thanks for your reaction!',
         'feedback.submissionOk': 'Submission received! It is now pending review.',
@@ -5136,6 +5362,7 @@
       isProfileMenuOpen: false,
       isSettingsMenuOpen: false,
       isPrimaryNavOpen: false,
+      openJokeActionMenu: '',
       notificationInterval: null,
       voices: [],
       recorder: null,
@@ -5205,6 +5432,15 @@
       if (dom.mobileNavToggle) {
         dom.mobileNavToggle.setAttribute('aria-label', t('nav.menu'));
       }
+      if (dom.reactionToggle) {
+        dom.reactionToggle.setAttribute('aria-label', t('actions.reaction'));
+      }
+      if (dom.shareToggle) {
+        dom.shareToggle.setAttribute('aria-label', t('actions.share'));
+      }
+      if (dom.moreActionsToggle) {
+        dom.moreActionsToggle.setAttribute('aria-label', t('actions.more'));
+      }
       updateSavedControls();
       renderSavedSection();
       updateAuthUI();
@@ -5216,6 +5452,7 @@
       renderModeration();
       renderAdminDashboard();
       renderComments();
+      updateReactionUI();
       applyTheme(settings.theme);
       updateNavActive(getRouteFromHash());
       initCollapsibles();
@@ -5571,6 +5808,54 @@
         dom.primaryNav.classList.remove('is-open');
         dom.mobileNavToggle.setAttribute('aria-expanded', 'false');
       }
+    }
+
+    function getJokeActionMenus() {
+      return [
+        { name: 'reaction', toggle: dom.reactionToggle, panel: dom.reactionDropdown },
+        { name: 'share', toggle: dom.shareToggle, panel: dom.shareDropdown },
+        { name: 'more', toggle: dom.moreActionsToggle, panel: dom.moreActionsDropdown }
+      ];
+    }
+
+    function setJokeActionMenuOpen(name = '') {
+      const next = typeof name === 'string' ? name : '';
+      if (next === state.openJokeActionMenu) {
+        return;
+      }
+      state.openJokeActionMenu = next;
+      getJokeActionMenus().forEach((entry) => {
+        if (!entry.toggle || !entry.panel) {
+          return;
+        }
+        const isOpen = next === entry.name;
+        entry.toggle.classList.toggle('active', isOpen);
+        entry.toggle.setAttribute('aria-expanded', String(isOpen));
+        if (isOpen) {
+          entry.panel.hidden = false;
+          requestAnimationFrame(() => {
+            if (state.openJokeActionMenu === entry.name) {
+              entry.panel.classList.add('is-open');
+            }
+          });
+          return;
+        }
+        entry.panel.classList.remove('is-open');
+        const hideTask = () => {
+          if (state.openJokeActionMenu !== entry.name) {
+            entry.panel.hidden = true;
+          }
+        };
+        if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+          hideTask();
+        } else {
+          setTimeout(hideTask, 170);
+        }
+      });
+    }
+
+    function closeJokeActionMenus() {
+      setJokeActionMenuOpen('');
     }
 
     function appendProfileJokeId(field, jokeId) {
@@ -6358,6 +6643,7 @@
       }
       closeProfileMenu();
       closeSettingsMenu();
+      closeJokeActionMenus();
       setPrimaryNavOpen(false);
       showPageTransition();
       showView(route);
@@ -6426,16 +6712,53 @@
 
     function updateSavedControls() {
       const list = getSavedJokesList();
-      dom.savedCount.textContent = t('saved.count', { count: list.length });
       if (dom.savedTotal) {
         dom.savedTotal.textContent = String(list.length);
       }
       const hasJoke = Boolean(state.currentJoke);
-      dom.save.disabled = !hasJoke || isJokeSaved(state.currentJoke, state.currentLang, state.currentCategory);
-      dom.unsave.disabled = !hasJoke || !isJokeSaved(state.currentJoke, state.currentLang, state.currentCategory);
+      const saved = hasJoke && isJokeSaved(state.currentJoke, state.currentLang, state.currentCategory);
+      if (dom.save) {
+        dom.save.disabled = !hasJoke;
+        dom.save.textContent = saved
+          ? t('actions.removeSavedWithCount', { count: list.length })
+          : t('actions.saveWithCount', { count: list.length });
+      }
+      if (dom.unsave) {
+        dom.unsave.disabled = !hasJoke || !saved;
+      }
+      if (dom.play) {
+        const canPlay = hasJoke && Boolean(window.speechSynthesis);
+        dom.play.hidden = !canPlay;
+        dom.play.disabled = !canPlay;
+      }
+      if (dom.reactionToggle) {
+        dom.reactionToggle.disabled = !hasJoke;
+      }
+      if (dom.shareToggle) {
+        dom.shareToggle.disabled = !hasJoke;
+      }
+      if (dom.moreActionsToggle) {
+        dom.moreActionsToggle.disabled = !hasJoke;
+      }
+      if (dom.moreShareUrl) {
+        dom.moreShareUrl.disabled = !hasJoke;
+      }
       if (dom.profileSavedCount) {
         dom.profileSavedCount.textContent = String(list.length);
       }
+    }
+
+    function toggleCurrentSavedJoke() {
+      if (!state.currentJoke) {
+        setFeedback('feedback.noJoke');
+        return;
+      }
+      if (isJokeSaved(state.currentJoke, state.currentLang, state.currentCategory)) {
+        removeCurrentSavedJoke();
+      } else {
+        saveCurrentJoke();
+      }
+      closeJokeActionMenus();
     }
 
     function formatSavedDate(value) {
@@ -6603,6 +6926,7 @@
 
     function showJoke(joke) {
       state.currentJoke = joke;
+      closeJokeActionMenus();
       dom.jokeText.textContent = joke;
       state.jokeExpanded = false;
       dom.jokeCategory.textContent = state.currentCategory
@@ -6633,6 +6957,7 @@
 
     function showJokeMessage(message) {
       state.currentJoke = '';
+      closeJokeActionMenus();
       dom.jokeText.textContent = message;
       dom.jokeCategory.textContent = '';
       dom.jokeLanguage.textContent = '';
@@ -7165,46 +7490,125 @@
       dom.jotdText.textContent = jotd || t('feedback.fallback');
     }
 
-    function copyToClipboard(text) {
+    function copyToClipboard(text, options = {}) {
+      const feedbackKey = options.feedbackKey || 'feedback.copy';
       if (!text) {
-        return;
+        return Promise.resolve(false);
       }
-      navigator.clipboard.writeText(text).then(() => {
-        setFeedback('feedback.copy');
-      });
+      const fallbackCopy = () => {
+        try {
+          const textarea = document.createElement('textarea');
+          textarea.value = text;
+          textarea.setAttribute('readonly', '');
+          textarea.style.position = 'fixed';
+          textarea.style.opacity = '0';
+          document.body.appendChild(textarea);
+          textarea.select();
+          const succeeded = document.execCommand('copy');
+          document.body.removeChild(textarea);
+          if (succeeded && feedbackKey) {
+            setFeedback(feedbackKey);
+          }
+          return succeeded;
+        } catch (error) {
+          return false;
+        }
+      };
+      if (!navigator.clipboard || typeof navigator.clipboard.writeText !== 'function') {
+        return Promise.resolve(fallbackCopy());
+      }
+      return navigator.clipboard
+        .writeText(text)
+        .then(() => {
+          if (feedbackKey) {
+            setFeedback(feedbackKey);
+          }
+          return true;
+        })
+        .catch(() => fallbackCopy());
     }
 
-    function shareJoke(type) {
+    function getJokeSharePayload() {
+      const url = getJokeShareUrl();
+      const text = `${state.currentJoke} - ${t('brand.name')}`;
+      return { url, text };
+    }
+
+    function openShareWindow(url) {
+      if (!url) {
+        return;
+      }
+      window.open(url, '_blank', 'noopener,noreferrer');
+    }
+
+    async function shareJoke(type) {
       if (!state.currentJoke) {
         setFeedback('feedback.noJoke');
         return;
       }
-      const url = window.location.href.split('#')[0];
-      const text = `${state.currentJoke} - ${t('brand.name')}`;
+      const { url, text } = getJokeSharePayload();
+      const combined = `${text} ${url}`;
+      const encodedText = encodeURIComponent(text);
+      const encodedUrl = encodeURIComponent(url);
+      const encodedCombined = encodeURIComponent(combined);
+
       if (type === 'native') {
         if (navigator.share) {
           navigator.share({ title: t('brand.name'), text, url }).catch(() => {});
         } else {
-          copyToClipboard(`${text} ${url}`);
+          await copyToClipboard(combined);
         }
+        closeJokeActionMenus();
         return;
       }
-      if (navigator.share && type !== 'copy') {
-        navigator.share({ title: t('brand.name'), text, url }).catch(() => {});
-        return;
-      }
-      if (type === 'whatsapp') {
-        window.open(`https://wa.me/?text=${encodeURIComponent(`${text} ${url}`)}`, '_blank');
-        return;
-      }
+
       if (type === 'copy') {
-        copyToClipboard(`${text} ${url}`);
+        const copied = await copyToClipboard(url, { feedbackKey: 'feedback.linkCopied' });
+        if (copied) {
+          showToast(t('feedback.linkCopied'));
+        }
+        closeJokeActionMenus();
         return;
       }
-      const platform = type === 'tiktok' ? 'TikTok' : 'Instagram';
-      copyToClipboard(text);
-      setFeedback('feedback.shareTip', { platform });
-      window.open(type === 'tiktok' ? 'https://www.tiktok.com/upload' : 'https://www.instagram.com/', '_blank');
+
+      if (type === 'email') {
+        const subject = encodeURIComponent(t('brand.name'));
+        openShareWindow(`mailto:?subject=${subject}&body=${encodedCombined}`);
+        closeJokeActionMenus();
+        return;
+      }
+
+      const directTargets = {
+        whatsapp: `https://wa.me/?text=${encodedCombined}`,
+        facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}&quote=${encodedText}`,
+        x: `https://twitter.com/intent/tweet?text=${encodedText}&url=${encodedUrl}`,
+        telegram: `https://t.me/share/url?url=${encodedUrl}&text=${encodedText}`,
+        reddit: `https://www.reddit.com/submit?url=${encodedUrl}&title=${encodedText}`
+      };
+      if (directTargets[type]) {
+        openShareWindow(directTargets[type]);
+        closeJokeActionMenus();
+        return;
+      }
+
+      const guidedTargets = {
+        tiktok: { url: 'https://www.tiktok.com/upload', label: 'TikTok' },
+        instagram: { url: 'https://www.instagram.com/', label: 'Instagram' },
+        snapchat: { url: 'https://www.snapchat.com/', label: 'Snapchat' },
+        discord: { url: 'https://discord.com/channels/@me', label: 'Discord' }
+      };
+      if (guidedTargets[type]) {
+        await copyToClipboard(combined);
+        setFeedback('feedback.shareTip', { platform: guidedTargets[type].label });
+        openShareWindow(guidedTargets[type].url);
+        closeJokeActionMenus();
+        return;
+      }
+
+      if (navigator.share) {
+        navigator.share({ title: t('brand.name'), text, url }).catch(() => {});
+        closeJokeActionMenus();
+      }
     }
 
     let qrScriptPromise = null;
@@ -7592,11 +7996,39 @@
       window.speechSynthesis.speak(utter);
     }
 
+    function getCurrentJokeId() {
+      if (!state.currentJoke) {
+        return '';
+      }
+      return buildJokeId(state.currentJoke, state.currentLang, state.currentCategory);
+    }
+
+    function getReactionLabel(type) {
+      if (!type) {
+        return '';
+      }
+      const map = {
+        funny: 'reactions.funny',
+        veryFunny: 'reactions.veryFunny',
+        notFunny: 'reactions.notFunny'
+      };
+      return t(map[type] || '');
+    }
+
     function updateReactionUI() {
       const reaction = getReactionData(state.currentJoke, state.currentLang, state.currentCategory);
-      dom.reactionCounts.textContent = reaction
-        ? `😂 ${reaction.funny} · 🤣 ${reaction.veryFunny} · 🙃 ${reaction.notFunny}`
-        : t('community.empty');
+      if (dom.reactionCounts) {
+        dom.reactionCounts.textContent = reaction
+          ? `😂 ${reaction.funny} · 🤣 ${reaction.veryFunny} · 🙃 ${reaction.notFunny}`
+          : t('community.empty');
+      }
+      if (dom.reactionToggle) {
+        const jokeId = getCurrentJokeId();
+        const selected = jokeId ? userReactions[jokeId] : '';
+        dom.reactionToggle.textContent = selected
+          ? t('actions.reacted', { reaction: getReactionLabel(selected) })
+          : t('actions.reaction');
+      }
     }
 
     function addReaction(type) {
@@ -7607,6 +8039,7 @@
       const id = buildJokeId(state.currentJoke, state.currentLang, state.currentCategory);
       if (userReactions[id]) {
         setFeedback('feedback.reactionThanks');
+        closeJokeActionMenus();
         return;
       }
       const data = reactionStore[id] || {
@@ -7630,6 +8063,7 @@
         syncLikedJokeToProfile(id);
       }
       setFeedback('feedback.reactionThanks');
+      closeJokeActionMenus();
     }
 
     function reactionScore(data) {
@@ -8906,13 +9340,17 @@
     }
 
     dom.play.onclick = () => speakJoke(state.currentJoke);
-    dom.replay.onclick = () => speakJoke(state.currentJoke);
+    dom.replay.onclick = () => {
+      speakJoke(state.currentJoke);
+      closeJokeActionMenus();
+    };
     dom.copyJoke.onclick = () => {
       if (!state.currentJoke) {
         setFeedback('feedback.noJoke');
         return;
       }
       copyToClipboard(state.currentJoke);
+      closeJokeActionMenus();
     };
     if (dom.jokeToggle) {
       dom.jokeToggle.onclick = () => {
@@ -8928,6 +9366,12 @@
     }
     if (dom.shareUrl) {
       dom.shareUrl.onclick = () => shareJokeUrl();
+    }
+    if (dom.moreShareUrl) {
+      dom.moreShareUrl.onclick = () => {
+        shareJokeUrl();
+        closeJokeActionMenus();
+      };
     }
     dom.heroStart.onclick = () => {
       if (location.hash !== '#/jokes') {
@@ -8945,8 +9389,29 @@
     dom.jotdCopy.onclick = () => copyToClipboard(dom.jotdText.textContent);
     dom.previous.onclick = () => navigateJoke('previous');
     dom.next.onclick = () => navigateJoke('next');
-    dom.save.onclick = () => saveCurrentJoke();
-    dom.unsave.onclick = () => removeCurrentSavedJoke();
+    dom.save.onclick = () => toggleCurrentSavedJoke();
+    dom.unsave.onclick = () => {
+      removeCurrentSavedJoke();
+      closeJokeActionMenus();
+    };
+    if (dom.reactionToggle) {
+      dom.reactionToggle.onclick = (event) => {
+        event.preventDefault();
+        setJokeActionMenuOpen(state.openJokeActionMenu === 'reaction' ? '' : 'reaction');
+      };
+    }
+    if (dom.shareToggle) {
+      dom.shareToggle.onclick = (event) => {
+        event.preventDefault();
+        setJokeActionMenuOpen(state.openJokeActionMenu === 'share' ? '' : 'share');
+      };
+    }
+    if (dom.moreActionsToggle) {
+      dom.moreActionsToggle.onclick = (event) => {
+        event.preventDefault();
+        setJokeActionMenuOpen(state.openJokeActionMenu === 'more' ? '' : 'more');
+      };
+    }
     if (dom.savedSearch) {
       dom.savedSearch.oninput = () => renderSavedSection();
     }
@@ -9382,6 +9847,9 @@
       if (state.isSettingsMenuOpen && dom.settingsMenu && !dom.settingsMenu.contains(event.target)) {
         closeSettingsMenu();
       }
+      if (state.openJokeActionMenu && dom.jokeActions && !dom.jokeActions.contains(event.target)) {
+        closeJokeActionMenus();
+      }
       if (state.isPrimaryNavOpen && dom.topBar && !dom.topBar.contains(event.target)) {
         setPrimaryNavOpen(false);
       }
@@ -9398,6 +9866,9 @@
       }
       if (state.isPrimaryNavOpen) {
         setPrimaryNavOpen(false);
+      }
+      if (state.openJokeActionMenu) {
+        closeJokeActionMenus();
       }
     });
     if (dom.mediaWatermarkToggle) {
