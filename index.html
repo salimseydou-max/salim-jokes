@@ -273,6 +273,11 @@
       align-items: center;
       gap: 0.45rem;
     }
+    .guest-auth-actions {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+    }
     .auth-link {
       display: inline-flex;
       align-items: center;
@@ -1738,7 +1743,15 @@
           </div>
         </div>
         <div id="auth-nav" class="auth-nav" aria-label="Account">
-          <div id="nav-profile-menu" class="profile-menu">
+          <div id="guest-auth-actions" class="guest-auth-actions">
+            <a id="nav-login-link" href="#/login" class="auth-link" data-i18n="auth.login">
+              Log In
+            </a>
+            <a id="nav-signup-link" href="#/signup" class="auth-link ghost-link" data-i18n="auth.signup">
+              Sign Up
+            </a>
+          </div>
+          <div id="nav-profile-menu" class="profile-menu" hidden>
             <button
               id="nav-profile-toggle"
               type="button"
@@ -1757,24 +1770,6 @@
               <span id="nav-profile-label" class="visually-hidden" data-i18n="auth.accountMenu">Account menu</span>
             </button>
             <div id="nav-profile-dropdown" class="profile-dropdown card" role="menu" hidden>
-              <a
-                id="nav-login-link"
-                href="#/login"
-                class="profile-dropdown-item"
-                role="menuitem"
-                data-i18n="auth.login"
-              >
-                Log In
-              </a>
-              <a
-                id="nav-signup-link"
-                href="#/signup"
-                class="profile-dropdown-item"
-                role="menuitem"
-                data-i18n="auth.signup"
-              >
-                Sign Up
-              </a>
               <a
                 id="nav-profile-link"
                 href="#/profile"
@@ -2652,6 +2647,7 @@
       navMenuIcon: document.getElementById('nav-menu-icon'),
       navLoginLink: document.getElementById('nav-login-link'),
       navSignupLink: document.getElementById('nav-signup-link'),
+      guestAuthActions: document.getElementById('guest-auth-actions'),
       navProfileMenu: document.getElementById('nav-profile-menu'),
       navProfileToggle: document.getElementById('nav-profile-toggle'),
       navProfileAvatar: document.getElementById('nav-profile-avatar'),
@@ -2815,6 +2811,7 @@
       stats: 'jokeStatsV1',
       comments: 'commentStoreV1',
       notifications: 'notificationPrefsV1',
+      authSession: 'authSessionV1',
       pwaInstall: 'pwaInstallPrefsV1',
       lastViewedJokes: 'lastViewedJokesV1',
       userPreferences: 'userPreferenceStoreV1',
@@ -2955,6 +2952,9 @@
     };
     const PWA_INSTALL_COOLDOWN_MS = 3 * 24 * 60 * 60 * 1000;
     const SERVICE_WORKER_UPDATE_INTERVAL_MS = 30 * 60 * 1000;
+    const AVATAR_UPLOAD_MAX_BYTES = 1_000_000;
+    const AVATAR_OUTPUT_MAX_CHARS = 950_000;
+    const AVATAR_MAX_DIMENSION = 640;
     const DEFAULT_GUEST_AVATAR =
       "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='96' viewBox='0 0 96 96'%3E%3Crect width='96' height='96' rx='48' fill='%23dfe7ff'/%3E%3Ccircle cx='48' cy='37' r='17' fill='%23657899'/%3E%3Cpath d='M20 82c3-16 14-26 28-26s25 10 28 26' fill='%23657899'/%3E%3C/svg%3E";
     const BLOCKED_PATTERNS = [
@@ -3248,7 +3248,7 @@
         'auth.avatarUploading': 'Uploading profile photo...',
         'auth.avatarUpdated': 'Profile photo updated.',
         'auth.avatarReset': 'Default profile photo restored.',
-        'auth.avatarInvalidType': 'Please select a PNG, JPG, GIF, or WebP image.',
+        'auth.avatarInvalidType': 'Please select a PNG, JPG, or WebP image.',
         'auth.avatarTooLarge': 'Image is too large. Please use a file under 1MB.',
         'auth.profileEmptyFavorites': 'No favorites yet.',
         'auth.profileEmptyLikes': 'No liked jokes yet.',
@@ -5969,6 +5969,7 @@
     const dailyIngest = loadDailyIngest();
     const commentStore = loadComments();
     const notificationPrefs = loadNotifications();
+    const cachedAuthSession = loadCachedAuthSession();
     const lastViewedJokesStore = loadLastViewedJokes();
     const installPromptPrefs = loadPwaInstallPrefs();
     const userPreferenceStore = loadUserPreferenceStore();
@@ -5976,6 +5977,15 @@
     const sessionSeen = loadSessionSeen();
     const sessionProgress = loadSessionProgress();
     const viewedStore = loadViewedStore();
+
+    if (cachedAuthSession && cachedAuthSession.user) {
+      state.currentUserId = cachedAuthSession.user.id;
+      state.currentUserEmail = cachedAuthSession.user.email || '';
+      state.currentUserName =
+        cachedAuthSession.user?.profile?.displayName || cachedAuthSession.user.email || '';
+      state.currentUserProfile = cachedAuthSession.user;
+      state.authSignature = buildAuthSignature(cachedAuthSession.user);
+    }
 
     function t(key, params = {}) {
       const dict = translations[state.currentLang] || translations.en;
@@ -6298,13 +6308,25 @@
       return 'jokes';
     }
 
+    function createInitialAvatarDataUrl(name = 'User') {
+      const label = sanitizeText(name, 80) || 'User';
+      const first = (label.replace(/[^a-zA-Z0-9]/g, '').charAt(0) || 'U').toUpperCase();
+      const svg =
+        `<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96">` +
+        `<rect width="96" height="96" rx="48" fill="#f6e58d"/>` +
+        `<text x="48" y="58" text-anchor="middle" font-family="Arial, sans-serif" font-size="38" font-weight="700" fill="#1f1f1f">${first}</text>` +
+        `</svg>`;
+      return `data:image/svg+xml,${encodeURIComponent(svg)}`;
+    }
+
     function getUserAvatarUrl(user = null) {
       const source = user || state.currentUserProfile;
       const avatar = source?.profile?.avatarUrl;
       if (typeof avatar === 'string' && avatar.trim()) {
         return avatar.trim();
       }
-      return '';
+      const displayName = source?.profile?.displayName || source?.email || state.currentUserName || 'User';
+      return createInitialAvatarDataUrl(displayName);
     }
 
     function buildAuthSignature(user) {
@@ -7287,8 +7309,14 @@
 
     function updateAuthUI() {
       const isAuthenticated = Boolean(state.currentUserId);
+      if (dom.guestAuthActions) {
+        dom.guestAuthActions.hidden = isAuthenticated;
+      }
       if (dom.navProfileMenu) {
-        dom.navProfileMenu.hidden = false;
+        dom.navProfileMenu.hidden = !isAuthenticated;
+        if (!isAuthenticated) {
+          closeProfileMenu();
+        }
       }
       if (dom.navLoginLink) {
         dom.navLoginLink.hidden = isAuthenticated;
@@ -7431,24 +7459,90 @@
       if (!file || typeof file !== 'object') {
         return false;
       }
-      return /^image\/(png|jpeg|jpg|gif|webp)$/i.test(file.type || '');
+      return /^image\/(png|jpeg|jpg|webp)$/i.test(file.type || '');
     }
 
-    function readFileAsDataUrl(file) {
+    function getResizedDimensions(width, height, maxDimension = AVATAR_MAX_DIMENSION) {
+      const safeWidth = Math.max(1, Math.floor(Number(width) || 1));
+      const safeHeight = Math.max(1, Math.floor(Number(height) || 1));
+      const longestSide = Math.max(safeWidth, safeHeight);
+      if (longestSide <= maxDimension) {
+        return { width: safeWidth, height: safeHeight };
+      }
+      const scale = maxDimension / longestSide;
+      return {
+        width: Math.max(1, Math.round(safeWidth * scale)),
+        height: Math.max(1, Math.round(safeHeight * scale))
+      };
+    }
+
+    function loadImageElementFromFile(file) {
       return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => {
-          if (typeof reader.result === 'string' && reader.result) {
-            resolve(reader.result);
-            return;
-          }
+        const objectUrl = URL.createObjectURL(file);
+        const image = new Image();
+        image.onload = () => {
+          URL.revokeObjectURL(objectUrl);
+          resolve(image);
+        };
+        image.onerror = () => {
+          URL.revokeObjectURL(objectUrl);
           reject(new Error('Invalid image file.'));
         };
-        reader.onerror = () => {
-          reject(new Error('Image upload failed.'));
-        };
-        reader.readAsDataURL(file);
+        image.src = objectUrl;
       });
+    }
+
+    function canvasToDataUrl(canvas, mimeType, quality) {
+      try {
+        if (typeof quality === 'number') {
+          return canvas.toDataURL(mimeType, quality);
+        }
+        return canvas.toDataURL(mimeType);
+      } catch (error) {
+        return '';
+      }
+    }
+
+    async function readFileAsDataUrl(file) {
+      const image = await loadImageElementFromFile(file);
+      const width = image.naturalWidth || image.width || 1;
+      const height = image.naturalHeight || image.height || 1;
+      const nextSize = getResizedDimensions(width, height);
+      const canvas = document.createElement('canvas');
+      canvas.width = nextSize.width;
+      canvas.height = nextSize.height;
+      const ctx = canvas.getContext('2d', { alpha: true });
+      if (!ctx) {
+        throw new Error('Image upload failed.');
+      }
+      ctx.drawImage(image, 0, 0, nextSize.width, nextSize.height);
+
+      const encodePlan = [
+        { mime: 'image/webp', qualities: [0.9, 0.82, 0.74, 0.66] },
+        { mime: 'image/jpeg', qualities: [0.9, 0.82, 0.74, 0.66] },
+        { mime: 'image/png', qualities: [undefined] }
+      ];
+
+      let fallbackDataUrl = '';
+      for (const entry of encodePlan) {
+        for (const quality of entry.qualities) {
+          const dataUrl = canvasToDataUrl(canvas, entry.mime, quality);
+          if (!dataUrl || !/^data:image\/(png|jpeg|jpg|webp);base64,/i.test(dataUrl)) {
+            continue;
+          }
+          if (!fallbackDataUrl || dataUrl.length < fallbackDataUrl.length) {
+            fallbackDataUrl = dataUrl;
+          }
+          if (dataUrl.length <= AVATAR_OUTPUT_MAX_CHARS) {
+            return dataUrl;
+          }
+        }
+      }
+
+      if (fallbackDataUrl && fallbackDataUrl.length <= AVATAR_UPLOAD_MAX_BYTES) {
+        return fallbackDataUrl;
+      }
+      throw new Error(t('auth.avatarTooLarge'));
     }
 
     async function authRequest(url, options = {}) {
@@ -7476,25 +7570,36 @@
       return payload;
     }
 
-    function applyAuthenticatedUser(user) {
-      const nextSignature = buildAuthSignature(user);
+    function applyAuthenticatedUser(user, options = {}) {
+      const resolvedOptions =
+        options && typeof options === 'object'
+          ? options
+          : {};
+      const safeUser = user && typeof user === 'object' ? user : null;
+      const nextSignature = buildAuthSignature(safeUser);
       if (state.authSignature === nextSignature) {
         return false;
       }
       state.authSignature = nextSignature;
-      if (user && user.id) {
-        state.currentUserId = user.id;
-        state.currentUserEmail = user.email || '';
-        state.currentUserName = user?.profile?.displayName || user.email || '';
-        state.currentUserProfile = user;
+      if (safeUser && safeUser.id) {
+        state.currentUserId = safeUser.id;
+        state.currentUserEmail = safeUser.email || '';
+        state.currentUserName = safeUser?.profile?.displayName || safeUser.email || '';
+        state.currentUserProfile = safeUser;
+        if (!resolvedOptions.skipCache) {
+          saveCachedAuthSession(safeUser);
+        }
       } else {
         state.currentUserId = null;
         state.currentUserEmail = '';
         state.currentUserName = '';
         state.currentUserProfile = null;
+        if (!resolvedOptions.preserveCache) {
+          clearCachedAuthSession();
+        }
       }
       switchStorageScope(getStorageScopeId());
-      if (state.currentUserId) {
+      if (state.currentUserId && !resolvedOptions.fromCache) {
         maybeAddImportantUpdateNotification();
       }
       updateSavedControls();
@@ -7509,14 +7614,34 @@
     async function refreshAuthSession() {
       try {
         const payload = await authRequest(AUTH_ENDPOINTS.me, { method: 'GET' });
-        applyAuthenticatedUser(payload.authenticated ? payload.user : null);
+        const authenticated = Boolean(payload && payload.authenticated && payload.user);
+        applyAuthenticatedUser(authenticated ? payload.user : null);
         handleRouteChange();
         return payload;
       } catch (error) {
-        console.error('Auth session refresh failed:', error);
-        applyAuthenticatedUser(null);
+        const status = Number(error?.status);
+        const isUnauthorized = status === 401 || status === 403;
+        if (isUnauthorized) {
+          applyAuthenticatedUser(null);
+          handleRouteChange();
+          return { authenticated: false, user: null };
+        }
+        console.error('Auth session refresh failed. Preserving local session:', error);
+        if (!state.currentUserId) {
+          const fallback = loadCachedAuthSession();
+          if (fallback && fallback.user) {
+            applyAuthenticatedUser(fallback.user, {
+              fromCache: true,
+              preserveCache: true,
+              skipCache: true
+            });
+          }
+        }
         handleRouteChange();
-        return { authenticated: false, user: null };
+        return {
+          authenticated: Boolean(state.currentUserId),
+          user: state.currentUserProfile || null
+        };
       }
     }
 
@@ -10856,6 +10981,158 @@
       persistCurrentPreferences();
     }
 
+    function sanitizeCachedAvatarUrl(value) {
+      if (typeof value !== 'string') {
+        return '';
+      }
+      const text = value.trim();
+      if (!text) {
+        return '';
+      }
+      if (/^data:image\/(png|jpeg|jpg|webp);base64,[a-z0-9+/=]+$/i.test(text)) {
+        return text.slice(0, AVATAR_OUTPUT_MAX_CHARS);
+      }
+      if (/^https?:\/\/[^\s]+$/i.test(text)) {
+        return text.slice(0, 2048);
+      }
+      if (text.startsWith('data:image/svg+xml,')) {
+        return text.slice(0, 2048);
+      }
+      return '';
+    }
+
+    function sanitizeCachedId(value, maxLength = 120) {
+      if (typeof value !== 'string' && typeof value !== 'number') {
+        return '';
+      }
+      return String(value)
+        .trim()
+        .replace(/[^a-zA-Z0-9_\-:.]/g, '')
+        .slice(0, maxLength);
+    }
+
+    function normalizeCachedAuthUser(rawUser) {
+      if (!rawUser || typeof rawUser !== 'object') {
+        return null;
+      }
+      const id = sanitizeCachedId(rawUser.id, 80);
+      if (!id) {
+        return null;
+      }
+      const email = sanitizeText(rawUser.email, 320).toLowerCase();
+      const profile = rawUser.profile && typeof rawUser.profile === 'object' ? rawUser.profile : {};
+      const displayName =
+        sanitizeText(profile.displayName, 80) || sanitizeText(email.split('@')[0] || 'User', 80);
+
+      const normalizeIdList = (input, max = 500) => {
+        if (!Array.isArray(input)) {
+          return [];
+        }
+        const seen = new Set();
+        const output = [];
+        input.forEach((entry) => {
+          const safe = sanitizeCachedId(entry, 120);
+          if (!safe || seen.has(safe)) {
+            return;
+          }
+          seen.add(safe);
+          output.push(safe);
+        });
+        return output.slice(0, max);
+      };
+
+      const normalizeCount = (value) => {
+        const parsed = Number(value);
+        return Number.isFinite(parsed) && parsed >= 0 ? Math.floor(parsed) : 0;
+      };
+
+      return {
+        id,
+        email,
+        createdAt: sanitizeText(rawUser.createdAt, 80),
+        updatedAt: sanitizeText(rawUser.updatedAt, 80),
+        lastLoginAt: sanitizeText(rawUser.lastLoginAt, 80),
+        profile: {
+          displayName,
+          avatarUrl: sanitizeCachedAvatarUrl(profile.avatarUrl),
+          favorites: normalizeIdList(profile.favorites),
+          likedJokes: normalizeIdList(profile.likedJokes),
+          basics: profile.basics && typeof profile.basics === 'object'
+            ? {
+                locale: sanitizeText(profile.basics.locale, 40),
+                timezone: sanitizeText(profile.basics.timezone, 80)
+              }
+            : { locale: '', timezone: '' },
+          preferences: profile.preferences && typeof profile.preferences === 'object'
+            ? {
+                language: sanitizeText(profile.preferences.language, 20),
+                theme: sanitizeText(profile.preferences.theme, 20)
+              }
+            : { language: '', theme: '' },
+          subscription: profile.subscription && typeof profile.subscription === 'object'
+            ? {
+                plan: sanitizeText(profile.subscription.plan, 32),
+                status: sanitizeText(profile.subscription.status, 32)
+              }
+            : { plan: '', status: '' }
+        },
+        stats: rawUser.stats && typeof rawUser.stats === 'object'
+          ? {
+              jokeViews: normalizeCount(rawUser.stats.jokeViews),
+              favoritesAdded: normalizeCount(rawUser.stats.favoritesAdded),
+              likesAdded: normalizeCount(rawUser.stats.likesAdded)
+            }
+          : {
+              jokeViews: 0,
+              favoritesAdded: 0,
+              likesAdded: 0
+            }
+      };
+    }
+
+    function loadCachedAuthSession() {
+      try {
+        const stored = JSON.parse(localStorage.getItem(STORAGE_KEYS.authSession) || '{}');
+        if (!stored || typeof stored !== 'object') {
+          return { user: null, cachedAt: 0 };
+        }
+        const user = normalizeCachedAuthUser(stored.user);
+        return {
+          user,
+          cachedAt: Number(stored.cachedAt) || 0
+        };
+      } catch (error) {
+        return { user: null, cachedAt: 0 };
+      }
+    }
+
+    function clearCachedAuthSession() {
+      try {
+        localStorage.removeItem(STORAGE_KEYS.authSession);
+      } catch (error) {
+        // Ignore localStorage failures.
+      }
+    }
+
+    function saveCachedAuthSession(user) {
+      const normalized = normalizeCachedAuthUser(user);
+      if (!normalized || !normalized.id) {
+        clearCachedAuthSession();
+        return;
+      }
+      try {
+        localStorage.setItem(
+          STORAGE_KEYS.authSession,
+          JSON.stringify({
+            user: normalized,
+            cachedAt: Date.now()
+          })
+        );
+      } catch (error) {
+        // Ignore localStorage failures.
+      }
+    }
+
     function loadLastViewedJokes() {
       const stored = JSON.parse(localStorage.getItem(STORAGE_KEYS.lastViewedJokes) || '[]');
       if (!Array.isArray(stored)) {
@@ -11666,7 +11943,7 @@
           dom.profileAvatarInput.value = '';
           return;
         }
-        if (file.size > 1_000_000) {
+        if (file.size > AVATAR_UPLOAD_MAX_BYTES) {
           if (dom.profileFeedback) {
             dom.profileFeedback.textContent = t('auth.avatarTooLarge');
           }
