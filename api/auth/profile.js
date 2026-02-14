@@ -37,8 +37,8 @@ export default async function handler(req, res) {
 
     return res.status(200).json({
       success: true,
-      updated: Boolean(result?.updated),
-      user: result?.user || auth.user,
+      updated: Boolean(result && result.updated),
+      user: (result && result.user) || auth.user,
     });
   } catch (error) {
     console.error("PATCH /api/auth/profile failed:", error);
