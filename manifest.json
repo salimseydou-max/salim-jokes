@@ -1,0 +1,53 @@
+{
+  "id": "/",
+  "name": "Voice Joke Club",
+  "short_name": "Joke Club",
+  "description": "Listen, react, and share jokes in multiple languages with offline access and push updates.",
+  "lang": "en",
+  "dir": "ltr",
+  "start_url": "/#/jokes",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui", "browser"],
+  "background_color": "#ffffff",
+  "theme_color": "#ffeaa7",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/splash/splash-1125x2436.png",
+      "sizes": "1125x2436",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Voice Joke Club mobile app preview"
+    },
+    {
+      "src": "/splash/splash-2048x2732.png",
+      "sizes": "2048x2732",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Voice Joke Club tablet app preview"
+    }
+  ],
+  "categories": ["entertainment", "social", "lifestyle"],
+  "prefer_related_applications": false
+}
