@@ -231,6 +231,73 @@
       background: var(--accent);
       border-width: 2px;
     }
+    .profile-menu {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+    }
+    .profile-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      min-height: 40px;
+    }
+    .nav-avatar {
+      width: 26px;
+      height: 26px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      object-fit: cover;
+      background: var(--bg-soft);
+      flex-shrink: 0;
+    }
+    .profile-dropdown {
+      position: absolute;
+      top: calc(100% + 0.35rem);
+      right: 0;
+      min-width: 220px;
+      padding: 0.4rem;
+      display: grid;
+      gap: 0.25rem;
+      z-index: 30;
+      box-shadow: var(--shadow);
+    }
+    .profile-dropdown-item {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      width: 100%;
+      min-height: 38px;
+      padding: 0.45rem 0.7rem;
+      border-radius: 10px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--text);
+      box-shadow: none;
+      font-weight: 600;
+      font-size: 0.9rem;
+      text-align: left;
+      cursor: pointer;
+      transform: none;
+    }
+    .profile-dropdown-item:hover {
+      background: var(--bg-soft);
+      border-color: var(--border);
+      transform: none;
+    }
+    .profile-avatar-panel {
+      display: grid;
+      gap: 0.6rem;
+      margin-top: 0.8rem;
+    }
+    .profile-avatar {
+      width: 76px;
+      height: 76px;
+      border-radius: 999px;
+      object-fit: cover;
+      border: 1px solid var(--border);
+      background: var(--bg-soft);
+    }
     .auth-panel {
       max-width: 620px;
       margin: 0 auto;
@@ -953,6 +1020,10 @@
     .rtl .top-actions {
       justify-content: flex-end;
     }
+    .rtl .profile-dropdown {
+      left: 0;
+      right: auto;
+    }
     @keyframes pulse {
       0% { transform: scale(1); }
       50% { transform: scale(1.01); }
@@ -989,6 +1060,10 @@
       }
       .auth-nav {
         justify-content: center;
+      }
+      .profile-dropdown {
+        right: auto;
+        left: 0;
       }
       .joke-text {
         font-size: 1.1rem;
@@ -1051,19 +1126,38 @@
           >
             Sign Up
           </a>
-          <a
-            id="nav-profile-link"
-            class="auth-link ghost-link"
-            href="#/profile"
-            data-auth-route="profile"
-            data-i18n="auth.profile"
-            hidden
-          >
-            Profile
-          </a>
-          <button id="nav-logout-button" type="button" class="ghost" data-i18n="auth.logout" hidden>
-            Log Out
-          </button>
+          <div id="nav-profile-menu" class="profile-menu" hidden>
+            <button
+              id="nav-profile-toggle"
+              type="button"
+              class="auth-link ghost-link profile-toggle"
+              aria-expanded="false"
+              aria-haspopup="menu"
+            >
+              <img id="nav-profile-avatar" class="nav-avatar" alt="Profile" />
+              <span id="nav-profile-label" data-i18n="auth.profile">Profile</span>
+            </button>
+            <div id="nav-profile-dropdown" class="profile-dropdown card" role="menu" hidden>
+              <a href="#/profile" class="profile-dropdown-item" role="menuitem" data-i18n="auth.profileAccount">
+                Profile / Account
+              </a>
+              <a href="#/saved" class="profile-dropdown-item" role="menuitem" data-i18n="auth.menuFavorites">
+                Favorites / Saved
+              </a>
+              <a href="#/settings" class="profile-dropdown-item" role="menuitem" data-i18n="auth.menuSettings">
+                Settings
+              </a>
+              <button
+                id="nav-logout-button"
+                type="button"
+                class="profile-dropdown-item"
+                role="menuitem"
+                data-i18n="auth.logout"
+              >
+                Log Out
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -1205,6 +1299,23 @@
                 Refresh
               </button>
             </div>
+            <div class="profile-avatar-panel">
+              <img id="profile-avatar-image" class="profile-avatar" alt="Profile avatar" />
+              <div class="form-actions">
+                <label for="profile-avatar-input" class="auth-link ghost-link" data-i18n="auth.uploadAvatar">
+                  Upload Photo
+                </label>
+                <button type="button" id="profile-avatar-reset" class="ghost" data-i18n="auth.resetAvatar">
+                  Use Default
+                </button>
+              </div>
+              <input
+                id="profile-avatar-input"
+                type="file"
+                accept="image/png,image/jpeg,image/jpg,image/webp,image/gif"
+                hidden
+              />
+            </div>
           </div>
           <div class="card">
             <h3 data-i18n="auth.activity">Activity</h3>
@@ -1235,6 +1346,16 @@
           </div>
         </div>
         <div id="profile-feedback" class="feedback" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <section id="settings" class="section view-section" data-view="settings" data-emoji="⚙️" data-collapsible="false" hidden>
+      <div class="auth-panel">
+        <h2 data-i18n="auth.settingsTitle">Settings</h2>
+        <p data-i18n="auth.settingsSubtitle">Account and personal preferences.</p>
+        <div class="card">
+          <p data-i18n="auth.settingsComingSoon">Settings structure is ready. More options coming soon.</p>
+        </div>
       </div>
     </section>
 
@@ -1672,7 +1793,11 @@
       darkToggle: document.getElementById('dark-toggle'),
       navLoginLink: document.getElementById('nav-login-link'),
       navSignupLink: document.getElementById('nav-signup-link'),
-      navProfileLink: document.getElementById('nav-profile-link'),
+      navProfileMenu: document.getElementById('nav-profile-menu'),
+      navProfileToggle: document.getElementById('nav-profile-toggle'),
+      navProfileAvatar: document.getElementById('nav-profile-avatar'),
+      navProfileLabel: document.getElementById('nav-profile-label'),
+      navProfileDropdown: document.getElementById('nav-profile-dropdown'),
       navLogoutButton: document.getElementById('nav-logout-button'),
       category: document.getElementById('category-select'),
       voiceSpeed: document.getElementById('voice-speed'),
@@ -1777,7 +1902,10 @@
       profileSavedCount: document.getElementById('profile-saved-count'),
       profileFavoritesList: document.getElementById('profile-favorites-list'),
       profileLikedList: document.getElementById('profile-liked-list'),
-      profileFeedback: document.getElementById('profile-feedback')
+      profileFeedback: document.getElementById('profile-feedback'),
+      profileAvatarImage: document.getElementById('profile-avatar-image'),
+      profileAvatarInput: document.getElementById('profile-avatar-input'),
+      profileAvatarReset: document.getElementById('profile-avatar-reset')
     };
 
     const STORAGE_KEYS = {
@@ -1852,6 +1980,7 @@
       login: '/api/auth/login',
       logout: '/api/auth/logout',
       me: '/api/auth/me',
+      profile: '/api/auth/profile',
       like: '/api/auth/like',
       favorite: '/api/jokes/favorite'
     };
@@ -2164,12 +2293,25 @@
         'auth.switchToLogin': 'Already have an account? Log in',
         'auth.profileTitle': 'My Account',
         'auth.profileSubtitle': 'View your profile, favorites, and liked jokes.',
+        'auth.profileAccount': 'Profile / Account',
+        'auth.menuFavorites': 'Favorites / Saved',
+        'auth.menuSettings': 'Settings',
         'auth.accountDetails': 'Account Details',
         'auth.memberSince': 'Member since',
         'auth.activity': 'Activity',
         'auth.profileFavorites': 'Favorites',
         'auth.profileLikes': 'Liked jokes',
         'auth.profileSavedOnDevice': 'Saved on this device',
+        'auth.settingsTitle': 'Settings',
+        'auth.settingsSubtitle': 'Account and personal preferences.',
+        'auth.settingsComingSoon': 'Settings structure is ready. More options coming soon.',
+        'auth.uploadAvatar': 'Upload Photo',
+        'auth.resetAvatar': 'Use Default',
+        'auth.avatarUploading': 'Uploading profile photo...',
+        'auth.avatarUpdated': 'Profile photo updated.',
+        'auth.avatarReset': 'Default profile photo restored.',
+        'auth.avatarInvalidType': 'Please select a PNG, JPG, GIF, or WebP image.',
+        'auth.avatarTooLarge': 'Image is too large. Please use a file under 1MB.',
         'auth.profileEmptyFavorites': 'No favorites yet.',
         'auth.profileEmptyLikes': 'No liked jokes yet.',
         'auth.moreItems': '+{count} more items',
@@ -4819,7 +4961,9 @@
       currentUserEmail: '',
       currentUserName: '',
       currentUserProfile: null,
+      authSignature: 'guest',
       authRedirectRoute: 'jokes',
+      isProfileMenuOpen: false,
       notificationInterval: null,
       voices: [],
       recorder: null,
@@ -5136,6 +5280,48 @@
       return 'jokes';
     }
 
+    function getUserAvatarUrl(user = null) {
+      const source = user || state.currentUserProfile;
+      const avatar = source?.profile?.avatarUrl;
+      if (typeof avatar === 'string' && avatar.trim()) {
+        return avatar.trim();
+      }
+      return '';
+    }
+
+    function buildAuthSignature(user) {
+      if (!user || !user.id) {
+        return 'guest';
+      }
+      const profile = user.profile || {};
+      const favoritesCount = Array.isArray(profile.favorites) ? profile.favorites.length : 0;
+      const likedCount = Array.isArray(profile.likedJokes) ? profile.likedJokes.length : 0;
+      return [
+        user.id,
+        user.email || '',
+        profile.displayName || '',
+        profile.avatarUrl || '',
+        favoritesCount,
+        likedCount,
+        user.updatedAt || '',
+        user.lastLoginAt || ''
+      ].join('|');
+    }
+
+    function setProfileMenuOpen(isOpen) {
+      if (!dom.navProfileDropdown || !dom.navProfileToggle) {
+        return;
+      }
+      const next = Boolean(isOpen && state.currentUserId);
+      state.isProfileMenuOpen = next;
+      dom.navProfileDropdown.hidden = !next;
+      dom.navProfileToggle.setAttribute('aria-expanded', String(next));
+    }
+
+    function closeProfileMenu() {
+      setProfileMenuOpen(false);
+    }
+
     function appendProfileJokeId(field, jokeId) {
       if (!state.currentUserProfile || !jokeId) {
         return;
@@ -5149,6 +5335,7 @@
       if (!list.includes(jokeId)) {
         list.push(jokeId);
         state.currentUserProfile.profile[field] = list;
+        state.authSignature = buildAuthSignature(state.currentUserProfile);
         renderProfileSection();
       }
     }
@@ -5161,11 +5348,19 @@
       if (dom.navSignupLink) {
         dom.navSignupLink.hidden = isAuthenticated;
       }
-      if (dom.navProfileLink) {
-        dom.navProfileLink.hidden = !isAuthenticated;
+      if (dom.navProfileMenu) {
+        dom.navProfileMenu.hidden = !isAuthenticated;
       }
-      if (dom.navLogoutButton) {
-        dom.navLogoutButton.hidden = !isAuthenticated;
+      if (dom.navProfileAvatar) {
+        const avatar = getUserAvatarUrl();
+        if (avatar) {
+          dom.navProfileAvatar.src = avatar;
+        } else {
+          dom.navProfileAvatar.removeAttribute('src');
+        }
+      }
+      if (!isAuthenticated) {
+        closeProfileMenu();
       }
       updateAuthNavActive(getRouteFromHash());
     }
@@ -5207,6 +5402,9 @@
         dom.profileDisplayName.textContent = '--';
         dom.profileEmail.textContent = '--';
         dom.profileCreatedAt.textContent = '--';
+        if (dom.profileAvatarImage) {
+          dom.profileAvatarImage.removeAttribute('src');
+        }
         if (dom.profileFavoritesCount) {
           dom.profileFavoritesCount.textContent = '0';
         }
@@ -5225,6 +5423,7 @@
       const displayName = profile.displayName || state.currentUserName || t('auth.guest');
       const favorites = Array.isArray(profile.favorites) ? profile.favorites : [];
       const likedJokes = Array.isArray(profile.likedJokes) ? profile.likedJokes : [];
+      const avatarUrl = getUserAvatarUrl(state.currentUserProfile);
       const createdAt = state.currentUserProfile.createdAt || '';
       const createdDate = createdAt ? new Date(createdAt) : null;
       const createdText =
@@ -5235,6 +5434,13 @@
       dom.profileDisplayName.textContent = displayName;
       dom.profileEmail.textContent = state.currentUserEmail || '--';
       dom.profileCreatedAt.textContent = createdText;
+      if (dom.profileAvatarImage) {
+        if (avatarUrl) {
+          dom.profileAvatarImage.src = avatarUrl;
+        } else {
+          dom.profileAvatarImage.removeAttribute('src');
+        }
+      }
       if (dom.profileFavoritesCount) {
         dom.profileFavoritesCount.textContent = String(favorites.length);
       }
@@ -5258,6 +5464,30 @@
         return error.message;
       }
       return t('auth.error');
+    }
+
+    function isAllowedAvatarFile(file) {
+      if (!file || typeof file !== 'object') {
+        return false;
+      }
+      return /^image\/(png|jpeg|jpg|gif|webp)$/i.test(file.type || '');
+    }
+
+    function readFileAsDataUrl(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          if (typeof reader.result === 'string' && reader.result) {
+            resolve(reader.result);
+            return;
+          }
+          reject(new Error('Invalid image file.'));
+        };
+        reader.onerror = () => {
+          reject(new Error('Image upload failed.'));
+        };
+        reader.readAsDataURL(file);
+      });
     }
 
     async function authRequest(url, options = {}) {
@@ -5286,6 +5516,11 @@
     }
 
     function applyAuthenticatedUser(user) {
+      const nextSignature = buildAuthSignature(user);
+      if (state.authSignature === nextSignature) {
+        return false;
+      }
+      state.authSignature = nextSignature;
       if (user && user.id) {
         state.currentUserId = user.id;
         state.currentUserEmail = user.email || '';
@@ -5302,6 +5537,7 @@
       updateSessionProgressUI();
       updateAuthUI();
       renderProfileSection();
+      return true;
     }
 
     async function refreshAuthSession() {
@@ -5388,6 +5624,17 @@
       async logout() {
         const payload = await authRequest(AUTH_ENDPOINTS.logout, { method: 'POST' });
         applyAuthenticatedUser(null);
+        return payload;
+      },
+      async updateProfile(updates = {}) {
+        const payload = await authRequest(AUTH_ENDPOINTS.profile, {
+          method: 'PATCH',
+          body: {
+            displayName: updates.displayName,
+            avatarUrl: updates.avatarUrl
+          }
+        });
+        applyAuthenticatedUser(payload.user || null);
         return payload;
       },
       async me() {
@@ -5731,10 +5978,11 @@
       'admin',
       'login',
       'signup',
-      'profile'
+      'profile',
+      'settings'
     ];
     const AUTH_FORM_ROUTES = ['login', 'signup'];
-    const PROTECTED_ROUTES = ['profile'];
+    const PROTECTED_ROUTES = ['profile', 'settings'];
 
     function getRouteFromHash() {
       const raw = location.hash.replace('#', '');
@@ -5758,12 +6006,13 @@
       [
         { link: dom.navLoginLink, route: 'login' },
         { link: dom.navSignupLink, route: 'signup' },
-        { link: dom.navProfileLink, route: 'profile' }
+        { link: dom.navProfileToggle, route: 'profile' }
       ].forEach((item) => {
         if (!item.link) {
           return;
         }
-        const isActive = item.route === route;
+        const isAccountRoute = route === 'profile' || route === 'settings';
+        const isActive = item.route === route || (item.route === 'profile' && isAccountRoute);
         item.link.classList.toggle('active', isActive);
         if (isActive) {
           item.link.setAttribute('aria-current', 'page');
@@ -5825,6 +6074,7 @@
       if (route === 'admin') {
         updateAdminAccessUI();
       }
+      closeProfileMenu();
       showPageTransition();
       showView(route);
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -8600,6 +8850,19 @@
         setAuthRedirectRoute(getRouteFromHash());
       };
     }
+    if (dom.navProfileToggle) {
+      dom.navProfileToggle.onclick = (event) => {
+        event.preventDefault();
+        setProfileMenuOpen(!state.isProfileMenuOpen);
+      };
+    }
+    if (dom.navProfileDropdown) {
+      dom.navProfileDropdown.querySelectorAll('a').forEach((link) => {
+        link.addEventListener('click', () => {
+          closeProfileMenu();
+        });
+      });
+    }
     if (dom.navLogoutButton) {
       dom.navLogoutButton.onclick = async () => {
         dom.navLogoutButton.disabled = true;
@@ -8609,6 +8872,7 @@
         try {
           await window.jokeAuth.logout();
           showToast(t('auth.loggedOut'));
+          closeProfileMenu();
           const route = getRouteFromHash();
           if (PROTECTED_ROUTES.includes(route)) {
             location.hash = '#/jokes';
@@ -8714,6 +8978,85 @@
         }
       };
     }
+    if (dom.profileAvatarInput) {
+      dom.profileAvatarInput.onchange = async (event) => {
+        const file = event.target?.files?.[0];
+        if (!file) {
+          return;
+        }
+        if (!isAllowedAvatarFile(file)) {
+          if (dom.profileFeedback) {
+            dom.profileFeedback.textContent = t('auth.avatarInvalidType');
+          }
+          dom.profileAvatarInput.value = '';
+          return;
+        }
+        if (file.size > 1_000_000) {
+          if (dom.profileFeedback) {
+            dom.profileFeedback.textContent = t('auth.avatarTooLarge');
+          }
+          dom.profileAvatarInput.value = '';
+          return;
+        }
+        dom.profileAvatarInput.disabled = true;
+        if (dom.profileAvatarReset) {
+          dom.profileAvatarReset.disabled = true;
+        }
+        if (dom.profileFeedback) {
+          dom.profileFeedback.textContent = t('auth.avatarUploading');
+        }
+        try {
+          const avatarUrl = await readFileAsDataUrl(file);
+          await window.jokeAuth.updateProfile({ avatarUrl });
+          if (dom.profileFeedback) {
+            dom.profileFeedback.textContent = t('auth.avatarUpdated');
+          }
+        } catch (error) {
+          if (dom.profileFeedback) {
+            dom.profileFeedback.textContent = getAuthErrorMessage(error);
+          }
+        } finally {
+          dom.profileAvatarInput.value = '';
+          dom.profileAvatarInput.disabled = false;
+          if (dom.profileAvatarReset) {
+            dom.profileAvatarReset.disabled = false;
+          }
+        }
+      };
+    }
+    if (dom.profileAvatarReset) {
+      dom.profileAvatarReset.onclick = async () => {
+        dom.profileAvatarReset.disabled = true;
+        if (dom.profileFeedback) {
+          dom.profileFeedback.textContent = t('auth.avatarUploading');
+        }
+        try {
+          await window.jokeAuth.updateProfile({ avatarUrl: '' });
+          if (dom.profileFeedback) {
+            dom.profileFeedback.textContent = t('auth.avatarReset');
+          }
+        } catch (error) {
+          if (dom.profileFeedback) {
+            dom.profileFeedback.textContent = getAuthErrorMessage(error);
+          }
+        } finally {
+          dom.profileAvatarReset.disabled = false;
+        }
+      };
+    }
+    document.addEventListener('click', (event) => {
+      if (!state.isProfileMenuOpen || !dom.navProfileMenu) {
+        return;
+      }
+      if (!dom.navProfileMenu.contains(event.target)) {
+        closeProfileMenu();
+      }
+    });
+    window.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && state.isProfileMenuOpen) {
+        closeProfileMenu();
+      }
+    });
     if (dom.mediaWatermarkToggle) {
       dom.mediaWatermarkToggle.onchange = () => {
         settings.mediaWatermark = dom.mediaWatermarkToggle.checked;
