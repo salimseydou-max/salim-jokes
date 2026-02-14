@@ -17,6 +17,7 @@
   <meta name="twitter:title" content="Voice Joke Club" />
   <meta name="twitter:description" content="Listen, react, and share jokes in multiple languages." />
   <meta name="twitter:image" content="https://dummyimage.com/1200x630/ffeaa7/222.png&text=Voice+Joke+Club" />
+  <link rel="preconnect" href="https://v2.jokeapi.dev" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64'%3E%3Crect width='64' height='64' fill='%23ffffff'/%3E%3Ctext x='12' y='46' font-size='36'%3E%F0%9F%98%82%3C/text%3E%3C/svg%3E" />
@@ -66,7 +67,7 @@
       color: var(--text);
     }
     body {
-      padding-top: 150px;
+      padding-top: 190px;
       background-color: var(--bg);
       background-image: var(--bg-pattern);
       background-repeat: repeat;
@@ -133,10 +134,8 @@
       justify-content: space-between;
       gap: 0.6rem;
     }
-    .top-bar-row.main-nav-row {
-      flex-wrap: nowrap;
-      gap: 0.8rem;
-      position: relative;
+    .top-bar-row.tabs-row {
+      justify-content: center;
     }
     .brand {
       display: flex;
@@ -144,10 +143,6 @@
       gap: 0.5rem;
       font-weight: 700;
       font-size: 1.05rem;
-    }
-    .brand-link {
-      padding: 0.2rem 0.1rem;
-      border-radius: 10px;
     }
     .brand-logo {
       font-size: 1.4rem;
@@ -183,20 +178,6 @@
       border-radius: 999px;
       border: 1px solid transparent;
     }
-    .nav-primary {
-      flex: 1;
-      justify-content: center;
-      overflow: visible;
-    }
-    .mobile-nav-toggle {
-      display: none;
-      align-items: center;
-      justify-content: center;
-      min-width: 40px;
-      min-height: 40px;
-      padding: 0.45rem;
-      font-size: 1rem;
-    }
     .nav a:hover {
       background: var(--bg-soft);
     }
@@ -206,10 +187,9 @@
     }
     .top-actions {
       display: flex;
-      flex-wrap: nowrap;
+      flex-wrap: wrap;
       align-items: center;
       gap: 0.6rem;
-      margin-left: auto;
     }
     .inline-label {
       font-weight: 600;
@@ -219,7 +199,7 @@
     }
     .auth-nav {
       display: flex;
-      flex-wrap: nowrap;
+      flex-wrap: wrap;
       align-items: center;
       gap: 0.45rem;
     }
@@ -250,117 +230,6 @@
     .auth-link.active {
       background: var(--accent);
       border-width: 2px;
-    }
-    .profile-menu {
-      position: relative;
-      display: inline-flex;
-      align-items: center;
-    }
-    .profile-toggle {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.35rem;
-      min-height: 40px;
-      min-width: 40px;
-      padding: 0.45rem;
-    }
-    .nav-menu-icon {
-      font-size: 1.15rem;
-      line-height: 1;
-      font-weight: 700;
-    }
-    .visually-hidden {
-      position: absolute;
-      width: 1px;
-      height: 1px;
-      padding: 0;
-      margin: -1px;
-      overflow: hidden;
-      clip: rect(0, 0, 0, 0);
-      white-space: nowrap;
-      border: 0;
-    }
-    .nav-avatar {
-      width: 26px;
-      height: 26px;
-      border-radius: 999px;
-      border: 1px solid var(--border);
-      object-fit: cover;
-      background: var(--bg-soft);
-      flex-shrink: 0;
-    }
-    .profile-dropdown {
-      position: absolute;
-      top: calc(100% + 0.35rem);
-      right: 0;
-      min-width: 220px;
-      padding: 0.4rem;
-      display: grid;
-      gap: 0.25rem;
-      z-index: 30;
-      box-shadow: var(--shadow);
-      opacity: 0;
-      transform: translateY(-6px);
-      pointer-events: none;
-      transition: opacity 0.16s ease, transform 0.16s ease;
-    }
-    .profile-dropdown.is-open {
-      opacity: 1;
-      transform: translateY(0);
-      pointer-events: auto;
-    }
-    .settings-dropdown {
-      min-width: 260px;
-    }
-    .settings-controls {
-      display: grid;
-      gap: 0.45rem;
-      padding: 0.3rem 0.4rem 0.2rem;
-    }
-    .settings-controls select {
-      width: 100%;
-      min-width: 0;
-    }
-    .settings-controls .inline-label {
-      font-size: 0.82rem;
-      color: var(--muted);
-    }
-    .profile-dropdown-item {
-      display: flex;
-      align-items: center;
-      justify-content: flex-start;
-      width: 100%;
-      min-height: 38px;
-      padding: 0.45rem 0.7rem;
-      border-radius: 10px;
-      border: 1px solid transparent;
-      background: transparent;
-      color: var(--text);
-      box-shadow: none;
-      font-weight: 600;
-      font-size: 0.9rem;
-      text-align: left;
-      cursor: pointer;
-      transform: none;
-    }
-    .profile-dropdown-item:hover {
-      background: var(--bg-soft);
-      border-color: var(--border);
-      transform: none;
-    }
-    .profile-avatar-panel {
-      display: grid;
-      gap: 0.6rem;
-      margin-top: 0.8rem;
-    }
-    .profile-avatar {
-      width: 76px;
-      height: 76px;
-      border-radius: 999px;
-      object-fit: cover;
-      border: 1px solid var(--border);
-      background: var(--bg-soft);
     }
     .auth-panel {
       max-width: 620px;
@@ -1084,46 +953,18 @@
     .rtl .top-actions {
       justify-content: flex-end;
     }
-    .rtl .profile-dropdown {
-      left: 0;
-      right: auto;
-    }
     @keyframes pulse {
       0% { transform: scale(1); }
       50% { transform: scale(1.01); }
       100% { transform: scale(1); }
     }
     @media (max-width: 900px) {
-      body { padding-top: 180px; }
+      body { padding-top: 230px; }
       .top-bar-row {
         justify-content: center;
       }
-      .top-bar-row.main-nav-row {
-        flex-wrap: wrap;
-        justify-content: space-between;
-      }
-      .mobile-nav-toggle {
-        display: inline-flex;
-      }
-      .nav-primary {
-        display: none;
-        flex: none;
-        width: 100%;
-        order: 5;
-        margin-top: 0.2rem;
-        padding: 0.45rem;
-        border-radius: 14px;
-        border: 1px solid var(--border);
-        background: var(--card);
-        box-shadow: var(--shadow);
-        justify-content: flex-start;
-        overflow-x: auto;
-      }
-      .nav-primary.is-open {
-        display: flex;
-      }
       .top-actions {
-        margin-left: 0;
+        justify-content: center;
       }
       .joke-card {
         margin: 1.2rem auto;
@@ -1131,37 +972,23 @@
       }
     }
     @media (max-width: 600px) {
-      body { padding-top: 200px; }
+      body { padding-top: 260px; }
       .hero {
         text-align: center;
       }
       .nav.tabs {
         justify-content: flex-start;
       }
-      .nav-primary {
-        flex-direction: column;
-        overflow: visible;
-      }
-      .nav.tabs a {
-        width: 100%;
-        text-align: center;
+      .top-actions select {
+        min-width: 120px;
       }
       .top-actions button,
       .auth-nav button,
-      .auth-link,
-      .mobile-nav-toggle {
+      .auth-link {
         width: auto;
       }
       .auth-nav {
-        justify-content: flex-end;
-      }
-      .top-actions {
-        width: 100%;
-        justify-content: flex-end;
-      }
-      .profile-dropdown {
-        right: 0;
-        left: auto;
+        justify-content: center;
       }
       .joke-text {
         font-size: 1.1rem;
@@ -1189,144 +1016,68 @@
 </head>
 <body>
   <div class="top-bar">
-    <div class="top-bar-row main-nav-row">
-      <a class="brand brand-link" href="#/jokes" id="brand-home-link" data-route="jokes">
+    <div class="top-bar-row">
+      <div class="brand">
         <span class="brand-logo">😂</span>
         <span class="brand-name" data-i18n="brand.name">Voice Joke Club</span>
-      </a>
-      <button
-        id="mobile-nav-toggle"
-        type="button"
-        class="mobile-nav-toggle ghost"
-        aria-expanded="false"
-        aria-controls="primary-nav"
-      >
-        ☰
-      </button>
-      <nav id="primary-nav" class="nav tabs nav-primary" aria-label="Primary Navigation">
-        <a href="#/jokes" data-route="jokes" data-i18n="nav.jokes">Jokes</a>
-        <a href="#/submit" data-route="submit" data-i18n="nav.submit">Submit a Joke</a>
-        <a href="#/community" data-route="community" data-i18n="nav.community">Community</a>
-      </nav>
+      </div>
       <div class="top-actions">
-        <div id="settings-menu" class="profile-menu">
-          <button
-            id="settings-toggle"
-            type="button"
-            class="auth-link ghost-link profile-toggle"
-            aria-expanded="false"
-            aria-haspopup="menu"
-            aria-label="Settings menu"
-          >
-            <span class="nav-menu-icon" aria-hidden="true">⚙</span>
-            <span id="settings-label" class="visually-hidden" data-i18n="auth.settingsMenu">Settings menu</span>
-          </button>
-          <div id="settings-dropdown" class="profile-dropdown settings-dropdown card" role="menu" hidden>
-            <div class="settings-controls">
-              <label class="inline-label" for="language" data-i18n="controls.language">Language</label>
-              <select id="language">
-                <option value="en" data-i18n="languages.en">English</option>
-                <option value="ar" data-i18n="languages.ar">Arabic</option>
-                <option value="fr" data-i18n="languages.fr">French</option>
-                <option value="es" data-i18n="languages.es">Spanish</option>
-                <option value="ha" data-i18n="languages.ha">Hausa</option>
-                <option value="pt" data-i18n="languages.pt">Portuguese</option>
-              </select>
-            </div>
-            <button id="dark-toggle" class="profile-dropdown-item" type="button" role="menuitem" data-i18n="buttons.dark">
-              Dark Mode
-            </button>
-            <a href="#/achievements" class="profile-dropdown-item" role="menuitem" data-i18n="nav.achievements">
-              Achievements
-            </a>
-            <a href="#/about" class="profile-dropdown-item" role="menuitem" data-i18n="nav.about">
-              About
-            </a>
-            <a href="#/creator" class="profile-dropdown-item" role="menuitem" data-i18n="nav.creator">
-              About Creator
-            </a>
-            <a href="#/contact" class="profile-dropdown-item" role="menuitem" data-i18n="nav.contact">
-              Contact
-            </a>
-          </div>
-        </div>
+        <label class="inline-label" for="language" data-i18n="controls.language">Language</label>
+        <select id="language">
+          <option value="en" data-i18n="languages.en">English</option>
+          <option value="ar" data-i18n="languages.ar">Arabic</option>
+          <option value="fr" data-i18n="languages.fr">French</option>
+          <option value="es" data-i18n="languages.es">Spanish</option>
+          <option value="ha" data-i18n="languages.ha">Hausa</option>
+          <option value="pt" data-i18n="languages.pt">Portuguese</option>
+        </select>
+        <button id="dark-toggle" class="ghost" data-i18n="buttons.dark">Dark Mode</button>
         <div id="auth-nav" class="auth-nav" aria-label="Account">
-          <div id="nav-profile-menu" class="profile-menu">
-            <button
-              id="nav-profile-toggle"
-              type="button"
-              class="auth-link ghost-link profile-toggle"
-              aria-expanded="false"
-              aria-haspopup="menu"
-              aria-label="Account menu"
-            >
-              <span id="nav-menu-icon" class="nav-menu-icon" aria-hidden="true">⋯</span>
-              <img id="nav-profile-avatar" class="nav-avatar" alt="Profile" hidden />
-              <span id="nav-profile-label" class="visually-hidden" data-i18n="auth.accountMenu">Account menu</span>
-            </button>
-            <div id="nav-profile-dropdown" class="profile-dropdown card" role="menu" hidden>
-              <a
-                id="nav-login-link"
-                href="#/login"
-                class="profile-dropdown-item"
-                role="menuitem"
-                data-i18n="auth.login"
-              >
-                Log In
-              </a>
-              <a
-                id="nav-signup-link"
-                href="#/signup"
-                class="profile-dropdown-item"
-                role="menuitem"
-                data-i18n="auth.signup"
-              >
-                Sign Up
-              </a>
-              <a
-                id="nav-profile-link"
-                href="#/profile"
-                class="profile-dropdown-item"
-                role="menuitem"
-                data-i18n="auth.profileAccount"
-                hidden
-              >
-                Profile / Account
-              </a>
-              <a
-                id="nav-saved-link"
-                href="#/saved"
-                class="profile-dropdown-item"
-                role="menuitem"
-                data-i18n="auth.menuFavorites"
-                hidden
-              >
-                Favorites / Saved
-              </a>
-              <a
-                id="nav-achievements-link"
-                href="#/achievements"
-                class="profile-dropdown-item"
-                role="menuitem"
-                data-i18n="nav.achievements"
-                hidden
-              >
-                Achievements
-              </a>
-              <button
-                id="nav-logout-button"
-                type="button"
-                class="profile-dropdown-item"
-                role="menuitem"
-                data-i18n="auth.logout"
-                hidden
-              >
-                Log Out
-              </button>
-            </div>
-          </div>
+          <a
+            id="nav-login-link"
+            class="auth-link ghost-link"
+            href="#/login"
+            data-auth-route="login"
+            data-i18n="auth.login"
+          >
+            Log In
+          </a>
+          <a
+            id="nav-signup-link"
+            class="auth-link"
+            href="#/signup"
+            data-auth-route="signup"
+            data-i18n="auth.signup"
+          >
+            Sign Up
+          </a>
+          <a
+            id="nav-profile-link"
+            class="auth-link ghost-link"
+            href="#/profile"
+            data-auth-route="profile"
+            data-i18n="auth.profile"
+            hidden
+          >
+            Profile
+          </a>
+          <button id="nav-logout-button" type="button" class="ghost" data-i18n="auth.logout" hidden>
+            Log Out
+          </button>
         </div>
       </div>
+    </div>
+    <div class="top-bar-row tabs-row">
+      <nav class="nav tabs" aria-label="Sections">
+        <a href="#/jokes" data-route="jokes" data-i18n="nav.jokes">Jokes</a>
+        <a href="#/saved" data-route="saved" data-i18n="nav.saved">Saved Jokes</a>
+        <a href="#/submit" data-route="submit" data-i18n="nav.submit">Submit a Joke</a>
+        <a href="#/community" data-route="community" data-i18n="nav.community">Community</a>
+        <a href="#/achievements" data-route="achievements" data-i18n="nav.achievements">Achievements</a>
+        <a href="#/about" data-route="about" data-i18n="nav.about">About</a>
+        <a href="#/creator" data-route="creator" data-i18n="nav.creator">About Creator</a>
+        <a href="#/contact" data-route="contact" data-i18n="nav.contact">Contact</a>
+      </nav>
     </div>
   </div>
   <main class="page">
@@ -1454,23 +1205,6 @@
                 Refresh
               </button>
             </div>
-            <div class="profile-avatar-panel">
-              <img id="profile-avatar-image" class="profile-avatar" alt="Profile avatar" />
-              <div class="form-actions">
-                <label for="profile-avatar-input" class="auth-link ghost-link" data-i18n="auth.uploadAvatar">
-                  Upload Photo
-                </label>
-                <button type="button" id="profile-avatar-reset" class="ghost" data-i18n="auth.resetAvatar">
-                  Use Default
-                </button>
-              </div>
-              <input
-                id="profile-avatar-input"
-                type="file"
-                accept="image/png,image/jpeg,image/jpg,image/webp,image/gif"
-                hidden
-              />
-            </div>
           </div>
           <div class="card">
             <h3 data-i18n="auth.activity">Activity</h3>
@@ -1501,16 +1235,6 @@
           </div>
         </div>
         <div id="profile-feedback" class="feedback" aria-live="polite"></div>
-      </div>
-    </section>
-
-    <section id="settings" class="section view-section" data-view="settings" data-emoji="⚙️" data-collapsible="false" hidden>
-      <div class="auth-panel">
-        <h2 data-i18n="auth.settingsTitle">Settings</h2>
-        <p data-i18n="auth.settingsSubtitle">Account and personal preferences.</p>
-        <div class="card">
-          <p data-i18n="auth.settingsComingSoon">Settings structure is ready. More options coming soon.</p>
-        </div>
       </div>
     </section>
 
@@ -1944,27 +1668,11 @@
   </main>
   <script>
     const dom = {
-      topBar: document.querySelector('.top-bar'),
-      brandHomeLink: document.getElementById('brand-home-link'),
-      mobileNavToggle: document.getElementById('mobile-nav-toggle'),
-      primaryNav: document.getElementById('primary-nav'),
-      settingsMenu: document.getElementById('settings-menu'),
-      settingsToggle: document.getElementById('settings-toggle'),
-      settingsDropdown: document.getElementById('settings-dropdown'),
-      settingsLabel: document.getElementById('settings-label'),
       language: document.getElementById('language'),
       darkToggle: document.getElementById('dark-toggle'),
-      navMenuIcon: document.getElementById('nav-menu-icon'),
       navLoginLink: document.getElementById('nav-login-link'),
       navSignupLink: document.getElementById('nav-signup-link'),
-      navProfileMenu: document.getElementById('nav-profile-menu'),
-      navProfileToggle: document.getElementById('nav-profile-toggle'),
-      navProfileAvatar: document.getElementById('nav-profile-avatar'),
-      navProfileLabel: document.getElementById('nav-profile-label'),
       navProfileLink: document.getElementById('nav-profile-link'),
-      navSavedLink: document.getElementById('nav-saved-link'),
-      navAchievementsLink: document.getElementById('nav-achievements-link'),
-      navProfileDropdown: document.getElementById('nav-profile-dropdown'),
       navLogoutButton: document.getElementById('nav-logout-button'),
       category: document.getElementById('category-select'),
       voiceSpeed: document.getElementById('voice-speed'),
@@ -2069,10 +1777,7 @@
       profileSavedCount: document.getElementById('profile-saved-count'),
       profileFavoritesList: document.getElementById('profile-favorites-list'),
       profileLikedList: document.getElementById('profile-liked-list'),
-      profileFeedback: document.getElementById('profile-feedback'),
-      profileAvatarImage: document.getElementById('profile-avatar-image'),
-      profileAvatarInput: document.getElementById('profile-avatar-input'),
-      profileAvatarReset: document.getElementById('profile-avatar-reset')
+      profileFeedback: document.getElementById('profile-feedback')
     };
 
     const STORAGE_KEYS = {
@@ -2147,7 +1852,6 @@
       login: '/api/auth/login',
       logout: '/api/auth/logout',
       me: '/api/auth/me',
-      profile: '/api/auth/profile',
       like: '/api/auth/like',
       favorite: '/api/jokes/favorite'
     };
@@ -2243,7 +1947,6 @@
         'brand.name': 'Voice Joke Club',
         'nav.home': 'Home',
         'nav.jokes': 'Jokes',
-        'nav.menu': 'Navigation menu',
         'nav.about': 'About',
         'nav.listen': 'Listen',
         'nav.community': 'Community',
@@ -2442,8 +2145,6 @@
         'auth.login': 'Log In',
         'auth.signup': 'Sign Up',
         'auth.profile': 'Profile',
-        'auth.accountMenu': 'Account menu',
-        'auth.settingsMenu': 'Settings menu',
         'auth.logout': 'Log Out',
         'auth.loginTitle': 'Log In',
         'auth.signupTitle': 'Sign Up',
@@ -2463,25 +2164,12 @@
         'auth.switchToLogin': 'Already have an account? Log in',
         'auth.profileTitle': 'My Account',
         'auth.profileSubtitle': 'View your profile, favorites, and liked jokes.',
-        'auth.profileAccount': 'Profile / Account',
-        'auth.menuFavorites': 'Favorites / Saved',
-        'auth.menuSettings': 'Settings',
         'auth.accountDetails': 'Account Details',
         'auth.memberSince': 'Member since',
         'auth.activity': 'Activity',
         'auth.profileFavorites': 'Favorites',
         'auth.profileLikes': 'Liked jokes',
         'auth.profileSavedOnDevice': 'Saved on this device',
-        'auth.settingsTitle': 'Settings',
-        'auth.settingsSubtitle': 'Account and personal preferences.',
-        'auth.settingsComingSoon': 'Settings structure is ready. More options coming soon.',
-        'auth.uploadAvatar': 'Upload Photo',
-        'auth.resetAvatar': 'Use Default',
-        'auth.avatarUploading': 'Uploading profile photo...',
-        'auth.avatarUpdated': 'Profile photo updated.',
-        'auth.avatarReset': 'Default profile photo restored.',
-        'auth.avatarInvalidType': 'Please select a PNG, JPG, GIF, or WebP image.',
-        'auth.avatarTooLarge': 'Image is too large. Please use a file under 1MB.',
         'auth.profileEmptyFavorites': 'No favorites yet.',
         'auth.profileEmptyLikes': 'No liked jokes yet.',
         'auth.moreItems': '+{count} more items',
@@ -5131,11 +4819,7 @@
       currentUserEmail: '',
       currentUserName: '',
       currentUserProfile: null,
-      authSignature: 'guest',
       authRedirectRoute: 'jokes',
-      isProfileMenuOpen: false,
-      isSettingsMenuOpen: false,
-      isPrimaryNavOpen: false,
       notificationInterval: null,
       voices: [],
       recorder: null,
@@ -5196,15 +4880,6 @@
       document.querySelectorAll('[data-i18n-placeholder]').forEach((el) => {
         el.placeholder = t(el.dataset.i18nPlaceholder);
       });
-      if (dom.navProfileToggle) {
-        dom.navProfileToggle.setAttribute('aria-label', t('auth.accountMenu'));
-      }
-      if (dom.settingsToggle) {
-        dom.settingsToggle.setAttribute('aria-label', t('auth.settingsMenu'));
-      }
-      if (dom.mobileNavToggle) {
-        dom.mobileNavToggle.setAttribute('aria-label', t('nav.menu'));
-      }
       updateSavedControls();
       renderSavedSection();
       updateAuthUI();
@@ -5461,118 +5136,6 @@
       return 'jokes';
     }
 
-    function getUserAvatarUrl(user = null) {
-      const source = user || state.currentUserProfile;
-      const avatar = source?.profile?.avatarUrl;
-      if (typeof avatar === 'string' && avatar.trim()) {
-        return avatar.trim();
-      }
-      return '';
-    }
-
-    function buildAuthSignature(user) {
-      if (!user || !user.id) {
-        return 'guest';
-      }
-      const profile = user.profile || {};
-      const favoritesCount = Array.isArray(profile.favorites) ? profile.favorites.length : 0;
-      const likedCount = Array.isArray(profile.likedJokes) ? profile.likedJokes.length : 0;
-      return [
-        user.id,
-        user.email || '',
-        profile.displayName || '',
-        profile.avatarUrl || '',
-        favoritesCount,
-        likedCount,
-        user.updatedAt || '',
-        user.lastLoginAt || ''
-      ].join('|');
-    }
-
-    function setDropdownMenuOpen(nextOpen, panelEl, toggleEl, stateKey) {
-      if (!panelEl || !toggleEl || !stateKey) {
-        return;
-      }
-      const next = Boolean(nextOpen);
-      if (next === state[stateKey]) {
-        return;
-      }
-      state[stateKey] = next;
-      toggleEl.setAttribute('aria-expanded', String(next));
-      if (next) {
-        panelEl.hidden = false;
-        requestAnimationFrame(() => {
-          if (state[stateKey]) {
-            panelEl.classList.add('is-open');
-          }
-        });
-        return;
-      }
-      panelEl.classList.remove('is-open');
-      const hideTask = () => {
-        if (!state[stateKey]) {
-          panelEl.hidden = true;
-        }
-      };
-      if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-        hideTask();
-      } else {
-        setTimeout(hideTask, 170);
-      }
-    }
-
-    function setProfileMenuOpen(isOpen) {
-      setDropdownMenuOpen(isOpen, dom.navProfileDropdown, dom.navProfileToggle, 'isProfileMenuOpen');
-    }
-
-    function setSettingsMenuOpen(isOpen) {
-      setDropdownMenuOpen(isOpen, dom.settingsDropdown, dom.settingsToggle, 'isSettingsMenuOpen');
-    }
-
-    function closeProfileMenu() {
-      setProfileMenuOpen(false);
-    }
-
-    function closeSettingsMenu() {
-      setSettingsMenuOpen(false);
-    }
-
-    function isMobileViewport() {
-      return Boolean(window.matchMedia && window.matchMedia('(max-width: 900px)').matches);
-    }
-
-    function setPrimaryNavOpen(isOpen) {
-      if (!dom.primaryNav || !dom.mobileNavToggle) {
-        return;
-      }
-      if (!isMobileViewport()) {
-        state.isPrimaryNavOpen = false;
-        dom.primaryNav.classList.remove('is-open');
-        dom.mobileNavToggle.setAttribute('aria-expanded', 'false');
-        return;
-      }
-      const next = Boolean(isOpen);
-      if (next === state.isPrimaryNavOpen) {
-        return;
-      }
-      state.isPrimaryNavOpen = next;
-      dom.primaryNav.classList.toggle('is-open', next);
-      dom.mobileNavToggle.setAttribute('aria-expanded', String(next));
-    }
-
-    function syncPrimaryNavLayout() {
-      if (!dom.primaryNav || !dom.mobileNavToggle) {
-        return;
-      }
-      const mobile = isMobileViewport();
-      dom.mobileNavToggle.hidden = !mobile;
-      if (!mobile) {
-        state.isPrimaryNavOpen = false;
-        dom.primaryNav.classList.remove('is-open');
-        dom.mobileNavToggle.setAttribute('aria-expanded', 'false');
-      }
-    }
-
     function appendProfileJokeId(field, jokeId) {
       if (!state.currentUserProfile || !jokeId) {
         return;
@@ -5586,16 +5149,12 @@
       if (!list.includes(jokeId)) {
         list.push(jokeId);
         state.currentUserProfile.profile[field] = list;
-        state.authSignature = buildAuthSignature(state.currentUserProfile);
         renderProfileSection();
       }
     }
 
     function updateAuthUI() {
       const isAuthenticated = Boolean(state.currentUserId);
-      if (dom.navProfileMenu) {
-        dom.navProfileMenu.hidden = false;
-      }
       if (dom.navLoginLink) {
         dom.navLoginLink.hidden = isAuthenticated;
       }
@@ -5605,30 +5164,8 @@
       if (dom.navProfileLink) {
         dom.navProfileLink.hidden = !isAuthenticated;
       }
-      if (dom.navSavedLink) {
-        dom.navSavedLink.hidden = !isAuthenticated;
-      }
-      if (dom.navAchievementsLink) {
-        dom.navAchievementsLink.hidden = !isAuthenticated;
-      }
       if (dom.navLogoutButton) {
         dom.navLogoutButton.hidden = !isAuthenticated;
-      }
-      if (dom.navMenuIcon) {
-        dom.navMenuIcon.hidden = isAuthenticated;
-      }
-      if (dom.navProfileAvatar) {
-        dom.navProfileAvatar.hidden = !isAuthenticated;
-        if (isAuthenticated) {
-          const avatar = getUserAvatarUrl();
-          if (avatar) {
-            dom.navProfileAvatar.src = avatar;
-          } else {
-            dom.navProfileAvatar.removeAttribute('src');
-          }
-        } else {
-          dom.navProfileAvatar.removeAttribute('src');
-        }
       }
       updateAuthNavActive(getRouteFromHash());
     }
@@ -5670,9 +5207,6 @@
         dom.profileDisplayName.textContent = '--';
         dom.profileEmail.textContent = '--';
         dom.profileCreatedAt.textContent = '--';
-        if (dom.profileAvatarImage) {
-          dom.profileAvatarImage.removeAttribute('src');
-        }
         if (dom.profileFavoritesCount) {
           dom.profileFavoritesCount.textContent = '0';
         }
@@ -5691,7 +5225,6 @@
       const displayName = profile.displayName || state.currentUserName || t('auth.guest');
       const favorites = Array.isArray(profile.favorites) ? profile.favorites : [];
       const likedJokes = Array.isArray(profile.likedJokes) ? profile.likedJokes : [];
-      const avatarUrl = getUserAvatarUrl(state.currentUserProfile);
       const createdAt = state.currentUserProfile.createdAt || '';
       const createdDate = createdAt ? new Date(createdAt) : null;
       const createdText =
@@ -5702,13 +5235,6 @@
       dom.profileDisplayName.textContent = displayName;
       dom.profileEmail.textContent = state.currentUserEmail || '--';
       dom.profileCreatedAt.textContent = createdText;
-      if (dom.profileAvatarImage) {
-        if (avatarUrl) {
-          dom.profileAvatarImage.src = avatarUrl;
-        } else {
-          dom.profileAvatarImage.removeAttribute('src');
-        }
-      }
       if (dom.profileFavoritesCount) {
         dom.profileFavoritesCount.textContent = String(favorites.length);
       }
@@ -5732,30 +5258,6 @@
         return error.message;
       }
       return t('auth.error');
-    }
-
-    function isAllowedAvatarFile(file) {
-      if (!file || typeof file !== 'object') {
-        return false;
-      }
-      return /^image\/(png|jpeg|jpg|gif|webp)$/i.test(file.type || '');
-    }
-
-    function readFileAsDataUrl(file) {
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => {
-          if (typeof reader.result === 'string' && reader.result) {
-            resolve(reader.result);
-            return;
-          }
-          reject(new Error('Invalid image file.'));
-        };
-        reader.onerror = () => {
-          reject(new Error('Image upload failed.'));
-        };
-        reader.readAsDataURL(file);
-      });
     }
 
     async function authRequest(url, options = {}) {
@@ -5784,11 +5286,6 @@
     }
 
     function applyAuthenticatedUser(user) {
-      const nextSignature = buildAuthSignature(user);
-      if (state.authSignature === nextSignature) {
-        return false;
-      }
-      state.authSignature = nextSignature;
       if (user && user.id) {
         state.currentUserId = user.id;
         state.currentUserEmail = user.email || '';
@@ -5805,7 +5302,6 @@
       updateSessionProgressUI();
       updateAuthUI();
       renderProfileSection();
-      return true;
     }
 
     async function refreshAuthSession() {
@@ -5886,28 +5382,12 @@
           method: 'POST',
           body: { email, password }
         });
-        if (!payload || payload.success === false) {
-          const loginError = new Error(payload?.error || t('auth.error'));
-          loginError.code = payload?.code || 'AUTH_INVALID_CREDENTIALS';
-          throw loginError;
-        }
         applyAuthenticatedUser(payload.user || null);
         return payload;
       },
       async logout() {
         const payload = await authRequest(AUTH_ENDPOINTS.logout, { method: 'POST' });
         applyAuthenticatedUser(null);
-        return payload;
-      },
-      async updateProfile(updates = {}) {
-        const payload = await authRequest(AUTH_ENDPOINTS.profile, {
-          method: 'PATCH',
-          body: {
-            displayName: updates.displayName,
-            avatarUrl: updates.avatarUrl
-          }
-        });
-        applyAuthenticatedUser(payload.user || null);
         return payload;
       },
       async me() {
@@ -6251,11 +5731,10 @@
       'admin',
       'login',
       'signup',
-      'profile',
-      'settings'
+      'profile'
     ];
     const AUTH_FORM_ROUTES = ['login', 'signup'];
-    const PROTECTED_ROUTES = ['profile', 'settings'];
+    const PROTECTED_ROUTES = ['profile'];
 
     function getRouteFromHash() {
       const raw = location.hash.replace('#', '');
@@ -6276,20 +5755,10 @@
     }
 
     function updateAuthNavActive(route) {
-      const isAccountRoute = ['login', 'signup', 'profile', 'saved'].includes(route);
-      const isSettingsRoute = ['settings', 'achievements', 'about', 'creator', 'contact'].includes(route);
-      if (dom.navProfileToggle) {
-        dom.navProfileToggle.classList.toggle('active', isAccountRoute);
-      }
-      if (dom.settingsToggle) {
-        dom.settingsToggle.classList.toggle('active', isSettingsRoute);
-      }
       [
         { link: dom.navLoginLink, route: 'login' },
         { link: dom.navSignupLink, route: 'signup' },
-        { link: dom.navProfileLink, route: 'profile' },
-        { link: dom.navSavedLink, route: 'saved' },
-        { link: dom.navAchievementsLink, route: 'achievements' }
+        { link: dom.navProfileLink, route: 'profile' }
       ].forEach((item) => {
         if (!item.link) {
           return;
@@ -6356,9 +5825,6 @@
       if (route === 'admin') {
         updateAdminAccessUI();
       }
-      closeProfileMenu();
-      closeSettingsMenu();
-      setPrimaryNavOpen(false);
       showPageTransition();
       showView(route);
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -7077,10 +6543,11 @@
     }
 
     function buildApiUrl(apiLang, category) {
-      const params = new URLSearchParams();
-      params.set('lang', String(apiLang || 'en'));
-      params.set('category', category === 'dark' ? 'dark' : 'random');
-      return `/api/jokes/external?${params.toString()}`;
+      let apiCategory = 'Misc,Pun';
+      if (category === 'dark') {
+        apiCategory = 'Dark';
+      }
+      return `https://v2.jokeapi.dev/joke/${apiCategory}?type=single&safe-mode&blacklistFlags=nsfw,religious,political,racist,sexist,explicit&lang=${apiLang}`;
     }
 
     async function fetchJokeFromApi(apiLang, category) {
@@ -7090,18 +6557,13 @@
         const url = buildApiUrl(apiLang, category);
         const resp = await fetch(url);
         if (!resp.ok) {
-          const requestError = new Error('Joke request failed');
-          requestError.retryable = true;
-          throw requestError;
+          throw new Error('Joke request failed');
         }
         const data = await resp.json();
-        if (!data || data.success !== true || !data.joke) {
-          const requestError = new Error(data?.error || 'Joke request failed');
-          requestError.retryable = Boolean(data?.retryable);
-          requestError.status = Number(data?.status) || 0;
-          throw requestError;
+        if (data.error) {
+          throw new Error(data.message || 'Joke request failed');
         }
-        return data.joke;
+        return data;
       } catch (error) {
         hasError = true;
         throw error;
@@ -7128,10 +6590,7 @@
               return { joke, source: 'api', wasRepeat: false };
             }
           } catch (error) {
-            const retryable = error?.retryable !== false;
-            if (!retryable) {
-              break;
-            }
+            console.error('Joke API fetch failed', { lang, category, error });
           }
         }
       }
@@ -8528,9 +7987,6 @@
             jokeText = buildJoke(data);
           } catch (error) {
             jokeText = '';
-            if (error?.retryable === false) {
-              break;
-            }
           }
         }
         if (!jokeText) {
@@ -9134,40 +8590,6 @@
         }
       };
     }
-    if (dom.mobileNavToggle) {
-      dom.mobileNavToggle.onclick = (event) => {
-        event.preventDefault();
-        setPrimaryNavOpen(!state.isPrimaryNavOpen);
-      };
-    }
-    if (dom.primaryNav) {
-      dom.primaryNav.querySelectorAll('a').forEach((link) => {
-        link.addEventListener('click', () => {
-          setPrimaryNavOpen(false);
-        });
-      });
-    }
-    if (dom.brandHomeLink) {
-      dom.brandHomeLink.addEventListener('click', () => {
-        setPrimaryNavOpen(false);
-        closeSettingsMenu();
-        closeProfileMenu();
-      });
-    }
-    if (dom.settingsToggle) {
-      dom.settingsToggle.onclick = (event) => {
-        event.preventDefault();
-        setProfileMenuOpen(false);
-        setSettingsMenuOpen(!state.isSettingsMenuOpen);
-      };
-    }
-    if (dom.settingsDropdown) {
-      dom.settingsDropdown.querySelectorAll('a').forEach((link) => {
-        link.addEventListener('click', () => {
-          closeSettingsMenu();
-        });
-      });
-    }
     if (dom.navLoginLink) {
       dom.navLoginLink.onclick = () => {
         setAuthRedirectRoute(getRouteFromHash());
@@ -9178,20 +8600,6 @@
         setAuthRedirectRoute(getRouteFromHash());
       };
     }
-    if (dom.navProfileToggle) {
-      dom.navProfileToggle.onclick = (event) => {
-        event.preventDefault();
-        setSettingsMenuOpen(false);
-        setProfileMenuOpen(!state.isProfileMenuOpen);
-      };
-    }
-    if (dom.navProfileDropdown) {
-      dom.navProfileDropdown.querySelectorAll('a').forEach((link) => {
-        link.addEventListener('click', () => {
-          closeProfileMenu();
-        });
-      });
-    }
     if (dom.navLogoutButton) {
       dom.navLogoutButton.onclick = async () => {
         dom.navLogoutButton.disabled = true;
@@ -9201,8 +8609,6 @@
         try {
           await window.jokeAuth.logout();
           showToast(t('auth.loggedOut'));
-          closeProfileMenu();
-          closeSettingsMenu();
           const route = getRouteFromHash();
           if (PROTECTED_ROUTES.includes(route)) {
             location.hash = '#/jokes';
@@ -9308,97 +8714,6 @@
         }
       };
     }
-    if (dom.profileAvatarInput) {
-      dom.profileAvatarInput.onchange = async (event) => {
-        const file = event.target?.files?.[0];
-        if (!file) {
-          return;
-        }
-        if (!isAllowedAvatarFile(file)) {
-          if (dom.profileFeedback) {
-            dom.profileFeedback.textContent = t('auth.avatarInvalidType');
-          }
-          dom.profileAvatarInput.value = '';
-          return;
-        }
-        if (file.size > 1_000_000) {
-          if (dom.profileFeedback) {
-            dom.profileFeedback.textContent = t('auth.avatarTooLarge');
-          }
-          dom.profileAvatarInput.value = '';
-          return;
-        }
-        dom.profileAvatarInput.disabled = true;
-        if (dom.profileAvatarReset) {
-          dom.profileAvatarReset.disabled = true;
-        }
-        if (dom.profileFeedback) {
-          dom.profileFeedback.textContent = t('auth.avatarUploading');
-        }
-        try {
-          const avatarUrl = await readFileAsDataUrl(file);
-          await window.jokeAuth.updateProfile({ avatarUrl });
-          if (dom.profileFeedback) {
-            dom.profileFeedback.textContent = t('auth.avatarUpdated');
-          }
-        } catch (error) {
-          if (dom.profileFeedback) {
-            dom.profileFeedback.textContent = getAuthErrorMessage(error);
-          }
-        } finally {
-          dom.profileAvatarInput.value = '';
-          dom.profileAvatarInput.disabled = false;
-          if (dom.profileAvatarReset) {
-            dom.profileAvatarReset.disabled = false;
-          }
-        }
-      };
-    }
-    if (dom.profileAvatarReset) {
-      dom.profileAvatarReset.onclick = async () => {
-        dom.profileAvatarReset.disabled = true;
-        if (dom.profileFeedback) {
-          dom.profileFeedback.textContent = t('auth.avatarUploading');
-        }
-        try {
-          await window.jokeAuth.updateProfile({ avatarUrl: '' });
-          if (dom.profileFeedback) {
-            dom.profileFeedback.textContent = t('auth.avatarReset');
-          }
-        } catch (error) {
-          if (dom.profileFeedback) {
-            dom.profileFeedback.textContent = getAuthErrorMessage(error);
-          }
-        } finally {
-          dom.profileAvatarReset.disabled = false;
-        }
-      };
-    }
-    document.addEventListener('click', (event) => {
-      if (state.isProfileMenuOpen && dom.navProfileMenu && !dom.navProfileMenu.contains(event.target)) {
-        closeProfileMenu();
-      }
-      if (state.isSettingsMenuOpen && dom.settingsMenu && !dom.settingsMenu.contains(event.target)) {
-        closeSettingsMenu();
-      }
-      if (state.isPrimaryNavOpen && dom.topBar && !dom.topBar.contains(event.target)) {
-        setPrimaryNavOpen(false);
-      }
-    });
-    window.addEventListener('keydown', (event) => {
-      if (event.key !== 'Escape') {
-        return;
-      }
-      if (state.isProfileMenuOpen) {
-        closeProfileMenu();
-      }
-      if (state.isSettingsMenuOpen) {
-        closeSettingsMenu();
-      }
-      if (state.isPrimaryNavOpen) {
-        setPrimaryNavOpen(false);
-      }
-    });
     if (dom.mediaWatermarkToggle) {
       dom.mediaWatermarkToggle.onchange = () => {
         settings.mediaWatermark = dom.mediaWatermarkToggle.checked;
@@ -9409,8 +8724,6 @@
     dom.moderatorToggle.onchange = () => renderModeration();
 
     state.currentCategory = dom.category.value;
-    syncPrimaryNavLayout();
-    window.addEventListener('resize', syncPrimaryNavLayout);
     updateAdminAccessUI();
     initVoiceRecorder();
     if ('speechSynthesis' in window) {
