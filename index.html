@@ -373,6 +373,42 @@
       color: var(--muted);
       font-size: 0.9rem;
     }
+    .settings-list {
+      display: grid;
+      gap: 0.55rem;
+    }
+    .settings-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.8rem;
+      padding: 0.65rem 0.75rem;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: var(--bg-soft);
+    }
+    .settings-item-content {
+      display: grid;
+      gap: 0.2rem;
+      min-width: 0;
+    }
+    .settings-item-content strong {
+      font-size: 0.95rem;
+    }
+    .settings-item-content small {
+      color: var(--muted);
+      font-size: 0.82rem;
+      line-height: 1.3;
+      display: block;
+    }
+    .settings-item .ghost {
+      width: auto;
+      min-width: 84px;
+      white-space: nowrap;
+    }
+    .settings-danger {
+      border-color: #d66b6b;
+    }
     .profile-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -705,6 +741,9 @@
       white-space: normal;
       padding: 0.5rem;
       min-height: 44px;
+      align-items: flex-start;
+      justify-content: flex-start;
+      text-align: left;
     }
     .share-option-icon {
       width: 1.25rem;
@@ -712,6 +751,15 @@
       font-size: 1rem;
       line-height: 1;
       flex-shrink: 0;
+    }
+    .share-option-label {
+      display: block;
+      flex: 1;
+      white-space: normal;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+      line-height: 1.25;
+      text-align: left;
     }
     .image-share {
       margin-top: 1rem;
@@ -1293,8 +1341,14 @@
         width: 100%;
       }
       .share-dropdown {
-        min-width: 240px;
+        min-width: min(92vw, 320px);
+        max-width: min(92vw, 320px);
+        max-height: min(58vh, 420px);
+        overflow-y: auto;
         grid-template-columns: 1fr;
+      }
+      .share-dropdown .action-menu-item {
+        min-height: 48px;
       }
       .auth-nav {
         justify-content: flex-end;
@@ -1310,6 +1364,13 @@
       .auth-required-actions {
         flex-direction: column;
         align-items: stretch;
+      }
+      .settings-item {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .settings-item .ghost {
+        width: 100%;
       }
       .joke-text {
         font-size: 1.1rem;
@@ -1662,7 +1723,51 @@
         <h2 data-i18n="auth.settingsTitle">Settings</h2>
         <p data-i18n="auth.settingsSubtitle">Account and personal preferences.</p>
         <div class="card">
-          <p data-i18n="auth.settingsComingSoon">Settings structure is ready. More options coming soon.</p>
+          <div class="settings-list">
+            <div class="settings-item">
+              <div class="settings-item-content">
+                <strong data-i18n="auth.settingsPrivacyPolicy">Privacy Policy</strong>
+                <small data-i18n="auth.settingsPrivacyPolicyHint">Read how your data is handled.</small>
+              </div>
+              <button id="settings-privacy-policy" type="button" class="ghost" data-i18n="auth.settingsOpen">Open</button>
+            </div>
+            <div class="settings-item">
+              <div class="settings-item-content">
+                <strong data-i18n="auth.settingsDataControls">Data and Privacy Controls</strong>
+                <small data-i18n="auth.settingsDataControlsHint">Manage export and privacy preferences.</small>
+              </div>
+              <button id="settings-data-controls" type="button" class="ghost" data-i18n="auth.settingsManage">Manage</button>
+            </div>
+            <div class="settings-item">
+              <div class="settings-item-content">
+                <strong data-i18n="auth.settingsPassword">Change Password</strong>
+                <small data-i18n="auth.settingsPasswordHint">Update your account password securely.</small>
+              </div>
+              <button id="settings-change-password" type="button" class="ghost" data-i18n="auth.settingsChange">Change</button>
+            </div>
+            <div class="settings-item">
+              <div class="settings-item-content">
+                <strong data-i18n="auth.settingsSecurity">Account Security</strong>
+                <small data-i18n="auth.settingsSecurityHint">Review recent sessions and account safety.</small>
+              </div>
+              <button id="settings-account-security" type="button" class="ghost" data-i18n="auth.settingsReview">Review</button>
+            </div>
+            <div class="settings-item">
+              <div class="settings-item-content">
+                <strong data-i18n="auth.settingsNotifications">Notification Preferences</strong>
+                <small data-i18n="auth.settingsNotificationsHint">Control reminder and alert preferences.</small>
+              </div>
+              <button id="settings-notifications" type="button" class="ghost" data-i18n="auth.settingsManage">Manage</button>
+            </div>
+            <div class="settings-item settings-danger">
+              <div class="settings-item-content">
+                <strong data-i18n="auth.settingsDeleteAccount">Delete Account</strong>
+                <small data-i18n="auth.settingsDeleteAccountHint">Permanently remove your account access.</small>
+              </div>
+              <button id="settings-delete-account" type="button" class="ghost" data-i18n="auth.settingsDelete">Delete</button>
+            </div>
+          </div>
+          <div id="settings-feedback" class="feedback" aria-live="polite"></div>
         </div>
       </div>
     </section>
@@ -1802,47 +1907,47 @@
               <div id="share-dropdown" class="action-dropdown share-dropdown card" role="menu" hidden>
                 <button type="button" class="action-menu-item" data-share="whatsapp" role="menuitem">
                   <span class="share-option-icon" aria-hidden="true">💬</span>
-                  <span data-i18n="share.whatsapp">WhatsApp</span>
+                  <span class="share-option-label" data-i18n="share.whatsapp">WhatsApp</span>
                 </button>
                 <button type="button" class="action-menu-item" data-share="instagram" role="menuitem">
                   <span class="share-option-icon" aria-hidden="true">📸</span>
-                  <span data-i18n="share.instagram">Instagram</span>
+                  <span class="share-option-label" data-i18n="share.instagram">Instagram</span>
                 </button>
                 <button type="button" class="action-menu-item" data-share="tiktok" role="menuitem">
                   <span class="share-option-icon" aria-hidden="true">🎵</span>
-                  <span data-i18n="share.tiktok">TikTok</span>
+                  <span class="share-option-label" data-i18n="share.tiktok">TikTok</span>
                 </button>
                 <button type="button" class="action-menu-item" data-share="facebook" role="menuitem">
                   <span class="share-option-icon" aria-hidden="true">📘</span>
-                  <span data-i18n="share.facebook">Facebook</span>
+                  <span class="share-option-label" data-i18n="share.facebook">Facebook</span>
                 </button>
                 <button type="button" class="action-menu-item" data-share="x" role="menuitem">
                   <span class="share-option-icon" aria-hidden="true">𝕏</span>
-                  <span data-i18n="share.x">X (Twitter)</span>
+                  <span class="share-option-label" data-i18n="share.x">X (Twitter)</span>
                 </button>
                 <button type="button" class="action-menu-item" data-share="snapchat" role="menuitem">
                   <span class="share-option-icon" aria-hidden="true">👻</span>
-                  <span data-i18n="share.snapchat">Snapchat</span>
+                  <span class="share-option-label" data-i18n="share.snapchat">Snapchat</span>
                 </button>
                 <button type="button" class="action-menu-item" data-share="telegram" role="menuitem">
                   <span class="share-option-icon" aria-hidden="true">✈️</span>
-                  <span data-i18n="share.telegram">Telegram</span>
+                  <span class="share-option-label" data-i18n="share.telegram">Telegram</span>
                 </button>
                 <button type="button" class="action-menu-item" data-share="reddit" role="menuitem">
                   <span class="share-option-icon" aria-hidden="true">👽</span>
-                  <span data-i18n="share.reddit">Reddit</span>
+                  <span class="share-option-label" data-i18n="share.reddit">Reddit</span>
                 </button>
                 <button type="button" class="action-menu-item" data-share="discord" role="menuitem">
                   <span class="share-option-icon" aria-hidden="true">🎮</span>
-                  <span data-i18n="share.discord">Discord</span>
+                  <span class="share-option-label" data-i18n="share.discord">Discord</span>
                 </button>
                 <button type="button" class="action-menu-item" data-share="email" role="menuitem">
                   <span class="share-option-icon" aria-hidden="true">✉️</span>
-                  <span data-i18n="share.email">Email</span>
+                  <span class="share-option-label" data-i18n="share.email">Email</span>
                 </button>
                 <button type="button" class="action-menu-item" data-share="copy" role="menuitem">
                   <span class="share-option-icon" aria-hidden="true">🔗</span>
-                  <span data-i18n="share.copy">Copy Link</span>
+                  <span class="share-option-label" data-i18n="share.copy">Copy Link</span>
                 </button>
               </div>
             </div>
@@ -2353,7 +2458,14 @@
       profileFeedback: document.getElementById('profile-feedback'),
       profileAvatarImage: document.getElementById('profile-avatar-image'),
       profileAvatarInput: document.getElementById('profile-avatar-input'),
-      profileAvatarReset: document.getElementById('profile-avatar-reset')
+      profileAvatarReset: document.getElementById('profile-avatar-reset'),
+      settingsFeedback: document.getElementById('settings-feedback'),
+      settingsPrivacyPolicy: document.getElementById('settings-privacy-policy'),
+      settingsDataControls: document.getElementById('settings-data-controls'),
+      settingsChangePassword: document.getElementById('settings-change-password'),
+      settingsAccountSecurity: document.getElementById('settings-account-security'),
+      settingsNotifications: document.getElementById('settings-notifications'),
+      settingsDeleteAccount: document.getElementById('settings-delete-account')
     };
 
     const STORAGE_KEYS = {
@@ -2771,6 +2883,29 @@
         'auth.settingsTitle': 'Settings',
         'auth.settingsSubtitle': 'Account and personal preferences.',
         'auth.settingsComingSoon': 'Settings structure is ready. More options coming soon.',
+        'auth.settingsPrivacyPolicy': 'Privacy Policy',
+        'auth.settingsPrivacyPolicyHint': 'Read how your data is handled.',
+        'auth.settingsDataControls': 'Data and Privacy Controls',
+        'auth.settingsDataControlsHint': 'Manage export and privacy preferences.',
+        'auth.settingsPassword': 'Change Password',
+        'auth.settingsPasswordHint': 'Update your account password securely.',
+        'auth.settingsSecurity': 'Account Security',
+        'auth.settingsSecurityHint': 'Review recent sessions and account safety.',
+        'auth.settingsDeleteAccount': 'Delete Account',
+        'auth.settingsDeleteAccountHint': 'Permanently remove your account access.',
+        'auth.settingsNotifications': 'Notification Preferences',
+        'auth.settingsNotificationsHint': 'Control reminder and alert preferences.',
+        'auth.settingsOpen': 'Open',
+        'auth.settingsManage': 'Manage',
+        'auth.settingsChange': 'Change',
+        'auth.settingsReview': 'Review',
+        'auth.settingsDelete': 'Delete',
+        'auth.settingsDataFeedback': 'Data and privacy controls are coming soon.',
+        'auth.settingsPasswordFeedback': 'Password change workflow is coming soon.',
+        'auth.settingsSecurityFeedback': 'Account security details are coming soon.',
+        'auth.settingsDeleteConfirm': 'Are you sure you want to request account deletion?',
+        'auth.settingsDeleteFeedback': 'Delete account request noted. Contact support to complete this action.',
+        'auth.settingsNotificationsFeedback': 'Notification preferences are available in Contact settings.',
         'auth.uploadAvatar': 'Upload Photo',
         'auth.resetAvatar': 'Use Default',
         'auth.avatarUploading': 'Uploading profile photo...',
@@ -5752,6 +5887,13 @@
       dom.submissionFeedback.textContent = t(key, params);
     }
 
+    function setSettingsFeedback(key, params = {}) {
+      if (!dom.settingsFeedback) {
+        return;
+      }
+      dom.settingsFeedback.textContent = key ? t(key, params) : '';
+    }
+
     function normalizeRouteValue(route) {
       const safe = String(route || '')
         .toLowerCase()
@@ -6856,6 +6998,9 @@
       });
       updateNavActive(route);
       updateAuthNavActive(route);
+      if (route !== 'settings') {
+        setSettingsFeedback('');
+      }
       if (route === 'profile') {
         renderProfileSection();
       }
@@ -9914,6 +10059,42 @@
           closeSettingsMenu();
         });
       });
+    }
+    if (dom.settingsPrivacyPolicy) {
+      dom.settingsPrivacyPolicy.onclick = () => {
+        setSettingsFeedback('');
+        location.hash = '#/about';
+      };
+    }
+    if (dom.settingsDataControls) {
+      dom.settingsDataControls.onclick = () => {
+        setSettingsFeedback('auth.settingsDataFeedback');
+      };
+    }
+    if (dom.settingsChangePassword) {
+      dom.settingsChangePassword.onclick = () => {
+        setSettingsFeedback('auth.settingsPasswordFeedback');
+      };
+    }
+    if (dom.settingsAccountSecurity) {
+      dom.settingsAccountSecurity.onclick = () => {
+        setSettingsFeedback('auth.settingsSecurityFeedback');
+      };
+    }
+    if (dom.settingsNotifications) {
+      dom.settingsNotifications.onclick = () => {
+        setSettingsFeedback('auth.settingsNotificationsFeedback');
+        location.hash = '#/contact';
+      };
+    }
+    if (dom.settingsDeleteAccount) {
+      dom.settingsDeleteAccount.onclick = () => {
+        const confirmed = window.confirm(t('auth.settingsDeleteConfirm'));
+        if (!confirmed) {
+          return;
+        }
+        setSettingsFeedback('auth.settingsDeleteFeedback');
+      };
     }
     if (dom.navLoginLink) {
       dom.navLoginLink.onclick = () => {
