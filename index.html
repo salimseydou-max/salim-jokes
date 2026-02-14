@@ -66,7 +66,7 @@
       color: var(--text);
     }
     body {
-      padding-top: 190px;
+      padding-top: 150px;
       background-color: var(--bg);
       background-image: var(--bg-pattern);
       background-repeat: repeat;
@@ -9145,6 +9145,13 @@
         link.addEventListener('click', () => {
           setPrimaryNavOpen(false);
         });
+      });
+    }
+    if (dom.brandHomeLink) {
+      dom.brandHomeLink.addEventListener('click', () => {
+        setPrimaryNavOpen(false);
+        closeSettingsMenu();
+        closeProfileMenu();
       });
     }
     if (dom.settingsToggle) {
