@@ -1384,6 +1384,27 @@
     }
     .install-ios-steps li {
       margin: 0;
+      opacity: 0;
+      transform: translateY(4px);
+    }
+    .install-ios-steps.is-visible li {
+      animation: installStepIn 0.22s ease forwards;
+    }
+    .install-ios-steps.is-visible li:nth-child(2) {
+      animation-delay: 0.06s;
+    }
+    .install-ios-steps.is-visible li:nth-child(3) {
+      animation-delay: 0.12s;
+    }
+    @keyframes installStepIn {
+      from {
+        opacity: 0;
+        transform: translateY(4px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
     .install-banner-actions {
       display: flex;
@@ -6530,7 +6551,7 @@
     }
 
     function isInstallEngagementReady() {
-      return installPromptPrefs.visitCount >= 2 || installPromptPrefs.interactionCount >= 3;
+      return installPromptPrefs.visitCount >= 2 || installPromptPrefs.interactionCount >= 1;
     }
 
     function recordInstallVisit() {
@@ -6638,6 +6659,7 @@
       }
       if (dom.installIosSteps) {
         dom.installIosSteps.hidden = !iosHintOnly;
+        dom.installIosSteps.classList.toggle('is-visible', iosHintOnly);
       }
       if (!canShow) {
         setInstallBannerOpen(false);
@@ -10895,15 +10917,6 @@
 
     function savePwaInstallPrefs() {
       localStorage.setItem(STORAGE_KEYS.pwaInstall, JSON.stringify(installPromptPrefs));
-    }
-
-    function loadLastViewedJokes() {
-      const stored = JSON.parse(localStorage.getItem(STORAGE_KEYS.lastViewedJokes) || '[]');
-      return Array.isArray(stored) ? stored.slice(0, 40) : [];
-    }
-
-    function saveLastViewedJokes() {
-      localStorage.setItem(STORAGE_KEYS.lastViewedJokes, JSON.stringify(lastViewedJokesStore.slice(0, 40)));
     }
 
     function loadUserPreferenceStore() {
