@@ -3,24 +3,30 @@ const DEFAULT_URL = "/#/jokes";
 const DEFAULT_ICON = "/icons/icon-192.png";
 const DEFAULT_BADGE = "/icons/favicon-32.png";
 
-const CORE_CACHE = "vjc-core-cache-v1";
-const RUNTIME_CACHE = "vjc-runtime-cache-v1";
-const API_CACHE = "vjc-api-cache-v1";
-const IMAGE_CACHE = "vjc-image-cache-v1";
+const CACHE_VERSION = "legacy-icon-v3";
+const CORE_CACHE = `vjc-core-cache-${CACHE_VERSION}`;
+const RUNTIME_CACHE = `vjc-runtime-cache-${CACHE_VERSION}`;
+const API_CACHE = `vjc-api-cache-${CACHE_VERSION}`;
+const IMAGE_CACHE = `vjc-image-cache-${CACHE_VERSION}`;
 const CACHE_NAMES = [CORE_CACHE, RUNTIME_CACHE, API_CACHE, IMAGE_CACHE];
 
 const OFFLINE_FALLBACK_URL = "/offline.html";
 const APP_SHELL_URL = "/index.html";
+const FONT_STYLESHEET_URL =
+  "https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&display=swap";
 const CORE_ASSETS = [
   "/",
   APP_SHELL_URL,
+  "/#/jokes",
   OFFLINE_FALLBACK_URL,
   "/manifest.json",
   DEFAULT_ICON,
   "/icons/icon-512.png",
   "/icons/icon-maskable-512.png",
   "/icons/apple-touch-icon.png",
-  DEFAULT_BADGE
+  "/icons/original-icon.svg",
+  DEFAULT_BADGE,
+  FONT_STYLESHEET_URL
 ];
 
 function isHttpRequest(request) {
@@ -167,7 +173,15 @@ self.addEventListener("install", (event) => {
   event.waitUntil(
     (async () => {
       const cache = await caches.open(CORE_CACHE);
-      await cache.addAll(CORE_ASSETS);
+      await Promise.allSettled(
+        CORE_ASSETS.map(async (asset) => {
+          try {
+            await cache.add(asset);
+          } catch (error) {
+            // Keep install resilient if a non-critical asset fails.
+          }
+        })
+      );
     })()
   );
 });

@@ -2,7 +2,7 @@
 <html lang="en" dir="ltr">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Voice Joke Club</title>
   <meta name="description" content="A community-driven voice joke platform with daily laughs, categories, reactions, and submissions." />
   <meta name="keywords" content="jokes, voice jokes, funny, community, daily joke, humor" />
@@ -27,6 +27,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="preload" href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&display=swap" as="style" />
   <link rel="preload" href="/icons/icon-192.png" as="image" type="image/png" />
+  <link rel="icon" href="/icons/original-icon.svg" type="image/svg+xml" />
   <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png" />
   <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png" />
   <link
@@ -115,7 +116,7 @@
       color: var(--text);
     }
     body {
-      padding-top: 150px;
+      padding-top: calc(150px + env(safe-area-inset-top));
       background-color: var(--bg);
       background-image: var(--bg-pattern);
       background-repeat: repeat;
@@ -169,7 +170,7 @@
       z-index: 10;
       background: var(--card);
       border-bottom: 1px solid var(--border);
-      padding: 0.4rem 1rem;
+      padding: calc(0.4rem + env(safe-area-inset-top)) 1rem 0.4rem;
       box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
     }
     [data-theme="dark"] .top-bar {
@@ -1310,7 +1311,7 @@
       position: fixed;
       left: 24px;
       right: 24px;
-      bottom: 24px;
+      bottom: max(24px, env(safe-area-inset-bottom));
       margin: 0 auto;
       width: min(560px, calc(100vw - 48px));
       z-index: 68;
@@ -1327,6 +1328,38 @@
       transform: translateY(0);
       pointer-events: auto;
     }
+    .install-banner-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+    }
+    .install-banner-logo {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--accent-strong);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+    .install-banner-logo img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .install-banner-close {
+      width: 40px;
+      min-width: 40px;
+      min-height: 40px;
+      padding: 0.4rem;
+      font-size: 1rem;
+      border-radius: 999px;
+    }
     .install-banner-content {
       display: grid;
       gap: 0.25rem;
@@ -1339,6 +1372,18 @@
       font-size: 0.88rem;
       line-height: 1.35;
       color: var(--muted);
+    }
+    .install-ios-steps {
+      margin: 0.25rem 0 0;
+      padding-left: 1rem;
+      display: grid;
+      gap: 0.25rem;
+      color: var(--muted);
+      font-size: 0.84rem;
+      line-height: 1.35;
+    }
+    .install-ios-steps li {
+      margin: 0;
     }
     .install-banner-actions {
       display: flex;
@@ -1434,7 +1479,7 @@
       100% { transform: scale(1); }
     }
     @media (max-width: 900px) {
-      body { padding-top: 180px; }
+      body { padding-top: calc(180px + env(safe-area-inset-top)); }
       .top-bar-row {
         justify-content: center;
       }
@@ -1476,7 +1521,7 @@
       }
     }
     @media (max-width: 600px) {
-      body { padding-top: 200px; }
+      body { padding-top: calc(200px + env(safe-area-inset-top)); }
       .hero {
         text-align: center;
       }
@@ -1579,7 +1624,7 @@
         left: 16px;
         right: 16px;
         width: auto;
-        bottom: 16px;
+        bottom: max(16px, env(safe-area-inset-bottom));
       }
       .install-banner-actions {
         justify-content: stretch;
@@ -2536,11 +2581,24 @@
       aria-modal="false"
       aria-labelledby="install-banner-title"
     >
+      <div class="install-banner-header">
+        <div class="install-banner-logo" aria-hidden="true">
+          <img src="/icons/icon-192.png" alt="" />
+        </div>
+        <button id="install-banner-close" type="button" class="ghost install-banner-close" aria-label="Close install prompt">
+          ✕
+        </button>
+      </div>
       <div class="install-banner-content">
         <strong id="install-banner-title" data-i18n="pwa.installTitle">Install Voice Joke Club</strong>
         <p id="install-banner-text" data-i18n="pwa.installDescription">
           Install the app for faster loading, offline jokes, and notification support.
         </p>
+        <ol id="install-ios-steps" class="install-ios-steps" hidden>
+          <li data-i18n="pwa.iosStep1">Step 1: Tap the Share button in Safari.</li>
+          <li data-i18n="pwa.iosStep2">Step 2: Tap "Add to Home Screen".</li>
+          <li data-i18n="pwa.iosStep3">Step 3: Confirm to install the app.</li>
+        </ol>
       </div>
       <div class="install-banner-actions">
         <button id="install-banner-install" type="button" data-i18n="pwa.installAction">Install App</button>
@@ -2650,7 +2708,9 @@
       adUnit: document.getElementById('ad-unit'),
       adPlaceholder: document.getElementById('ad-placeholder'),
       installBanner: document.getElementById('install-banner'),
+      installBannerClose: document.getElementById('install-banner-close'),
       installBannerText: document.getElementById('install-banner-text'),
+      installIosSteps: document.getElementById('install-ios-steps'),
       installBannerInstall: document.getElementById('install-banner-install'),
       installBannerDismiss: document.getElementById('install-banner-dismiss'),
       toastContainer: document.getElementById('toast-container'),
@@ -2756,6 +2816,7 @@
       comments: 'commentStoreV1',
       notifications: 'notificationPrefsV1',
       pwaInstall: 'pwaInstallPrefsV1',
+      lastViewedJokes: 'lastViewedJokesV1',
       userPreferences: 'userPreferenceStoreV1',
       progress: 'jokeProgressV1',
       sessionSeen: 'jokeSessionSeenV1'
@@ -3230,6 +3291,9 @@
         'pwa.addToHomeScreen': 'Add to Home Screen',
         'pwa.iosPrompt': 'Use Share > Add to Home Screen to install this app on iPhone or iPad.',
         'pwa.iosInstructions': 'Tap Share, then choose Add to Home Screen.',
+        'pwa.iosStep1': 'Step 1: Tap the Share button in Safari.',
+        'pwa.iosStep2': 'Step 2: Tap "Add to Home Screen".',
+        'pwa.iosStep3': 'Step 3: Confirm to install the app.',
         'pwa.installed': 'App installed successfully.',
         'pwa.installUnavailable': 'Install is only available on secure HTTPS pages.',
         'pwa.updateReady': 'App update is ready. Refreshing now...',
@@ -5881,6 +5945,7 @@
       hasReloadedForServiceWorkerUpdate: false,
       serviceWorkerUpdateInterval: null,
       isAdUnitLoaded: false,
+      lastInstallInteractionAt: 0,
       voices: [],
       recorder: null,
       voiceChunks: [],
@@ -5904,6 +5969,7 @@
     const dailyIngest = loadDailyIngest();
     const commentStore = loadComments();
     const notificationPrefs = loadNotifications();
+    const lastViewedJokesStore = loadLastViewedJokes();
     const installPromptPrefs = loadPwaInstallPrefs();
     const userPreferenceStore = loadUserPreferenceStore();
     const progressStore = loadProgressStore();
@@ -6463,11 +6529,40 @@
       return isIosDevice() && isSafari && !isStandaloneDisplayMode();
     }
 
+    function isInstallEngagementReady() {
+      return installPromptPrefs.visitCount >= 2 || installPromptPrefs.interactionCount >= 3;
+    }
+
+    function recordInstallVisit() {
+      const now = Date.now();
+      const lastVisitAt = Number(installPromptPrefs.lastVisitAt) || 0;
+      // Count a new "visit" only after a cool gap to avoid refresh inflation.
+      if (!lastVisitAt || now - lastVisitAt > 30 * 60 * 1000) {
+        installPromptPrefs.visitCount = (Number(installPromptPrefs.visitCount) || 0) + 1;
+      }
+      installPromptPrefs.lastVisitAt = now;
+      savePwaInstallPrefs();
+    }
+
+    function recordInstallInteraction() {
+      const now = Date.now();
+      if (now - state.lastInstallInteractionAt < 1200) {
+        return;
+      }
+      state.lastInstallInteractionAt = now;
+      installPromptPrefs.interactionCount = (Number(installPromptPrefs.interactionCount) || 0) + 1;
+      savePwaInstallPrefs();
+      maybeShowInstallBanner();
+    }
+
     function canShowInstallPromptUi() {
       if (!isSecurePwaContext()) {
         return false;
       }
       if (isStandaloneDisplayMode()) {
+        return false;
+      }
+      if (!isInstallEngagementReady()) {
         return false;
       }
       return Boolean(state.deferredInstallPrompt || isIosInstallHintAvailable());
@@ -6523,7 +6618,7 @@
     }
 
     function updateInstallUi() {
-      const canShow = canShowInstallPromptUi();
+      const canShow = canShowInstallPromptUi() && !shouldSuppressInstallPrompt();
       const iosHintOnly = Boolean(isIosInstallHintAvailable() && !state.deferredInstallPrompt);
       if (dom.installAppButton) {
         dom.installAppButton.hidden = !canShow;
@@ -6541,6 +6636,9 @@
           ? t('pwa.iosPrompt')
           : t('pwa.installDescription');
       }
+      if (dom.installIosSteps) {
+        dom.installIosSteps.hidden = !iosHintOnly;
+      }
       if (!canShow) {
         setInstallBannerOpen(false);
       }
@@ -6548,6 +6646,10 @@
 
     function maybeShowInstallBanner(options = {}) {
       const force = Boolean(options.force);
+      const ignoreEngagement = Boolean(options.ignoreEngagement);
+      if (!ignoreEngagement && !isInstallEngagementReady()) {
+        return;
+      }
       if (!canShowInstallPromptUi() || shouldSuppressInstallPrompt()) {
         return;
       }
@@ -8417,6 +8519,30 @@
       dom.next.disabled = !hasList || !hasNextJoke();
     }
 
+    function rememberLastViewedJoke(joke) {
+      const safeJoke = String(joke || '').trim();
+      if (!safeJoke) {
+        return;
+      }
+      const jokeId = buildJokeId(safeJoke, state.currentLang, state.currentCategory || 'random');
+      const existingIndex = lastViewedJokesStore.findIndex((entry) => entry.id === jokeId);
+      const nextEntry = {
+        id: jokeId,
+        joke: safeJoke,
+        lang: state.currentLang,
+        category: state.currentCategory || 'random',
+        viewedAt: new Date().toISOString()
+      };
+      if (existingIndex >= 0) {
+        lastViewedJokesStore.splice(existingIndex, 1);
+      }
+      lastViewedJokesStore.unshift(nextEntry);
+      if (lastViewedJokesStore.length > 40) {
+        lastViewedJokesStore.splice(40);
+      }
+      saveLastViewedJokes();
+    }
+
     function showJoke(joke) {
       state.currentJoke = joke;
       closeJokeActionMenus();
@@ -8432,6 +8558,7 @@
       updateJokeToggle();
       updateSessionProgressUI();
       renderJokeMedia();
+      rememberLastViewedJoke(joke);
     }
 
     function updateJokeToggle() {
@@ -10729,16 +10856,54 @@
       persistCurrentPreferences();
     }
 
+    function loadLastViewedJokes() {
+      const stored = JSON.parse(localStorage.getItem(STORAGE_KEYS.lastViewedJokes) || '[]');
+      if (!Array.isArray(stored)) {
+        return [];
+      }
+      return stored
+        .map((entry) => {
+          if (!entry || typeof entry !== 'object') {
+            return null;
+          }
+          return {
+            id: typeof entry.id === 'string' ? entry.id : '',
+            joke: typeof entry.joke === 'string' ? entry.joke : '',
+            lang: typeof entry.lang === 'string' ? entry.lang : 'en',
+            category: typeof entry.category === 'string' ? entry.category : 'random',
+            viewedAt: typeof entry.viewedAt === 'string' ? entry.viewedAt : new Date().toISOString()
+          };
+        })
+        .filter((entry) => entry && entry.id && entry.joke)
+        .slice(0, 40);
+    }
+
+    function saveLastViewedJokes() {
+      localStorage.setItem(STORAGE_KEYS.lastViewedJokes, JSON.stringify(lastViewedJokesStore.slice(0, 40)));
+    }
+
     function loadPwaInstallPrefs() {
       const stored = JSON.parse(localStorage.getItem(STORAGE_KEYS.pwaInstall) || '{}');
       return {
         dismissedAt: Number(stored.dismissedAt) || 0,
-        lastPromptAt: Number(stored.lastPromptAt) || 0
+        lastPromptAt: Number(stored.lastPromptAt) || 0,
+        visitCount: Number(stored.visitCount) || 0,
+        interactionCount: Number(stored.interactionCount) || 0,
+        lastVisitAt: Number(stored.lastVisitAt) || 0
       };
     }
 
     function savePwaInstallPrefs() {
       localStorage.setItem(STORAGE_KEYS.pwaInstall, JSON.stringify(installPromptPrefs));
+    }
+
+    function loadLastViewedJokes() {
+      const stored = JSON.parse(localStorage.getItem(STORAGE_KEYS.lastViewedJokes) || '[]');
+      return Array.isArray(stored) ? stored.slice(0, 40) : [];
+    }
+
+    function saveLastViewedJokes() {
+      localStorage.setItem(STORAGE_KEYS.lastViewedJokes, JSON.stringify(lastViewedJokesStore.slice(0, 40)));
     }
 
     function loadUserPreferenceStore() {
@@ -11072,6 +11237,9 @@
     }
     dom.darkToggle.onclick = () => toggleTheme();
     dom.jokeCard.addEventListener('click', (event) => {
+      if (event.target.closest('button')) {
+        recordInstallInteraction();
+      }
       const reactionButton = event.target.closest('button[data-reaction]');
       if (reactionButton) {
         addReaction(reactionButton.dataset.reaction);
@@ -11262,6 +11430,11 @@
     if (dom.installBannerInstall) {
       dom.installBannerInstall.onclick = async () => {
         await promptInstallApp();
+      };
+    }
+    if (dom.installBannerClose) {
+      dom.installBannerClose.onclick = () => {
+        dismissInstallBanner();
       };
     }
     if (dom.installBannerDismiss) {
@@ -11592,6 +11765,18 @@
         dismissInstallBanner();
       }
     });
+    let hasInstallScrollInteraction = false;
+    window.addEventListener(
+      'scroll',
+      () => {
+        if (hasInstallScrollInteraction || window.scrollY < 240) {
+          return;
+        }
+        hasInstallScrollInteraction = true;
+        recordInstallInteraction();
+      },
+      { passive: true }
+    );
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     window.addEventListener('appinstalled', handleAppInstalled);
     if (dom.mediaWatermarkToggle) {
@@ -11604,6 +11789,7 @@
     dom.moderatorToggle.onchange = () => renderModeration();
 
     state.currentCategory = dom.category.value;
+    recordInstallVisit();
     switchStorageScope(getStorageScopeId());
     syncPrimaryNavLayout();
     window.addEventListener('resize', syncPrimaryNavLayout);
