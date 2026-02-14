@@ -1,0 +1,19 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appIDs": ["REPLACE_WITH_TEAM_ID.com.voicejokeclub.app"],
+        "components": [
+          {
+            "/": "/*",
+            "comment": "Allow all in-app deep links for future iOS wrapper."
+          }
+        ]
+      }
+    ]
+  },
+  "webcredentials": {
+    "apps": ["REPLACE_WITH_TEAM_ID.com.voicejokeclub.app"]
+  }
+}
