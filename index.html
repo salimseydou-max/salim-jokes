@@ -201,6 +201,7 @@
       flex-wrap: wrap;
       align-items: center;
       gap: 0.45rem;
+      margin-left: auto;
     }
     .auth-link {
       display: inline-flex;
@@ -238,8 +239,27 @@
     .profile-toggle {
       display: inline-flex;
       align-items: center;
-      gap: 0.45rem;
+      justify-content: center;
+      gap: 0.35rem;
       min-height: 40px;
+      min-width: 40px;
+      padding: 0.45rem;
+    }
+    .nav-menu-icon {
+      font-size: 1.15rem;
+      line-height: 1;
+      font-weight: 700;
+    }
+    .visually-hidden {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
     }
     .nav-avatar {
       width: 26px;
@@ -260,6 +280,15 @@
       gap: 0.25rem;
       z-index: 30;
       box-shadow: var(--shadow);
+      opacity: 0;
+      transform: translateY(-6px);
+      pointer-events: none;
+      transition: opacity 0.16s ease, transform 0.16s ease;
+    }
+    .profile-dropdown.is-open {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
     }
     .profile-dropdown-item {
       display: flex;
@@ -1059,10 +1088,11 @@
       }
       .auth-nav {
         justify-content: center;
+        margin-left: 0;
       }
       .profile-dropdown {
-        right: auto;
-        left: 0;
+        right: 0;
+        left: auto;
       }
       .joke-text {
         font-size: 1.1rem;
@@ -1107,43 +1137,66 @@
         </select>
         <button id="dark-toggle" class="ghost" data-i18n="buttons.dark">Dark Mode</button>
         <div id="auth-nav" class="auth-nav" aria-label="Account">
-          <a
-            id="nav-login-link"
-            class="auth-link ghost-link"
-            href="#/login"
-            data-auth-route="login"
-            data-i18n="auth.login"
-          >
-            Log In
-          </a>
-          <a
-            id="nav-signup-link"
-            class="auth-link"
-            href="#/signup"
-            data-auth-route="signup"
-            data-i18n="auth.signup"
-          >
-            Sign Up
-          </a>
-          <div id="nav-profile-menu" class="profile-menu" hidden>
+          <div id="nav-profile-menu" class="profile-menu">
             <button
               id="nav-profile-toggle"
               type="button"
               class="auth-link ghost-link profile-toggle"
               aria-expanded="false"
               aria-haspopup="menu"
+              aria-label="Account menu"
             >
-              <img id="nav-profile-avatar" class="nav-avatar" alt="Profile" />
-              <span id="nav-profile-label" data-i18n="auth.profile">Profile</span>
+              <span id="nav-menu-icon" class="nav-menu-icon" aria-hidden="true">⋯</span>
+              <img id="nav-profile-avatar" class="nav-avatar" alt="Profile" hidden />
+              <span id="nav-profile-label" class="visually-hidden" data-i18n="auth.accountMenu">Account menu</span>
             </button>
             <div id="nav-profile-dropdown" class="profile-dropdown card" role="menu" hidden>
-              <a href="#/profile" class="profile-dropdown-item" role="menuitem" data-i18n="auth.profileAccount">
+              <a
+                id="nav-login-link"
+                href="#/login"
+                class="profile-dropdown-item"
+                role="menuitem"
+                data-i18n="auth.login"
+              >
+                Log In
+              </a>
+              <a
+                id="nav-signup-link"
+                href="#/signup"
+                class="profile-dropdown-item"
+                role="menuitem"
+                data-i18n="auth.signup"
+              >
+                Sign Up
+              </a>
+              <a
+                id="nav-profile-link"
+                href="#/profile"
+                class="profile-dropdown-item"
+                role="menuitem"
+                data-i18n="auth.profileAccount"
+                hidden
+              >
                 Profile / Account
               </a>
-              <a href="#/saved" class="profile-dropdown-item" role="menuitem" data-i18n="auth.menuFavorites">
+              <a
+                id="nav-saved-link"
+                href="#/saved"
+                class="profile-dropdown-item"
+                role="menuitem"
+                data-i18n="auth.menuFavorites"
+                hidden
+              >
                 Favorites / Saved
               </a>
-              <a href="#/settings" class="profile-dropdown-item" role="menuitem" data-i18n="auth.menuSettings">
+              <a
+                id="nav-settings-link"
+                href="#/settings"
+                class="profile-dropdown-item"
+                role="menuitem"
+                data-i18n="auth.menuSettings"
+                hidden
+              >
                 Settings
               </a>
               <button
@@ -1152,6 +1205,7 @@
                 class="profile-dropdown-item"
                 role="menuitem"
                 data-i18n="auth.logout"
+                hidden
               >
                 Log Out
               </button>
@@ -1790,12 +1844,16 @@
     const dom = {
       language: document.getElementById('language'),
       darkToggle: document.getElementById('dark-toggle'),
+      navMenuIcon: document.getElementById('nav-menu-icon'),
       navLoginLink: document.getElementById('nav-login-link'),
       navSignupLink: document.getElementById('nav-signup-link'),
       navProfileMenu: document.getElementById('nav-profile-menu'),
       navProfileToggle: document.getElementById('nav-profile-toggle'),
       navProfileAvatar: document.getElementById('nav-profile-avatar'),
       navProfileLabel: document.getElementById('nav-profile-label'),
+      navProfileLink: document.getElementById('nav-profile-link'),
+      navSavedLink: document.getElementById('nav-saved-link'),
+      navSettingsLink: document.getElementById('nav-settings-link'),
       navProfileDropdown: document.getElementById('nav-profile-dropdown'),
       navLogoutButton: document.getElementById('nav-logout-button'),
       category: document.getElementById('category-select'),
@@ -2273,6 +2331,7 @@
         'auth.login': 'Log In',
         'auth.signup': 'Sign Up',
         'auth.profile': 'Profile',
+        'auth.accountMenu': 'Account menu',
         'auth.logout': 'Log Out',
         'auth.loginTitle': 'Log In',
         'auth.signupTitle': 'Sign Up',
@@ -5023,6 +5082,9 @@
       document.querySelectorAll('[data-i18n-placeholder]').forEach((el) => {
         el.placeholder = t(el.dataset.i18nPlaceholder);
       });
+      if (dom.navProfileToggle) {
+        dom.navProfileToggle.setAttribute('aria-label', t('auth.accountMenu'));
+      }
       updateSavedControls();
       renderSavedSection();
       updateAuthUI();
@@ -5311,10 +5373,32 @@
       if (!dom.navProfileDropdown || !dom.navProfileToggle) {
         return;
       }
-      const next = Boolean(isOpen && state.currentUserId);
+      const next = Boolean(isOpen);
+      if (next === state.isProfileMenuOpen) {
+        return;
+      }
       state.isProfileMenuOpen = next;
-      dom.navProfileDropdown.hidden = !next;
       dom.navProfileToggle.setAttribute('aria-expanded', String(next));
+      if (next) {
+        dom.navProfileDropdown.hidden = false;
+        requestAnimationFrame(() => {
+          if (state.isProfileMenuOpen) {
+            dom.navProfileDropdown.classList.add('is-open');
+          }
+        });
+        return;
+      }
+      dom.navProfileDropdown.classList.remove('is-open');
+      const hideTask = () => {
+        if (!state.isProfileMenuOpen) {
+          dom.navProfileDropdown.hidden = true;
+        }
+      };
+      if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        hideTask();
+      } else {
+        setTimeout(hideTask, 170);
+      }
     }
 
     function closeProfileMenu() {
@@ -5341,25 +5425,45 @@
 
     function updateAuthUI() {
       const isAuthenticated = Boolean(state.currentUserId);
+      if (dom.navProfileMenu) {
+        dom.navProfileMenu.hidden = false;
+      }
       if (dom.navLoginLink) {
         dom.navLoginLink.hidden = isAuthenticated;
       }
       if (dom.navSignupLink) {
         dom.navSignupLink.hidden = isAuthenticated;
       }
-      if (dom.navProfileMenu) {
-        dom.navProfileMenu.hidden = !isAuthenticated;
+      if (dom.navProfileLink) {
+        dom.navProfileLink.hidden = !isAuthenticated;
+      }
+      if (dom.navSavedLink) {
+        dom.navSavedLink.hidden = !isAuthenticated;
+      }
+      if (dom.navSettingsLink) {
+        dom.navSettingsLink.hidden = !isAuthenticated;
+      }
+      if (dom.navLogoutButton) {
+        dom.navLogoutButton.hidden = !isAuthenticated;
+      }
+      if (dom.navMenuIcon) {
+        dom.navMenuIcon.hidden = isAuthenticated;
       }
       if (dom.navProfileAvatar) {
-        const avatar = getUserAvatarUrl();
-        if (avatar) {
-          dom.navProfileAvatar.src = avatar;
+        dom.navProfileAvatar.hidden = !isAuthenticated;
+        if (isAuthenticated) {
+          const avatar = getUserAvatarUrl();
+          if (avatar) {
+            dom.navProfileAvatar.src = avatar;
+          } else {
+            dom.navProfileAvatar.removeAttribute('src');
+          }
         } else {
           dom.navProfileAvatar.removeAttribute('src');
         }
       }
-      if (!isAuthenticated) {
-        closeProfileMenu();
+      if (!isAuthenticated && state.isProfileMenuOpen) {
+        setProfileMenuOpen(false);
       }
       updateAuthNavActive(getRouteFromHash());
     }
@@ -6007,16 +6111,20 @@
     }
 
     function updateAuthNavActive(route) {
+      const isAccountRoute = ['login', 'signup', 'profile', 'settings'].includes(route);
+      if (dom.navProfileToggle) {
+        dom.navProfileToggle.classList.toggle('active', isAccountRoute);
+      }
       [
         { link: dom.navLoginLink, route: 'login' },
         { link: dom.navSignupLink, route: 'signup' },
-        { link: dom.navProfileToggle, route: 'profile' }
+        { link: dom.navProfileLink, route: 'profile' },
+        { link: dom.navSettingsLink, route: 'settings' }
       ].forEach((item) => {
         if (!item.link) {
           return;
         }
-        const isAccountRoute = route === 'profile' || route === 'settings';
-        const isActive = item.route === route || (item.route === 'profile' && isAccountRoute);
+        const isActive = item.route === route;
         item.link.classList.toggle('active', isActive);
         if (isActive) {
           item.link.setAttribute('aria-current', 'page');
