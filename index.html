@@ -406,8 +406,73 @@
       min-width: 84px;
       white-space: nowrap;
     }
+    .settings-switch {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.86rem;
+      font-weight: 600;
+      color: var(--text);
+      white-space: nowrap;
+    }
+    .settings-switch input {
+      width: 16px;
+      height: 16px;
+      margin: 0;
+    }
     .settings-danger {
       border-color: #d66b6b;
+    }
+    .notification-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 18px;
+      height: 18px;
+      padding: 0 0.3rem;
+      border-radius: 999px;
+      background: #ff6767;
+      color: #ffffff;
+      font-size: 0.72rem;
+      font-weight: 700;
+      line-height: 1;
+    }
+    .notification-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.6rem;
+      padding: 0.2rem 0.3rem 0.35rem;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 0.2rem;
+    }
+    .notification-mark-read {
+      min-height: 30px;
+      padding: 0.25rem 0.55rem;
+      font-size: 0.78rem;
+      box-shadow: none;
+    }
+    .notification-list {
+      display: grid;
+      gap: 0.35rem;
+      max-height: 270px;
+      overflow-y: auto;
+      padding: 0.1rem 0.15rem 0.2rem;
+    }
+    .notification-item {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--bg-soft);
+      padding: 0.45rem 0.55rem;
+      display: grid;
+      gap: 0.18rem;
+    }
+    .notification-item.is-unread {
+      border-color: var(--accent);
+    }
+    .notification-item time {
+      color: var(--muted);
+      font-size: 0.74rem;
     }
     .profile-grid {
       display: grid;
@@ -1372,6 +1437,14 @@
       .settings-item .ghost {
         width: 100%;
       }
+      .settings-switch {
+        width: 100%;
+        justify-content: flex-start;
+        white-space: normal;
+      }
+      .notification-header {
+        flex-wrap: wrap;
+      }
       .joke-text {
         font-size: 1.1rem;
       }
@@ -1457,6 +1530,28 @@
             <a href="#/contact" class="profile-dropdown-item" role="menuitem" data-i18n="nav.contact">
               Contact
             </a>
+          </div>
+        </div>
+        <div id="notification-menu" class="profile-menu">
+          <button
+            id="notification-toggle"
+            type="button"
+            class="auth-link ghost-link profile-toggle"
+            aria-expanded="false"
+            aria-haspopup="menu"
+            aria-label="Notifications"
+          >
+            <span class="nav-menu-icon" aria-hidden="true">🔔</span>
+            <span id="notification-badge" class="notification-badge" hidden>0</span>
+          </button>
+          <div id="notification-dropdown" class="profile-dropdown settings-dropdown card" role="menu" hidden>
+            <div class="notification-header">
+              <strong data-i18n="notifications.title">Notifications</strong>
+              <button id="notification-mark-read" type="button" class="ghost notification-mark-read" data-i18n="notifications.markRead">
+                Mark all read
+              </button>
+            </div>
+            <div id="notification-list" class="notification-list"></div>
           </div>
         </div>
         <div id="auth-nav" class="auth-nav" aria-label="Account">
@@ -1757,7 +1852,10 @@
                 <strong data-i18n="auth.settingsNotifications">Notification Preferences</strong>
                 <small data-i18n="auth.settingsNotificationsHint">Control reminder and alert preferences.</small>
               </div>
-              <button id="settings-notifications" type="button" class="ghost" data-i18n="auth.settingsManage">Manage</button>
+              <label class="settings-switch" for="settings-notifications-toggle">
+                <input id="settings-notifications-toggle" type="checkbox" />
+                <span data-i18n="auth.settingsNotificationsToggle">Enable notifications</span>
+              </label>
             </div>
             <div class="settings-item settings-danger">
               <div class="settings-item-content">
@@ -2325,6 +2423,12 @@
       settingsToggle: document.getElementById('settings-toggle'),
       settingsDropdown: document.getElementById('settings-dropdown'),
       settingsLabel: document.getElementById('settings-label'),
+      notificationMenu: document.getElementById('notification-menu'),
+      notificationToggle: document.getElementById('notification-toggle'),
+      notificationDropdown: document.getElementById('notification-dropdown'),
+      notificationBadge: document.getElementById('notification-badge'),
+      notificationList: document.getElementById('notification-list'),
+      notificationMarkRead: document.getElementById('notification-mark-read'),
       language: document.getElementById('language'),
       darkToggle: document.getElementById('dark-toggle'),
       navMenuIcon: document.getElementById('nav-menu-icon'),
@@ -2373,6 +2477,7 @@
       searchInput: document.getElementById('search-input'),
       heroStart: document.getElementById('hero-start'),
       heroScroll: document.getElementById('hero-scroll'),
+      jotdCard: document.getElementById('jotd'),
       jotdText: document.getElementById('jotd-text'),
       jotdDate: document.getElementById('jotd-date'),
       jotdPlay: document.getElementById('jotd-play'),
@@ -2464,7 +2569,7 @@
       settingsDataControls: document.getElementById('settings-data-controls'),
       settingsChangePassword: document.getElementById('settings-change-password'),
       settingsAccountSecurity: document.getElementById('settings-account-security'),
-      settingsNotifications: document.getElementById('settings-notifications'),
+      settingsNotificationsToggle: document.getElementById('settings-notifications-toggle'),
       settingsDeleteAccount: document.getElementById('settings-delete-account')
     };
 
@@ -2484,6 +2589,7 @@
       stats: 'jokeStatsV1',
       comments: 'commentStoreV1',
       notifications: 'notificationPrefsV1',
+      userPreferences: 'userPreferenceStoreV1',
       progress: 'jokeProgressV1',
       sessionSeen: 'jokeSessionSeenV1'
     };
@@ -2906,6 +3012,7 @@
         'auth.settingsDeleteConfirm': 'Are you sure you want to request account deletion?',
         'auth.settingsDeleteFeedback': 'Delete account request noted. Contact support to complete this action.',
         'auth.settingsNotificationsFeedback': 'Notification preferences are available in Contact settings.',
+        'auth.settingsNotificationsToggle': 'Enable notifications',
         'auth.uploadAvatar': 'Upload Photo',
         'auth.resetAvatar': 'Use Default',
         'auth.avatarUploading': 'Uploading profile photo...',
@@ -2940,6 +3047,11 @@
         'contact.disabled': 'Notifications disabled.',
         'contact.denied': 'Permission denied.',
         'contact.unsupported': 'Notifications not supported here.',
+        'notifications.title': 'Notifications',
+        'notifications.empty': 'No notifications yet.',
+        'notifications.markRead': 'Mark all read',
+        'notifications.newJoke': 'A new joke was added to the feed.',
+        'notifications.importantUpdate': 'Important account updates are available.',
         'languages.en': 'English',
         'languages.ar': 'Arabic',
         'languages.fr': 'French',
@@ -5574,10 +5686,12 @@
       authRedirectRoute: 'jokes',
       isProfileMenuOpen: false,
       isSettingsMenuOpen: false,
+      isNotificationMenuOpen: false,
       isPrimaryNavOpen: false,
       openJokeActionMenu: '',
       isAuthPromptOpen: false,
       pendingAuthAction: null,
+      storageScopeId: '',
       notificationInterval: null,
       voices: [],
       recorder: null,
@@ -5602,6 +5716,7 @@
     const dailyIngest = loadDailyIngest();
     const commentStore = loadComments();
     const notificationPrefs = loadNotifications();
+    const userPreferenceStore = loadUserPreferenceStore();
     const progressStore = loadProgressStore();
     const sessionSeen = loadSessionSeen();
     const sessionProgress = loadSessionProgress();
@@ -5647,6 +5762,9 @@
       if (dom.mobileNavToggle) {
         dom.mobileNavToggle.setAttribute('aria-label', t('nav.menu'));
       }
+      if (dom.notificationToggle) {
+        dom.notificationToggle.setAttribute('aria-label', t('notifications.title'));
+      }
       if (dom.reactionToggle) {
         dom.reactionToggle.setAttribute('aria-label', t('actions.reaction'));
       }
@@ -5669,6 +5787,7 @@
       renderAdminDashboard();
       renderComments();
       updateReactionUI();
+      renderNotificationMenu();
       applyTheme(settings.theme);
       updateNavActive(getRouteFromHash());
       initCollapsibles();
@@ -5786,6 +5905,7 @@
       document.documentElement.classList.toggle('rtl', meta.dir === 'rtl');
       settings.language = lang;
       saveSettings();
+      persistCurrentPreferences();
       applyTranslations();
       renderJokeOfDay();
       if (!options.skipFetch) {
@@ -5799,6 +5919,7 @@
       document.documentElement.setAttribute('data-theme', theme);
       settings.theme = theme;
       saveSettings();
+      persistCurrentPreferences();
       dom.darkToggle.textContent = theme === 'dark' ? t('buttons.light') : t('buttons.dark');
       dom.darkToggle.setAttribute('aria-pressed', theme === 'dark');
       applyThemeContrast();
@@ -5997,6 +6118,229 @@
       setSettingsMenuOpen(false);
     }
 
+    function setNotificationMenuOpen(isOpen) {
+      setDropdownMenuOpen(isOpen, dom.notificationDropdown, dom.notificationToggle, 'isNotificationMenuOpen');
+      if (isOpen) {
+        markNotificationsRead();
+      }
+    }
+
+    function closeNotificationMenu() {
+      setNotificationMenuOpen(false);
+    }
+
+    function getStorageScopeId() {
+      return state.currentUserId ? `user:${state.currentUserId}` : 'guest';
+    }
+
+    function getCurrentUserReactionsMap() {
+      if (!userReactions || typeof userReactions !== 'object') {
+        return {};
+      }
+      if (!state.currentUserId) {
+        if (!userReactions.guest || typeof userReactions.guest !== 'object') {
+          userReactions.guest = {};
+        }
+        return userReactions.guest;
+      }
+      if (!userReactions.users || typeof userReactions.users !== 'object') {
+        userReactions.users = {};
+      }
+      if (!userReactions.users[state.currentUserId] || typeof userReactions.users[state.currentUserId] !== 'object') {
+        userReactions.users[state.currentUserId] = {};
+      }
+      return userReactions.users[state.currentUserId];
+    }
+
+    function upsertUserPreferenceScope(scopeId, preferences) {
+      if (!scopeId) {
+        return;
+      }
+      if (!userPreferenceStore.users || typeof userPreferenceStore.users !== 'object') {
+        userPreferenceStore.users = {};
+      }
+      const safePrefs = preferences && typeof preferences === 'object' ? preferences : {};
+      if (scopeId === 'guest') {
+        userPreferenceStore.guest = { ...userPreferenceStore.guest, ...safePrefs };
+      } else {
+        const key = scopeId.replace(/^user:/, '');
+        userPreferenceStore.users[key] = { ...(userPreferenceStore.users[key] || {}), ...safePrefs };
+      }
+      saveUserPreferenceStore();
+    }
+
+    function getUserPreferenceScope(scopeId) {
+      if (!scopeId || scopeId === 'guest') {
+        return userPreferenceStore.guest || {};
+      }
+      const key = scopeId.replace(/^user:/, '');
+      return (userPreferenceStore.users && userPreferenceStore.users[key]) || {};
+    }
+
+    function persistCurrentPreferences() {
+      upsertUserPreferenceScope(state.storageScopeId || getStorageScopeId(), {
+        language: settings.language,
+        theme: settings.theme,
+        notificationsEnabled: Boolean(notificationPrefs.enabled)
+      });
+    }
+
+    function applyStoredPreferencesForScope(scopeId) {
+      const prefs = getUserPreferenceScope(scopeId);
+      if (!prefs || typeof prefs !== 'object') {
+        return;
+      }
+      if (typeof prefs.language === 'string' && prefs.language && languageMeta[prefs.language]) {
+        settings.language = prefs.language;
+      }
+      if (typeof prefs.theme === 'string' && prefs.theme) {
+        settings.theme = prefs.theme;
+      }
+      if (typeof prefs.notificationsEnabled === 'boolean') {
+        notificationPrefs.enabled = prefs.notificationsEnabled;
+      }
+      saveSettings();
+      saveNotifications();
+    }
+
+    function switchStorageScope(scopeId) {
+      const nextScope = typeof scopeId === 'string' && scopeId.trim() ? scopeId.trim() : 'guest';
+      if (nextScope === state.storageScopeId) {
+        return;
+      }
+      persistCurrentPreferences();
+      state.storageScopeId = nextScope;
+      applyStoredPreferencesForScope(nextScope);
+      if (settings.language !== state.currentLang) {
+        applyLanguage(settings.language, { skipFetch: true });
+      } else {
+        applyTheme(settings.theme);
+      }
+      if (notificationPrefs.enabled) {
+        if (!state.notificationInterval) {
+          state.notificationInterval = setInterval(scheduleNotification, 60 * 60 * 1000);
+        }
+        updateNotificationStatus('contact.enabled');
+      } else {
+        if (state.notificationInterval) {
+          clearInterval(state.notificationInterval);
+          state.notificationInterval = null;
+        }
+        updateNotificationStatus('contact.disabled');
+      }
+      updateSavedControls();
+      renderSavedSection();
+      updateReactionUI();
+    }
+
+    function createNotificationItem(message, type = 'update') {
+      return {
+        id: `note_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 7)}`,
+        message: String(message || '').trim(),
+        type: String(type || 'update'),
+        createdAt: new Date().toISOString(),
+        read: false
+      };
+    }
+
+    function addNotification(messageKey, params = {}, type = 'update') {
+      if (!notificationPrefs.enabled) {
+        return;
+      }
+      const text = t(messageKey, params);
+      if (!text || text === messageKey) {
+        return;
+      }
+      if (!Array.isArray(notificationPrefs.items)) {
+        notificationPrefs.items = [];
+      }
+      notificationPrefs.items.unshift(createNotificationItem(text, type));
+      if (notificationPrefs.items.length > 40) {
+        notificationPrefs.items = notificationPrefs.items.slice(0, 40);
+      }
+      saveNotifications();
+      renderNotificationMenu();
+    }
+
+    function maybeAddImportantUpdateNotification() {
+      if (!notificationPrefs.enabled) {
+        return;
+      }
+      const today = new Date().toISOString().slice(0, 10);
+      if (notificationPrefs.lastImportantUpdate === today) {
+        return;
+      }
+      notificationPrefs.lastImportantUpdate = today;
+      addNotification('notifications.importantUpdate', {}, 'important-update');
+    }
+
+    function notifyNewJokeAvailability() {
+      addNotification('notifications.newJoke', {}, 'new-joke');
+    }
+
+    function markNotificationsRead() {
+      if (!Array.isArray(notificationPrefs.items) || !notificationPrefs.items.length) {
+        return;
+      }
+      let updated = false;
+      notificationPrefs.items.forEach((item) => {
+        if (!item.read) {
+          item.read = true;
+          updated = true;
+        }
+      });
+      if (updated) {
+        saveNotifications();
+        renderNotificationMenu();
+      }
+    }
+
+    function renderNotificationMenu() {
+      if (!dom.notificationList || !dom.notificationBadge) {
+        if (dom.settingsNotificationsToggle) {
+          dom.settingsNotificationsToggle.checked = Boolean(notificationPrefs.enabled);
+        }
+        return;
+      }
+      const items = Array.isArray(notificationPrefs.items) ? notificationPrefs.items : [];
+      const unreadCount = items.filter((item) => !item.read).length;
+      dom.notificationBadge.hidden = unreadCount === 0;
+      dom.notificationBadge.textContent = unreadCount > 99 ? '99+' : String(unreadCount);
+      dom.notificationList.innerHTML = '';
+      if (!items.length) {
+        const empty = document.createElement('div');
+        empty.className = 'notification-item';
+        empty.textContent = t('notifications.empty');
+        dom.notificationList.appendChild(empty);
+        if (dom.settingsNotificationsToggle) {
+          dom.settingsNotificationsToggle.checked = Boolean(notificationPrefs.enabled);
+        }
+        return;
+      }
+      items.slice(0, 25).forEach((item) => {
+        const row = document.createElement('div');
+        row.className = `notification-item${item.read ? '' : ' is-unread'}`;
+        const message = document.createElement('div');
+        message.textContent = item.message || t('notifications.empty');
+        const time = document.createElement('time');
+        const created = new Date(item.createdAt || Date.now());
+        time.textContent = Number.isNaN(created.getTime())
+          ? '--'
+          : created.toLocaleString(state.currentLang, {
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+          });
+        row.appendChild(message);
+        row.appendChild(time);
+        dom.notificationList.appendChild(row);
+      });
+      if (dom.settingsNotificationsToggle) {
+        dom.settingsNotificationsToggle.checked = Boolean(notificationPrefs.enabled);
+      }
+    }
+
     function getAuthPromptMessageKey(actionType = '') {
       const map = {
         'save-joke': 'authPrompt.loginToSave',
@@ -6033,6 +6377,7 @@
       if (next) {
         closeProfileMenu();
         closeSettingsMenu();
+        closeNotificationMenu();
         closeJokeActionMenus();
         updateAuthPromptMessage();
         dom.authRequiredModal.hidden = false;
@@ -6389,11 +6734,16 @@
         state.currentUserName = '';
         state.currentUserProfile = null;
       }
+      switchStorageScope(getStorageScopeId());
+      if (state.currentUserId) {
+        maybeAddImportantUpdateNotification();
+      }
       updateSavedControls();
       renderSavedSection();
       updateSessionProgressUI();
       updateAuthUI();
       renderProfileSection();
+      renderNotificationMenu();
       return true;
     }
 
@@ -6801,6 +7151,7 @@
       new Notification(t('brand.name'), { body: joke });
       notificationPrefs.lastSent = today;
       saveNotifications();
+      notifyNewJokeAvailability();
     }
 
     function getLoadingMessage() {
@@ -6986,6 +7337,13 @@
       });
     }
 
+    function updateJokeOfDayVisibility(route) {
+      if (!dom.jotdCard) {
+        return;
+      }
+      dom.jotdCard.hidden = route !== 'jokes';
+    }
+
     function showView(route) {
       document.querySelectorAll('[data-view]').forEach((section) => {
         const isActive = section.dataset.view === route;
@@ -6996,6 +7354,7 @@
           section.setAttribute('hidden', '');
         }
       });
+      updateJokeOfDayVisibility(route);
       updateNavActive(route);
       updateAuthNavActive(route);
       if (route !== 'settings') {
@@ -7046,6 +7405,7 @@
       }
       closeProfileMenu();
       closeSettingsMenu();
+      closeNotificationMenu();
       closeJokeActionMenus();
       setPrimaryNavOpen(false);
       showPageTransition();
@@ -7885,6 +8245,14 @@
     }
 
     function renderJokeOfDay() {
+      if (!dom.jotdText || !dom.jotdDate) {
+        return;
+      }
+      const route = getRouteFromHash();
+      updateJokeOfDayVisibility(route);
+      if (route !== 'jokes') {
+        return;
+      }
       const today = new Date();
       const dateKey = today.toISOString().slice(0, 10);
       dom.jotdDate.textContent = dateKey;
@@ -8164,7 +8532,23 @@
       });
     }
 
-    function drawEmojiPattern(ctx, width, height) {
+    function getImageExportTheme() {
+      const rootStyles = getComputedStyle(document.documentElement);
+      const readVar = (name, fallback) => {
+        const value = rootStyles.getPropertyValue(name);
+        return typeof value === 'string' && value.trim() ? value.trim() : fallback;
+      };
+      return {
+        page: readVar('--bg-soft', '#f5f7ff'),
+        card: readVar('--card', '#ffffff'),
+        text: readVar('--text', '#1f1f1f'),
+        muted: readVar('--muted', '#5c5c5c'),
+        border: readVar('--border', '#d8d9e8'),
+        accent: readVar('--accent', '#3d5af1')
+      };
+    }
+
+    function drawEmojiPattern(ctx, width, height, color) {
       const emojis = ['😂', '😆', '🤣'];
       const size = 34;
       const positions = [
@@ -8177,6 +8561,7 @@
       ];
       ctx.globalAlpha = 0.12;
       ctx.font = `600 ${size}px 'Comic Neue', 'Comic Sans MS', sans-serif`;
+      ctx.fillStyle = color;
       positions.forEach((pos, index) => {
         ctx.fillText(emojis[index % emojis.length], pos.x, pos.y);
       });
@@ -8196,20 +8581,29 @@
       canvas.width = width;
       canvas.height = height;
       const ctx = canvas.getContext('2d');
-      const textColor = '#1f1f1f';
-      const muted = '#5c5c5c';
-      const card = '#ffffff';
+      const palette = getImageExportTheme();
+      const textColor = palette.text;
+      const muted = palette.muted;
+      const card = palette.card;
       const padding = 80;
       const bottomSpace = 200;
 
-      ctx.fillStyle = '#ffffff';
+      ctx.fillStyle = palette.page;
       ctx.fillRect(0, 0, width, height);
-      ctx.fillStyle = textColor;
-      drawEmojiPattern(ctx, width, height);
+      drawEmojiPattern(ctx, width, height, textColor);
 
+      ctx.save();
+      ctx.shadowColor = 'rgba(15, 24, 55, 0.18)';
+      ctx.shadowBlur = 28;
+      ctx.shadowOffsetY = 6;
       drawRoundedRect(ctx, 50, 50, width - 100, height - 120, 32);
       ctx.fillStyle = card;
       ctx.fill();
+      ctx.restore();
+      drawRoundedRect(ctx, 50, 50, width - 100, height - 120, 32);
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = palette.border;
+      ctx.stroke();
 
       const meta = languageMeta[state.currentLang] || languageMeta.en;
       ctx.direction = meta.dir;
@@ -8251,6 +8645,12 @@
       const iconsX = width - padding - iconsWidth;
       const iconsY = height - padding + 6;
       drawSocialIcons(ctx, iconsX, iconsY, iconSize, iconGap);
+      ctx.strokeStyle = palette.accent;
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(padding, height - padding - 52);
+      ctx.lineTo(width - padding, height - padding - 52);
+      ctx.stroke();
 
       if (includeQr) {
         const qrSize = 160;
@@ -8435,7 +8835,8 @@
       }
       if (dom.reactionToggle) {
         const jokeId = getCurrentJokeId();
-        const selected = jokeId ? userReactions[jokeId] : '';
+        const reactionMap = getCurrentUserReactionsMap();
+        const selected = jokeId ? reactionMap[jokeId] : '';
         dom.reactionToggle.textContent = selected
           ? t('actions.reacted', { reaction: getReactionLabel(selected) })
           : t('actions.reaction');
@@ -8452,7 +8853,8 @@
         return;
       }
       const id = buildJokeId(state.currentJoke, state.currentLang, state.currentCategory);
-      if (userReactions[id]) {
+      const reactionMap = getCurrentUserReactionsMap();
+      if (reactionMap[id]) {
         setFeedback('feedback.reactionThanks');
         closeJokeActionMenus();
         return;
@@ -8467,7 +8869,7 @@
       };
       data[type] += 1;
       reactionStore[id] = data;
-      userReactions[id] = type;
+      reactionMap[id] = type;
       saveReactions();
       saveUserReactions();
       renderTopRated();
@@ -9277,6 +9679,7 @@
         lang: item.lang,
         extraCategories: Array.isArray(item.extraCategories) ? item.extraCategories : []
       });
+      notifyNewJokeAvailability();
       saveSubmissions();
       saveApprovedJokes();
       if (state.languageSessionIds && item.lang) {
@@ -9575,12 +9978,48 @@
       const stored = JSON.parse(localStorage.getItem(STORAGE_KEYS.notifications) || '{}');
       return {
         enabled: Boolean(stored.enabled),
-        lastSent: stored.lastSent || ''
+        lastSent: stored.lastSent || '',
+        lastImportantUpdate: typeof stored.lastImportantUpdate === 'string' ? stored.lastImportantUpdate : '',
+        items: Array.isArray(stored.items)
+          ? stored.items
+            .map((item) => {
+              if (!item || typeof item !== 'object') {
+                return null;
+              }
+              return {
+                id: typeof item.id === 'string' ? item.id : `note_${Math.random().toString(36).slice(2, 8)}`,
+                message: typeof item.message === 'string' ? item.message : '',
+                type: typeof item.type === 'string' ? item.type : 'update',
+                createdAt: typeof item.createdAt === 'string' ? item.createdAt : new Date().toISOString(),
+                read: Boolean(item.read)
+              };
+            })
+            .filter(Boolean)
+          : []
       };
     }
 
     function saveNotifications() {
       localStorage.setItem(STORAGE_KEYS.notifications, JSON.stringify(notificationPrefs));
+      persistCurrentPreferences();
+    }
+
+    function loadUserPreferenceStore() {
+      const stored = JSON.parse(localStorage.getItem(STORAGE_KEYS.userPreferences) || '{}');
+      if (stored && typeof stored === 'object') {
+        return {
+          guest: stored.guest && typeof stored.guest === 'object' ? stored.guest : {},
+          users: stored.users && typeof stored.users === 'object' ? stored.users : {}
+        };
+      }
+      return {
+        guest: {},
+        users: {}
+      };
+    }
+
+    function saveUserPreferenceStore() {
+      localStorage.setItem(STORAGE_KEYS.userPreferences, JSON.stringify(userPreferenceStore));
     }
 
     function loadProgressStore() {
@@ -9689,7 +10128,17 @@
     }
 
     function loadUserReactions() {
-      return JSON.parse(localStorage.getItem(STORAGE_KEYS.userReactions) || '{}');
+      const stored = JSON.parse(localStorage.getItem(STORAGE_KEYS.userReactions) || '{}');
+      if (stored && typeof stored === 'object' && (stored.guest || stored.users)) {
+        return {
+          guest: stored.guest && typeof stored.guest === 'object' ? stored.guest : {},
+          users: stored.users && typeof stored.users === 'object' ? stored.users : {}
+        };
+      }
+      return {
+        guest: stored && typeof stored === 'object' ? stored : {},
+        users: {}
+      };
     }
 
     function saveUserReactions() {
@@ -9866,19 +10315,26 @@
       dom.notifyEnable.onclick = async () => {
         if (!('Notification' in window)) {
           updateNotificationStatus('contact.unsupported');
+          setSettingsFeedback('contact.unsupported');
           return;
         }
         const permission = await Notification.requestPermission();
         if (permission === 'granted') {
           notificationPrefs.enabled = true;
           saveNotifications();
+          persistCurrentPreferences();
+          if (dom.settingsNotificationsToggle) {
+            dom.settingsNotificationsToggle.checked = true;
+          }
           updateNotificationStatus('contact.enabled');
+          setSettingsFeedback('contact.enabled');
           scheduleNotification();
           if (!state.notificationInterval) {
             state.notificationInterval = setInterval(scheduleNotification, 60 * 60 * 1000);
           }
         } else {
           updateNotificationStatus('contact.denied');
+          setSettingsFeedback('contact.denied');
         }
       };
     }
@@ -9886,7 +10342,12 @@
       dom.notifyDisable.onclick = () => {
         notificationPrefs.enabled = false;
         saveNotifications();
+        persistCurrentPreferences();
+        if (dom.settingsNotificationsToggle) {
+          dom.settingsNotificationsToggle.checked = false;
+        }
         updateNotificationStatus('contact.disabled');
+        setSettingsFeedback('contact.disabled');
         if (state.notificationInterval) {
           clearInterval(state.notificationInterval);
           state.notificationInterval = null;
@@ -10043,6 +10504,7 @@
       dom.brandHomeLink.addEventListener('click', () => {
         setPrimaryNavOpen(false);
         closeSettingsMenu();
+        closeNotificationMenu();
         closeProfileMenu();
       });
     }
@@ -10050,7 +10512,22 @@
       dom.settingsToggle.onclick = (event) => {
         event.preventDefault();
         setProfileMenuOpen(false);
+        setNotificationMenuOpen(false);
         setSettingsMenuOpen(!state.isSettingsMenuOpen);
+      };
+    }
+    if (dom.notificationToggle) {
+      dom.notificationToggle.onclick = (event) => {
+        event.preventDefault();
+        setProfileMenuOpen(false);
+        setSettingsMenuOpen(false);
+        setNotificationMenuOpen(!state.isNotificationMenuOpen);
+      };
+    }
+    if (dom.notificationMarkRead) {
+      dom.notificationMarkRead.onclick = (event) => {
+        event.preventDefault();
+        markNotificationsRead();
       };
     }
     if (dom.settingsDropdown) {
@@ -10081,10 +10558,45 @@
         setSettingsFeedback('auth.settingsSecurityFeedback');
       };
     }
-    if (dom.settingsNotifications) {
-      dom.settingsNotifications.onclick = () => {
-        setSettingsFeedback('auth.settingsNotificationsFeedback');
-        location.hash = '#/contact';
+    if (dom.settingsNotificationsToggle) {
+      dom.settingsNotificationsToggle.onchange = async () => {
+        const shouldEnable = Boolean(dom.settingsNotificationsToggle.checked);
+        if (shouldEnable) {
+          if (!('Notification' in window)) {
+            dom.settingsNotificationsToggle.checked = false;
+            updateNotificationStatus('contact.unsupported');
+            setSettingsFeedback('contact.unsupported');
+            return;
+          }
+          if (Notification.permission !== 'granted') {
+            const permission = await Notification.requestPermission();
+            if (permission !== 'granted') {
+              dom.settingsNotificationsToggle.checked = false;
+              updateNotificationStatus('contact.denied');
+              setSettingsFeedback('contact.denied');
+              return;
+            }
+          }
+          notificationPrefs.enabled = true;
+          saveNotifications();
+          persistCurrentPreferences();
+          setSettingsFeedback('contact.enabled');
+          updateNotificationStatus('contact.enabled');
+          scheduleNotification();
+          if (!state.notificationInterval) {
+            state.notificationInterval = setInterval(scheduleNotification, 60 * 60 * 1000);
+          }
+          return;
+        }
+        notificationPrefs.enabled = false;
+        saveNotifications();
+        persistCurrentPreferences();
+        setSettingsFeedback('contact.disabled');
+        updateNotificationStatus('contact.disabled');
+        if (state.notificationInterval) {
+          clearInterval(state.notificationInterval);
+          state.notificationInterval = null;
+        }
       };
     }
     if (dom.settingsDeleteAccount) {
@@ -10130,6 +10642,7 @@
       dom.navProfileToggle.onclick = (event) => {
         event.preventDefault();
         setSettingsMenuOpen(false);
+        setNotificationMenuOpen(false);
         setProfileMenuOpen(!state.isProfileMenuOpen);
       };
     }
@@ -10331,6 +10844,9 @@
       if (state.isSettingsMenuOpen && dom.settingsMenu && !dom.settingsMenu.contains(event.target)) {
         closeSettingsMenu();
       }
+      if (state.isNotificationMenuOpen && dom.notificationMenu && !dom.notificationMenu.contains(event.target)) {
+        closeNotificationMenu();
+      }
       if (state.openJokeActionMenu && dom.jokeActions && !dom.jokeActions.contains(event.target)) {
         closeJokeActionMenus();
       }
@@ -10350,6 +10866,9 @@
       }
       if (state.isSettingsMenuOpen) {
         closeSettingsMenu();
+      }
+      if (state.isNotificationMenuOpen) {
+        closeNotificationMenu();
       }
       if (state.isPrimaryNavOpen) {
         setPrimaryNavOpen(false);
@@ -10371,6 +10890,7 @@
     dom.moderatorToggle.onchange = () => renderModeration();
 
     state.currentCategory = dom.category.value;
+    switchStorageScope(getStorageScopeId());
     syncPrimaryNavLayout();
     window.addEventListener('resize', syncPrimaryNavLayout);
     updateAdminAccessUI();
@@ -10401,7 +10921,9 @@
     updateNavButtons();
     if (notificationPrefs.enabled) {
       scheduleNotification();
-      state.notificationInterval = setInterval(scheduleNotification, 60 * 60 * 1000);
+      if (!state.notificationInterval) {
+        state.notificationInterval = setInterval(scheduleNotification, 60 * 60 * 1000);
+      }
       updateNotificationStatus('contact.enabled');
     }
     window.addEventListener('hashchange', handleRouteChange);
