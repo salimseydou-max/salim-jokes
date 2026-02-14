@@ -17,7 +17,6 @@
   <meta name="twitter:title" content="Voice Joke Club" />
   <meta name="twitter:description" content="Listen, react, and share jokes in multiple languages." />
   <meta name="twitter:image" content="https://dummyimage.com/1200x630/ffeaa7/222.png&text=Voice+Joke+Club" />
-  <link rel="preconnect" href="https://v2.jokeapi.dev" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64'%3E%3Crect width='64' height='64' fill='%23ffffff'/%3E%3Ctext x='12' y='46' font-size='36'%3E%F0%9F%98%82%3C/text%3E%3C/svg%3E" />
@@ -5618,6 +5617,11 @@
           method: 'POST',
           body: { email, password }
         });
+        if (!payload || payload.success === false) {
+          const loginError = new Error(payload?.error || t('auth.error'));
+          loginError.code = payload?.code || 'AUTH_INVALID_CREDENTIALS';
+          throw loginError;
+        }
         applyAuthenticatedUser(payload.user || null);
         return payload;
       },
@@ -6793,11 +6797,10 @@
     }
 
     function buildApiUrl(apiLang, category) {
-      let apiCategory = 'Misc,Pun';
-      if (category === 'dark') {
-        apiCategory = 'Dark';
-      }
-      return `https://v2.jokeapi.dev/joke/${apiCategory}?type=single&safe-mode&blacklistFlags=nsfw,religious,political,racist,sexist,explicit&lang=${apiLang}`;
+      const params = new URLSearchParams();
+      params.set('lang', String(apiLang || 'en'));
+      params.set('category', category === 'dark' ? 'dark' : 'random');
+      return `/api/jokes/external?${params.toString()}`;
     }
 
     async function fetchJokeFromApi(apiLang, category) {
@@ -6807,13 +6810,18 @@
         const url = buildApiUrl(apiLang, category);
         const resp = await fetch(url);
         if (!resp.ok) {
-          throw new Error('Joke request failed');
+          const requestError = new Error('Joke request failed');
+          requestError.retryable = true;
+          throw requestError;
         }
         const data = await resp.json();
-        if (data.error) {
-          throw new Error(data.message || 'Joke request failed');
+        if (!data || data.success !== true || !data.joke) {
+          const requestError = new Error(data?.error || 'Joke request failed');
+          requestError.retryable = Boolean(data?.retryable);
+          requestError.status = Number(data?.status) || 0;
+          throw requestError;
         }
-        return data;
+        return data.joke;
       } catch (error) {
         hasError = true;
         throw error;
@@ -6840,7 +6848,10 @@
               return { joke, source: 'api', wasRepeat: false };
             }
           } catch (error) {
-            console.error('Joke API fetch failed', { lang, category, error });
+            const retryable = error?.retryable !== false;
+            if (!retryable) {
+              break;
+            }
           }
         }
       }
@@ -8237,6 +8248,9 @@
             jokeText = buildJoke(data);
           } catch (error) {
             jokeText = '';
+            if (error?.retryable === false) {
+              break;
+            }
           }
         }
         if (!jokeText) {
