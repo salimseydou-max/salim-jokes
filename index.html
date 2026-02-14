@@ -7078,9 +7078,10 @@
 
     function buildApiUrl(apiLang, category) {
       const params = new URLSearchParams();
+      params.set('source', 'external');
       params.set('lang', String(apiLang || 'en'));
       params.set('category', category === 'dark' ? 'dark' : 'random');
-      return `/api/jokes/external?${params.toString()}`;
+      return `/api/jokes?${params.toString()}`;
     }
 
     async function fetchJokeFromApi(apiLang, category) {
