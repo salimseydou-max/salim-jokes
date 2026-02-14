@@ -8,6 +8,11 @@
   <meta name="keywords" content="jokes, voice jokes, funny, community, daily joke, humor" />
   <meta name="theme-color" content="#ffeaa7" />
   <meta name="color-scheme" content="light dark" />
+  <meta name="application-name" content="Voice Joke Club" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="Voice Joke Club" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta property="og:title" content="Voice Joke Club" />
   <meta property="og:description" content="Listen, react, and share jokes in multiple languages. Submit your own and climb the leaderboard." />
   <meta property="og:type" content="website" />
@@ -17,9 +22,53 @@
   <meta name="twitter:title" content="Voice Joke Club" />
   <meta name="twitter:description" content="Listen, react, and share jokes in multiple languages." />
   <meta name="twitter:image" content="https://dummyimage.com/1200x630/ffeaa7/222.png&text=Voice+Joke+Club" />
+  <link rel="manifest" href="/manifest.json" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64'%3E%3Crect width='64' height='64' fill='%23ffffff'/%3E%3Ctext x='12' y='46' font-size='36'%3E%F0%9F%98%82%3C/text%3E%3C/svg%3E" />
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&display=swap" as="style" />
+  <link rel="preload" href="/icons/icon-192.png" as="image" type="image/png" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png" />
+  <link
+    rel="apple-touch-startup-image"
+    href="/splash/splash-640x1136.png"
+    media="(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)"
+  />
+  <link
+    rel="apple-touch-startup-image"
+    href="/splash/splash-750x1334.png"
+    media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)"
+  />
+  <link
+    rel="apple-touch-startup-image"
+    href="/splash/splash-1125x2436.png"
+    media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)"
+  />
+  <link
+    rel="apple-touch-startup-image"
+    href="/splash/splash-1179x2556.png"
+    media="(device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)"
+  />
+  <link
+    rel="apple-touch-startup-image"
+    href="/splash/splash-1242x2688.png"
+    media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)"
+  />
+  <link
+    rel="apple-touch-startup-image"
+    href="/splash/splash-1536x2048.png"
+    media="(device-width: 768px) and (device-height: 1024px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)"
+  />
+  <link
+    rel="apple-touch-startup-image"
+    href="/splash/splash-1668x2388.png"
+    media="(device-width: 834px) and (device-height: 1194px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)"
+  />
+  <link
+    rel="apple-touch-startup-image"
+    href="/splash/splash-2048x2732.png"
+    media="(device-width: 1024px) and (device-height: 1366px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)"
+  />
   <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&display=swap" rel="stylesheet" />
   <style>
     :root {
@@ -1257,6 +1306,52 @@
       opacity: 0;
       transform: translateY(10px);
     }
+    .install-banner {
+      position: fixed;
+      left: 24px;
+      right: 24px;
+      bottom: 24px;
+      margin: 0 auto;
+      width: min(560px, calc(100vw - 48px));
+      z-index: 68;
+      display: grid;
+      gap: 0.75rem;
+      padding: 0.95rem;
+      opacity: 0;
+      transform: translateY(14px);
+      pointer-events: none;
+      transition: opacity 0.22s ease, transform 0.22s ease;
+    }
+    .install-banner.is-open {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+    .install-banner-content {
+      display: grid;
+      gap: 0.25rem;
+    }
+    .install-banner-content strong {
+      font-size: 0.98rem;
+    }
+    .install-banner-content p {
+      margin: 0;
+      font-size: 0.88rem;
+      line-height: 1.35;
+      color: var(--muted);
+    }
+    .install-banner-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.55rem;
+      justify-content: flex-end;
+    }
+    .install-banner-actions button {
+      width: auto;
+      min-height: 40px;
+      padding: 0.5rem 1rem;
+      font-size: 0.9rem;
+    }
     .ad-unit {
       margin: 2rem auto 0;
       border: 2px solid var(--border);
@@ -1480,6 +1575,19 @@
         left: 16px;
         bottom: 16px;
       }
+      .install-banner {
+        left: 16px;
+        right: 16px;
+        width: auto;
+        bottom: 16px;
+      }
+      .install-banner-actions {
+        justify-content: stretch;
+      }
+      .install-banner-actions button {
+        flex: 1;
+        width: 100%;
+      }
     }
     @media (prefers-reduced-motion: reduce) {
       * {
@@ -1537,6 +1645,16 @@
             </div>
             <button id="dark-toggle" class="profile-dropdown-item" type="button" role="menuitem" data-i18n="buttons.dark">
               Dark Mode
+            </button>
+            <button
+              id="install-app-button"
+              class="profile-dropdown-item"
+              type="button"
+              role="menuitem"
+              data-i18n="pwa.installAction"
+              hidden
+            >
+              Install App
             </button>
             <a href="#/achievements" class="profile-dropdown-item" role="menuitem" data-i18n="nav.achievements">
               Achievements
@@ -2410,6 +2528,27 @@
       </div>
     </div>
 
+    <div
+      id="install-banner"
+      class="install-banner card"
+      hidden
+      role="dialog"
+      aria-modal="false"
+      aria-labelledby="install-banner-title"
+    >
+      <div class="install-banner-content">
+        <strong id="install-banner-title" data-i18n="pwa.installTitle">Install Voice Joke Club</strong>
+        <p id="install-banner-text" data-i18n="pwa.installDescription">
+          Install the app for faster loading, offline jokes, and notification support.
+        </p>
+      </div>
+      <div class="install-banner-actions">
+        <button id="install-banner-install" type="button" data-i18n="pwa.installAction">Install App</button>
+        <button id="install-banner-dismiss" type="button" class="ghost" data-i18n="pwa.installLater">
+          Later
+        </button>
+      </div>
+    </div>
     <div id="toast-container" class="toast-container" aria-live="polite"></div>
     <div id="page-transition" class="page-transition" aria-hidden="true">
       <div class="skeleton">
@@ -2419,17 +2558,17 @@
       </div>
     </div>
 
-    <div class="ad-unit view-section active" data-view="jokes" aria-label="Advertisement">
-      <script>
-        atOptions = {
-          'key' : '44737517597e4d4fd2582ae54ae399b2',
-          'format' : 'iframe',
-          'height' : 60,
-          'width' : 468,
-          'params' : {}
-        };
-      </script>
-      <script src="https://www.highperformanceformat.com/44737517597e4d4fd2582ae54ae399b2/invoke.js"></script>
+    <div
+      id="ad-unit"
+      class="ad-unit view-section active"
+      data-view="jokes"
+      aria-label="Advertisement"
+      data-ad-key="44737517597e4d4fd2582ae54ae399b2"
+      data-ad-format="iframe"
+      data-ad-height="60"
+      data-ad-width="468"
+    >
+      <div id="ad-placeholder" class="muted">Sponsored content</div>
     </div>
     <div id="site-watermark" class="site-watermark" aria-hidden="true">Salim Jokes</div>
   </main>
@@ -2451,6 +2590,7 @@
       notificationMarkRead: document.getElementById('notification-mark-read'),
       language: document.getElementById('language'),
       darkToggle: document.getElementById('dark-toggle'),
+      installAppButton: document.getElementById('install-app-button'),
       navMenuIcon: document.getElementById('nav-menu-icon'),
       navLoginLink: document.getElementById('nav-login-link'),
       navSignupLink: document.getElementById('nav-signup-link'),
@@ -2507,6 +2647,12 @@
       savedSearch: document.getElementById('saved-search'),
       savedTotal: document.getElementById('saved-total'),
       savedSectionList: document.getElementById('saved-section-list'),
+      adUnit: document.getElementById('ad-unit'),
+      adPlaceholder: document.getElementById('ad-placeholder'),
+      installBanner: document.getElementById('install-banner'),
+      installBannerText: document.getElementById('install-banner-text'),
+      installBannerInstall: document.getElementById('install-banner-install'),
+      installBannerDismiss: document.getElementById('install-banner-dismiss'),
       toastContainer: document.getElementById('toast-container'),
       pageTransition: document.getElementById('page-transition'),
       creatorModal: document.getElementById('creator-modal'),
@@ -2609,6 +2755,7 @@
       stats: 'jokeStatsV1',
       comments: 'commentStoreV1',
       notifications: 'notificationPrefsV1',
+      pwaInstall: 'pwaInstallPrefsV1',
       userPreferences: 'userPreferenceStoreV1',
       progress: 'jokeProgressV1',
       sessionSeen: 'jokeSessionSeenV1'
@@ -2745,6 +2892,8 @@
       followHandle: 'lolwith_salim',
       url: 'https://salim-jokes.vercel.app'
     };
+    const PWA_INSTALL_COOLDOWN_MS = 3 * 24 * 60 * 60 * 1000;
+    const SERVICE_WORKER_UPDATE_INTERVAL_MS = 30 * 60 * 1000;
     const DEFAULT_GUEST_AVATAR =
       "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='96' viewBox='0 0 96 96'%3E%3Crect width='96' height='96' rx='48' fill='%23dfe7ff'/%3E%3Ccircle cx='48' cy='37' r='17' fill='%23657899'/%3E%3Cpath d='M20 82c3-16 14-26 28-26s25 10 28 26' fill='%23657899'/%3E%3C/svg%3E";
     const BLOCKED_PATTERNS = [
@@ -3074,6 +3223,16 @@
         'notifications.trendingJokes': 'Trending jokes are gaining momentum right now.',
         'notifications.websiteUpdate': 'Website updates and improvements are now available.',
         'notifications.importantUpdate': 'Important account updates are available.',
+        'pwa.installTitle': 'Install Voice Joke Club',
+        'pwa.installDescription': 'Install the app for fast launch, offline jokes, and notification updates.',
+        'pwa.installAction': 'Install App',
+        'pwa.installLater': 'Later',
+        'pwa.addToHomeScreen': 'Add to Home Screen',
+        'pwa.iosPrompt': 'Use Share > Add to Home Screen to install this app on iPhone or iPad.',
+        'pwa.iosInstructions': 'Tap Share, then choose Add to Home Screen.',
+        'pwa.installed': 'App installed successfully.',
+        'pwa.installUnavailable': 'Install is only available on secure HTTPS pages.',
+        'pwa.updateReady': 'App update is ready. Refreshing now...',
         'languages.en': 'English',
         'languages.ar': 'Arabic',
         'languages.fr': 'French',
@@ -5711,11 +5870,17 @@
       isNotificationMenuOpen: false,
       isPrimaryNavOpen: false,
       openJokeActionMenu: '',
+      isInstallBannerOpen: false,
       isAuthPromptOpen: false,
       pendingAuthAction: null,
+      deferredInstallPrompt: null,
       storageScopeId: '',
       notificationInterval: null,
       notificationServiceWorker: null,
+      hasServiceWorkerControllerListener: false,
+      hasReloadedForServiceWorkerUpdate: false,
+      serviceWorkerUpdateInterval: null,
+      isAdUnitLoaded: false,
       voices: [],
       recorder: null,
       voiceChunks: [],
@@ -5739,6 +5904,7 @@
     const dailyIngest = loadDailyIngest();
     const commentStore = loadComments();
     const notificationPrefs = loadNotifications();
+    const installPromptPrefs = loadPwaInstallPrefs();
     const userPreferenceStore = loadUserPreferenceStore();
     const progressStore = loadProgressStore();
     const sessionSeen = loadSessionSeen();
@@ -5811,6 +5977,7 @@
       renderComments();
       updateReactionUI();
       renderNotificationMenu();
+      updateInstallUi();
       applyTheme(settings.theme);
       updateNavActive(getRouteFromHash());
       initCollapsibles();
@@ -6259,16 +6426,241 @@
       updateReactionUI();
     }
 
+    function isLocalDevelopmentHost() {
+      return ['localhost', '127.0.0.1', '::1'].includes(window.location.hostname);
+    }
+
+    function isSecurePwaContext() {
+      return Boolean(window.isSecureContext || isLocalDevelopmentHost());
+    }
+
     function supportsBrowserNotifications() {
-      return typeof window !== 'undefined' && 'Notification' in window;
+      return isSecurePwaContext() && typeof window !== 'undefined' && 'Notification' in window;
     }
 
     function supportsServiceWorkerNotifications() {
-      return typeof navigator !== 'undefined' && 'serviceWorker' in navigator;
+      return isSecurePwaContext() && typeof navigator !== 'undefined' && 'serviceWorker' in navigator;
     }
 
     function supportsPushMessaging() {
       return supportsServiceWorkerNotifications() && typeof window !== 'undefined' && 'PushManager' in window;
+    }
+
+    function isStandaloneDisplayMode() {
+      return Boolean(
+        (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) ||
+        window.navigator.standalone
+      );
+    }
+
+    function isIosDevice() {
+      return /iphone|ipad|ipod/i.test(window.navigator.userAgent || '');
+    }
+
+    function isIosInstallHintAvailable() {
+      const ua = window.navigator.userAgent || '';
+      const isSafari = /safari/i.test(ua) && !/crios|fxios|edgios/i.test(ua);
+      return isIosDevice() && isSafari && !isStandaloneDisplayMode();
+    }
+
+    function canShowInstallPromptUi() {
+      if (!isSecurePwaContext()) {
+        return false;
+      }
+      if (isStandaloneDisplayMode()) {
+        return false;
+      }
+      return Boolean(state.deferredInstallPrompt || isIosInstallHintAvailable());
+    }
+
+    function shouldSuppressInstallPrompt() {
+      if (isStandaloneDisplayMode()) {
+        return true;
+      }
+      const dismissedAt = Number(installPromptPrefs.dismissedAt) || 0;
+      if (!dismissedAt) {
+        return false;
+      }
+      return Date.now() - dismissedAt < PWA_INSTALL_COOLDOWN_MS;
+    }
+
+    function setInstallBannerOpen(isOpen) {
+      if (!dom.installBanner) {
+        return;
+      }
+      const next = Boolean(isOpen);
+      if (next === state.isInstallBannerOpen) {
+        return;
+      }
+      state.isInstallBannerOpen = next;
+      if (next) {
+        dom.installBanner.hidden = false;
+        requestAnimationFrame(() => {
+          if (state.isInstallBannerOpen) {
+            dom.installBanner.classList.add('is-open');
+          }
+        });
+        return;
+      }
+      dom.installBanner.classList.remove('is-open');
+      const hideTask = () => {
+        if (!state.isInstallBannerOpen) {
+          dom.installBanner.hidden = true;
+        }
+      };
+      if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        hideTask();
+      } else {
+        setTimeout(hideTask, 220);
+      }
+    }
+
+    function dismissInstallBanner() {
+      installPromptPrefs.dismissedAt = Date.now();
+      savePwaInstallPrefs();
+      setInstallBannerOpen(false);
+      updateInstallUi();
+    }
+
+    function updateInstallUi() {
+      const canShow = canShowInstallPromptUi();
+      const iosHintOnly = Boolean(isIosInstallHintAvailable() && !state.deferredInstallPrompt);
+      if (dom.installAppButton) {
+        dom.installAppButton.hidden = !canShow;
+        dom.installAppButton.textContent = iosHintOnly
+          ? t('pwa.addToHomeScreen')
+          : t('pwa.installAction');
+      }
+      if (dom.installBannerInstall) {
+        dom.installBannerInstall.textContent = iosHintOnly
+          ? t('pwa.addToHomeScreen')
+          : t('pwa.installAction');
+      }
+      if (dom.installBannerText) {
+        dom.installBannerText.textContent = iosHintOnly
+          ? t('pwa.iosPrompt')
+          : t('pwa.installDescription');
+      }
+      if (!canShow) {
+        setInstallBannerOpen(false);
+      }
+    }
+
+    function maybeShowInstallBanner(options = {}) {
+      const force = Boolean(options.force);
+      if (!canShowInstallPromptUi() || shouldSuppressInstallPrompt()) {
+        return;
+      }
+      const now = Date.now();
+      const lastPromptAt = Number(installPromptPrefs.lastPromptAt) || 0;
+      if (!force && lastPromptAt && now - lastPromptAt < PWA_INSTALL_COOLDOWN_MS) {
+        return;
+      }
+      installPromptPrefs.lastPromptAt = now;
+      savePwaInstallPrefs();
+      setInstallBannerOpen(true);
+    }
+
+    async function promptInstallApp() {
+      if (isStandaloneDisplayMode()) {
+        savePwaInstallPrefs();
+        updateInstallUi();
+        setInstallBannerOpen(false);
+        return;
+      }
+      if (!isSecurePwaContext()) {
+        showToast(t('pwa.installUnavailable'));
+        return;
+      }
+      if (state.deferredInstallPrompt) {
+        const promptEvent = state.deferredInstallPrompt;
+        state.deferredInstallPrompt = null;
+        try {
+          promptEvent.prompt();
+          const choice = await promptEvent.userChoice;
+          if (choice && choice.outcome === 'accepted') {
+            installPromptPrefs.dismissedAt = 0;
+          } else {
+            installPromptPrefs.dismissedAt = Date.now();
+          }
+          savePwaInstallPrefs();
+        } catch (error) {
+          installPromptPrefs.dismissedAt = Date.now();
+          savePwaInstallPrefs();
+        }
+        updateInstallUi();
+        return;
+      }
+      if (isIosInstallHintAvailable()) {
+        showToast(t('pwa.iosInstructions'));
+        maybeShowInstallBanner({ force: true });
+        return;
+      }
+      showToast(t('pwa.installUnavailable'));
+    }
+
+    function handleBeforeInstallPrompt(event) {
+      event.preventDefault();
+      state.deferredInstallPrompt = event;
+      updateInstallUi();
+      maybeShowInstallBanner({ force: true });
+    }
+
+    function handleAppInstalled() {
+      state.deferredInstallPrompt = null;
+      installPromptPrefs.dismissedAt = Date.now();
+      savePwaInstallPrefs();
+      setInstallBannerOpen(false);
+      updateInstallUi();
+      showToast(t('pwa.installed'));
+    }
+
+    function requestServiceWorkerSkipWaiting(worker) {
+      if (!worker) {
+        return;
+      }
+      worker.postMessage({ type: 'SKIP_WAITING' });
+    }
+
+    function bindServiceWorkerControllerChangeListener() {
+      if (!supportsServiceWorkerNotifications() || state.hasServiceWorkerControllerListener) {
+        return;
+      }
+      state.hasServiceWorkerControllerListener = true;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (state.hasReloadedForServiceWorkerUpdate) {
+          return;
+        }
+        state.hasReloadedForServiceWorkerUpdate = true;
+        showToast(t('pwa.updateReady'));
+        setTimeout(() => {
+          window.location.reload();
+        }, 350);
+      });
+    }
+
+    function trackServiceWorkerUpdates(registration) {
+      if (!registration) {
+        return;
+      }
+      if (registration.__vjcTracked) {
+        return;
+      }
+      registration.__vjcTracked = true;
+      if (registration.waiting) {
+        requestServiceWorkerSkipWaiting(registration.waiting);
+      }
+      registration.addEventListener('updatefound', () => {
+        const nextWorker = registration.installing;
+        if (!nextWorker) {
+          return;
+        }
+        nextWorker.addEventListener('statechange', () => {
+          if (nextWorker.state === 'installed' && navigator.serviceWorker.controller) {
+            requestServiceWorkerSkipWaiting(nextWorker);
+          }
+        });
+      });
     }
 
     async function registerNotificationServiceWorker() {
@@ -6279,8 +6671,15 @@
         return state.notificationServiceWorker;
       }
       try {
-        const registration = await navigator.serviceWorker.register('/sw.js');
+        const registration = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
         state.notificationServiceWorker = registration;
+        bindServiceWorkerControllerChangeListener();
+        trackServiceWorkerUpdates(registration);
+        if (!state.serviceWorkerUpdateInterval) {
+          state.serviceWorkerUpdateInterval = setInterval(() => {
+            registration.update().catch(() => {});
+          }, SERVICE_WORKER_UPDATE_INTERVAL_MS);
+        }
         return registration;
       } catch (error) {
         console.error('Notification service worker registration failed:', error);
@@ -6293,18 +6692,37 @@
         return false;
       }
       const safeTitle = String(title || t('brand.name')).trim() || t('brand.name');
-      const safeOptions = options && typeof options === 'object' ? { ...options } : {};
+      const safeOptions =
+        options && typeof options === 'object'
+          ? {
+              icon: '/icons/icon-192.png',
+              badge: '/icons/favicon-32.png',
+              ...options
+            }
+          : {
+              icon: '/icons/icon-192.png',
+              badge: '/icons/favicon-32.png'
+            };
+      if (!safeOptions.data || typeof safeOptions.data !== 'object') {
+        safeOptions.data = {
+          url: `${window.location.origin}${window.location.pathname}#/jokes`
+        };
+      }
 
       try {
         let registration = state.notificationServiceWorker || null;
         if (!registration && supportsServiceWorkerNotifications()) {
           registration = await navigator.serviceWorker.getRegistration();
+          if (registration) {
+            state.notificationServiceWorker = registration;
+            bindServiceWorkerControllerChangeListener();
+            trackServiceWorkerUpdates(registration);
+          }
         }
         if (!registration && supportsServiceWorkerNotifications()) {
           registration = await registerNotificationServiceWorker();
         }
         if (registration && typeof registration.showNotification === 'function') {
-          state.notificationServiceWorker = registration;
           await registration.showNotification(safeTitle, safeOptions);
           return true;
         }
@@ -7199,6 +7617,60 @@
           toast.remove();
         }, 300);
       }, 2200);
+    }
+
+    function loadAdUnit() {
+      if (!dom.adUnit || state.isAdUnitLoaded) {
+        return;
+      }
+      const adKey = dom.adUnit.dataset.adKey;
+      if (!adKey) {
+        return;
+      }
+      state.isAdUnitLoaded = true;
+      if (dom.adPlaceholder) {
+        dom.adPlaceholder.hidden = true;
+      }
+      window.atOptions = {
+        key: adKey,
+        format: dom.adUnit.dataset.adFormat || 'iframe',
+        height: Number(dom.adUnit.dataset.adHeight) || 60,
+        width: Number(dom.adUnit.dataset.adWidth) || 468,
+        params: {}
+      };
+      const script = document.createElement('script');
+      script.src = `https://www.highperformanceformat.com/${adKey}/invoke.js`;
+      script.async = true;
+      script.onerror = () => {
+        state.isAdUnitLoaded = false;
+        if (dom.adPlaceholder) {
+          dom.adPlaceholder.hidden = false;
+        }
+      };
+      dom.adUnit.appendChild(script);
+    }
+
+    function initAdUnitLazyLoad() {
+      if (!dom.adUnit || state.isAdUnitLoaded) {
+        return;
+      }
+      if ('IntersectionObserver' in window) {
+        const observer = new IntersectionObserver((entries) => {
+          const visible = entries.some((entry) => entry.isIntersecting || entry.intersectionRatio > 0);
+          if (!visible) {
+            return;
+          }
+          observer.disconnect();
+          loadAdUnit();
+        }, { rootMargin: '220px 0px' });
+        observer.observe(dom.adUnit);
+        return;
+      }
+      if ('requestIdleCallback' in window) {
+        requestIdleCallback(() => loadAdUnit(), { timeout: 2500 });
+      } else {
+        setTimeout(() => loadAdUnit(), 1200);
+      }
     }
 
     function getCurrentUserName() {
@@ -10257,6 +10729,18 @@
       persistCurrentPreferences();
     }
 
+    function loadPwaInstallPrefs() {
+      const stored = JSON.parse(localStorage.getItem(STORAGE_KEYS.pwaInstall) || '{}');
+      return {
+        dismissedAt: Number(stored.dismissedAt) || 0,
+        lastPromptAt: Number(stored.lastPromptAt) || 0
+      };
+    }
+
+    function savePwaInstallPrefs() {
+      localStorage.setItem(STORAGE_KEYS.pwaInstall, JSON.stringify(installPromptPrefs));
+    }
+
     function loadUserPreferenceStore() {
       const stored = JSON.parse(localStorage.getItem(STORAGE_KEYS.userPreferences) || '{}');
       if (stored && typeof stored === 'object') {
@@ -10769,6 +11253,22 @@
         });
       });
     }
+    if (dom.installAppButton) {
+      dom.installAppButton.onclick = async () => {
+        await promptInstallApp();
+        closeSettingsMenu();
+      };
+    }
+    if (dom.installBannerInstall) {
+      dom.installBannerInstall.onclick = async () => {
+        await promptInstallApp();
+      };
+    }
+    if (dom.installBannerDismiss) {
+      dom.installBannerDismiss.onclick = () => {
+        dismissInstallBanner();
+      };
+    }
     if (dom.settingsPrivacyPolicy) {
       dom.settingsPrivacyPolicy.onclick = () => {
         setSettingsFeedback('');
@@ -11088,7 +11588,12 @@
       if (state.isAuthPromptOpen) {
         closeAuthPrompt({ clearPending: true });
       }
+      if (state.isInstallBannerOpen) {
+        dismissInstallBanner();
+      }
     });
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    window.addEventListener('appinstalled', handleAppInstalled);
     if (dom.mediaWatermarkToggle) {
       dom.mediaWatermarkToggle.onchange = () => {
         settings.mediaWatermark = dom.mediaWatermarkToggle.checked;
@@ -11102,16 +11607,17 @@
     switchStorageScope(getStorageScopeId());
     syncPrimaryNavLayout();
     window.addEventListener('resize', syncPrimaryNavLayout);
+    initAdUnitLazyLoad();
     if (supportsServiceWorkerNotifications()) {
       if ('requestIdleCallback' in window) {
         requestIdleCallback(() => {
-          registerNotificationServiceWorker();
-          warmPushManager();
+          void registerNotificationServiceWorker();
+          void warmPushManager();
         });
       } else {
         setTimeout(() => {
-          registerNotificationServiceWorker();
-          warmPushManager();
+          void registerNotificationServiceWorker();
+          void warmPushManager();
         }, 300);
       }
     }
@@ -11132,6 +11638,8 @@
     }
     applyLanguage(settings.language);
     ensureCoreNotificationItems();
+    updateInstallUi();
+    maybeShowInstallBanner();
     if ('requestIdleCallback' in window) {
       requestIdleCallback(() => {
         refreshAuthSession();
