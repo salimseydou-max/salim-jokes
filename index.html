@@ -801,6 +801,10 @@
       min-width: 280px;
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 0.28rem;
+      overflow-y: auto;
+      overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
     }
     .share-dropdown .action-menu-item {
       white-space: normal;
@@ -809,6 +813,7 @@
       align-items: flex-start;
       justify-content: flex-start;
       text-align: left;
+      touch-action: manipulation;
     }
     .share-option-icon {
       width: 1.25rem;
@@ -820,6 +825,7 @@
     .share-option-label {
       display: block;
       flex: 1;
+      min-width: 0;
       white-space: normal;
       overflow-wrap: anywhere;
       word-break: break-word;
@@ -1371,6 +1377,7 @@
       .joke-card {
         margin: 1.2rem auto;
         padding: 1.2rem;
+        overflow: visible;
       }
     }
     @media (max-width: 600px) {
@@ -1406,11 +1413,24 @@
         width: 100%;
       }
       .share-dropdown {
-        min-width: min(92vw, 320px);
-        max-width: min(92vw, 320px);
-        max-height: min(58vh, 420px);
+        position: fixed;
+        top: auto;
+        left: 0.75rem;
+        right: 0.75rem;
+        bottom: max(0.75rem, env(safe-area-inset-bottom));
+        min-width: 0;
+        max-width: none;
+        width: auto;
+        max-height: min(64vh, 480px);
+        padding-bottom: calc(0.45rem + env(safe-area-inset-bottom));
         overflow-y: auto;
+        overflow-x: hidden;
         grid-template-columns: 1fr;
+        transform: translateY(8px);
+        z-index: 45;
+      }
+      .share-dropdown.is-open {
+        transform: translateY(0);
       }
       .share-dropdown .action-menu-item {
         min-height: 48px;
@@ -3051,6 +3071,8 @@
         'notifications.empty': 'No notifications yet.',
         'notifications.markRead': 'Mark all read',
         'notifications.newJoke': 'A new joke was added to the feed.',
+        'notifications.trendingJokes': 'Trending jokes are gaining momentum right now.',
+        'notifications.websiteUpdate': 'Website updates and improvements are now available.',
         'notifications.importantUpdate': 'Important account updates are available.',
         'languages.en': 'English',
         'languages.ar': 'Arabic',
@@ -5693,6 +5715,7 @@
       pendingAuthAction: null,
       storageScopeId: '',
       notificationInterval: null,
+      notificationServiceWorker: null,
       voices: [],
       recorder: null,
       voiceChunks: [],
@@ -6217,10 +6240,13 @@
         applyTheme(settings.theme);
       }
       if (notificationPrefs.enabled) {
+        ensureCoreNotificationItems();
+        void registerNotificationServiceWorker();
         if (!state.notificationInterval) {
           state.notificationInterval = setInterval(scheduleNotification, 60 * 60 * 1000);
         }
         updateNotificationStatus('contact.enabled');
+        void scheduleNotification();
       } else {
         if (state.notificationInterval) {
           clearInterval(state.notificationInterval);
@@ -6231,6 +6257,182 @@
       updateSavedControls();
       renderSavedSection();
       updateReactionUI();
+    }
+
+    function supportsBrowserNotifications() {
+      return typeof window !== 'undefined' && 'Notification' in window;
+    }
+
+    function supportsServiceWorkerNotifications() {
+      return typeof navigator !== 'undefined' && 'serviceWorker' in navigator;
+    }
+
+    function supportsPushMessaging() {
+      return supportsServiceWorkerNotifications() && typeof window !== 'undefined' && 'PushManager' in window;
+    }
+
+    async function registerNotificationServiceWorker() {
+      if (!supportsServiceWorkerNotifications()) {
+        return null;
+      }
+      if (state.notificationServiceWorker) {
+        return state.notificationServiceWorker;
+      }
+      try {
+        const registration = await navigator.serviceWorker.register('/sw.js');
+        state.notificationServiceWorker = registration;
+        return registration;
+      } catch (error) {
+        console.error('Notification service worker registration failed:', error);
+        return null;
+      }
+    }
+
+    async function showBrowserNotification(title, options = {}) {
+      if (!supportsBrowserNotifications() || Notification.permission !== 'granted') {
+        return false;
+      }
+      const safeTitle = String(title || t('brand.name')).trim() || t('brand.name');
+      const safeOptions = options && typeof options === 'object' ? { ...options } : {};
+
+      try {
+        let registration = state.notificationServiceWorker || null;
+        if (!registration && supportsServiceWorkerNotifications()) {
+          registration = await navigator.serviceWorker.getRegistration();
+        }
+        if (!registration && supportsServiceWorkerNotifications()) {
+          registration = await registerNotificationServiceWorker();
+        }
+        if (registration && typeof registration.showNotification === 'function') {
+          state.notificationServiceWorker = registration;
+          await registration.showNotification(safeTitle, safeOptions);
+          return true;
+        }
+      } catch (error) {
+        console.error('Service-worker notification failed:', error);
+      }
+
+      try {
+        new Notification(safeTitle, safeOptions);
+        return true;
+      } catch (error) {
+        console.error('Browser notification failed:', error);
+        return false;
+      }
+    }
+
+    async function warmPushManager() {
+      if (!supportsPushMessaging()) {
+        return;
+      }
+      const registration = await registerNotificationServiceWorker();
+      if (!registration || !registration.pushManager) {
+        return;
+      }
+      try {
+        await registration.pushManager.getSubscription();
+      } catch (error) {
+        console.error('Push manager warm-up failed:', error);
+      }
+    }
+
+    function ensureCoreNotificationItems() {
+      if (!Array.isArray(notificationPrefs.items)) {
+        notificationPrefs.items = [];
+      }
+      const coreItems = [
+        { key: 'notifications.newJoke', type: 'new-joke' },
+        { key: 'notifications.trendingJokes', type: 'trending-jokes' },
+        { key: 'notifications.websiteUpdate', type: 'website-update' }
+      ];
+      let updated = false;
+      coreItems.forEach((entry) => {
+        const exists = notificationPrefs.items.some((item) => item && item.type === entry.type);
+        if (exists) {
+          return;
+        }
+        const message = t(entry.key);
+        if (!message || message === entry.key) {
+          return;
+        }
+        const item = createNotificationItem(message, entry.type);
+        item.read = true;
+        notificationPrefs.items.unshift(item);
+        updated = true;
+      });
+      if (!notificationPrefs.coreItemsSeeded) {
+        notificationPrefs.coreItemsSeeded = true;
+        updated = true;
+      }
+      if (!updated) {
+        return;
+      }
+      if (notificationPrefs.items.length > 40) {
+        notificationPrefs.items = notificationPrefs.items.slice(0, 40);
+      }
+      saveNotifications();
+      renderNotificationMenu();
+    }
+
+    function maybeAddTrendingJokesNotification(trendingItems = []) {
+      if (!notificationPrefs.enabled || !Array.isArray(trendingItems) || !trendingItems.length) {
+        return;
+      }
+      const today = new Date().toISOString().slice(0, 10);
+      if (notificationPrefs.lastTrendingUpdate === today) {
+        return;
+      }
+      notificationPrefs.lastTrendingUpdate = today;
+      addNotification('notifications.trendingJokes', {}, 'trending-jokes');
+    }
+
+    async function enableNotificationsWithPermission() {
+      if (!supportsBrowserNotifications()) {
+        updateNotificationStatus('contact.unsupported');
+        if (dom.settingsNotificationsToggle) {
+          dom.settingsNotificationsToggle.checked = false;
+        }
+        return false;
+      }
+      if (Notification.permission !== 'granted') {
+        const permission = await Notification.requestPermission();
+        if (permission !== 'granted') {
+          if (dom.settingsNotificationsToggle) {
+            dom.settingsNotificationsToggle.checked = false;
+          }
+          notificationPrefs.enabled = false;
+          saveNotifications();
+          updateNotificationStatus('contact.denied');
+          return false;
+        }
+      }
+      notificationPrefs.enabled = true;
+      saveNotifications();
+      if (dom.settingsNotificationsToggle) {
+        dom.settingsNotificationsToggle.checked = true;
+      }
+      ensureCoreNotificationItems();
+      await registerNotificationServiceWorker();
+      await warmPushManager();
+      updateNotificationStatus('contact.enabled');
+      void scheduleNotification();
+      if (!state.notificationInterval) {
+        state.notificationInterval = setInterval(scheduleNotification, 60 * 60 * 1000);
+      }
+      return true;
+    }
+
+    function disableNotificationsPreference() {
+      notificationPrefs.enabled = false;
+      saveNotifications();
+      if (dom.settingsNotificationsToggle) {
+        dom.settingsNotificationsToggle.checked = false;
+      }
+      updateNotificationStatus('contact.disabled');
+      if (state.notificationInterval) {
+        clearInterval(state.notificationInterval);
+        state.notificationInterval = null;
+      }
     }
 
     function createNotificationItem(message, type = 'update') {
@@ -6271,7 +6473,7 @@
         return;
       }
       notificationPrefs.lastImportantUpdate = today;
-      addNotification('notifications.importantUpdate', {}, 'important-update');
+      addNotification('notifications.websiteUpdate', {}, 'website-update');
     }
 
     function notifyNewJokeAvailability() {
@@ -6426,6 +6628,43 @@
 
     function isMobileViewport() {
       return Boolean(window.matchMedia && window.matchMedia('(max-width: 900px)').matches);
+    }
+
+    function isTouchCapableDevice() {
+      return Boolean(
+        (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) ||
+          ('maxTouchPoints' in navigator && navigator.maxTouchPoints > 0) ||
+          'ontouchstart' in window
+      );
+    }
+
+    function shouldPreferNativeMobileShare() {
+      return (
+        isMobileViewport() &&
+        isTouchCapableDevice() &&
+        typeof navigator.share === 'function'
+      );
+    }
+
+    async function tryPrimaryMobileNativeShare() {
+      if (!shouldPreferNativeMobileShare()) {
+        return false;
+      }
+      if (!state.currentJoke) {
+        setFeedback('feedback.noJoke');
+        return true;
+      }
+      const { url, text } = getJokeSharePayload();
+      try {
+        await navigator.share({ title: t('brand.name'), text, url });
+        closeJokeActionMenus();
+        return true;
+      } catch (error) {
+        if (error && error.name === 'AbortError') {
+          return true;
+        }
+        return false;
+      }
     }
 
     function setPrimaryNavOpen(isOpen) {
@@ -7130,28 +7369,39 @@
       }
     }
 
-    function scheduleNotification() {
-      if (!notificationPrefs.enabled) {
-        return;
+    async function scheduleNotification() {
+      try {
+        if (!notificationPrefs.enabled) {
+          return;
+        }
+        if (!supportsBrowserNotifications()) {
+          updateNotificationStatus('contact.unsupported');
+          return;
+        }
+        if (Notification.permission !== 'granted') {
+          return;
+        }
+        const now = new Date();
+        const today = now.toISOString().slice(0, 10);
+        if (notificationPrefs.lastSent === today) {
+          return;
+        }
+        const list = getLocalJokes(state.currentLang, state.currentCategory);
+        const joke = list[0] || t('feedback.fallback');
+        const sent = await showBrowserNotification(t('brand.name'), {
+          body: joke,
+          tag: `daily-joke-${today}`,
+          data: { url: `${window.location.origin}${window.location.pathname}#/jokes` }
+        });
+        if (!sent) {
+          return;
+        }
+        notificationPrefs.lastSent = today;
+        saveNotifications();
+        notifyNewJokeAvailability();
+      } catch (error) {
+        console.error('Notification scheduling failed:', error);
       }
-      if (!('Notification' in window)) {
-        updateNotificationStatus('contact.unsupported');
-        return;
-      }
-      if (Notification.permission !== 'granted') {
-        return;
-      }
-      const now = new Date();
-      const today = now.toISOString().slice(0, 10);
-      if (notificationPrefs.lastSent === today) {
-        return;
-      }
-      const list = getLocalJokes(state.currentLang, state.currentCategory);
-      const joke = list[0] || t('feedback.fallback');
-      new Notification(t('brand.name'), { body: joke });
-      notificationPrefs.lastSent = today;
-      saveNotifications();
-      notifyNewJokeAvailability();
     }
 
     function getLoadingMessage() {
@@ -8974,6 +9224,7 @@
         row.appendChild(score);
         dom.trendingList.appendChild(row);
       });
+      maybeAddTrendingJokesNotification(items);
       renderCategorySuggestions();
     }
 
@@ -9980,6 +10231,8 @@
         enabled: Boolean(stored.enabled),
         lastSent: stored.lastSent || '',
         lastImportantUpdate: typeof stored.lastImportantUpdate === 'string' ? stored.lastImportantUpdate : '',
+        lastTrendingUpdate: typeof stored.lastTrendingUpdate === 'string' ? stored.lastTrendingUpdate : '',
+        coreItemsSeeded: Boolean(stored.coreItemsSeeded),
         items: Array.isArray(stored.items)
           ? stored.items
             .map((item) => {
@@ -10265,8 +10518,12 @@
       };
     }
     if (dom.shareToggle) {
-      dom.shareToggle.onclick = (event) => {
+      dom.shareToggle.onclick = async (event) => {
         event.preventDefault();
+        const handledByNativeShare = await tryPrimaryMobileNativeShare();
+        if (handledByNativeShare) {
+          return;
+        }
         setJokeActionMenuOpen(state.openJokeActionMenu === 'share' ? '' : 'share');
       };
     }
@@ -10313,45 +10570,20 @@
     }
     if (dom.notifyEnable) {
       dom.notifyEnable.onclick = async () => {
-        if (!('Notification' in window)) {
-          updateNotificationStatus('contact.unsupported');
-          setSettingsFeedback('contact.unsupported');
-          return;
-        }
-        const permission = await Notification.requestPermission();
-        if (permission === 'granted') {
-          notificationPrefs.enabled = true;
-          saveNotifications();
-          persistCurrentPreferences();
-          if (dom.settingsNotificationsToggle) {
-            dom.settingsNotificationsToggle.checked = true;
-          }
-          updateNotificationStatus('contact.enabled');
+        const enabled = await enableNotificationsWithPermission();
+        if (enabled) {
           setSettingsFeedback('contact.enabled');
-          scheduleNotification();
-          if (!state.notificationInterval) {
-            state.notificationInterval = setInterval(scheduleNotification, 60 * 60 * 1000);
-          }
+        } else if (!supportsBrowserNotifications()) {
+          setSettingsFeedback('contact.unsupported');
         } else {
-          updateNotificationStatus('contact.denied');
           setSettingsFeedback('contact.denied');
         }
       };
     }
     if (dom.notifyDisable) {
       dom.notifyDisable.onclick = () => {
-        notificationPrefs.enabled = false;
-        saveNotifications();
-        persistCurrentPreferences();
-        if (dom.settingsNotificationsToggle) {
-          dom.settingsNotificationsToggle.checked = false;
-        }
-        updateNotificationStatus('contact.disabled');
+        disableNotificationsPreference();
         setSettingsFeedback('contact.disabled');
-        if (state.notificationInterval) {
-          clearInterval(state.notificationInterval);
-          state.notificationInterval = null;
-        }
       };
     }
     dom.darkToggle.onclick = () => toggleTheme();
@@ -10562,41 +10794,18 @@
       dom.settingsNotificationsToggle.onchange = async () => {
         const shouldEnable = Boolean(dom.settingsNotificationsToggle.checked);
         if (shouldEnable) {
-          if (!('Notification' in window)) {
-            dom.settingsNotificationsToggle.checked = false;
-            updateNotificationStatus('contact.unsupported');
+          const enabled = await enableNotificationsWithPermission();
+          if (enabled) {
+            setSettingsFeedback('contact.enabled');
+          } else if (!supportsBrowserNotifications()) {
             setSettingsFeedback('contact.unsupported');
-            return;
-          }
-          if (Notification.permission !== 'granted') {
-            const permission = await Notification.requestPermission();
-            if (permission !== 'granted') {
-              dom.settingsNotificationsToggle.checked = false;
-              updateNotificationStatus('contact.denied');
-              setSettingsFeedback('contact.denied');
-              return;
-            }
-          }
-          notificationPrefs.enabled = true;
-          saveNotifications();
-          persistCurrentPreferences();
-          setSettingsFeedback('contact.enabled');
-          updateNotificationStatus('contact.enabled');
-          scheduleNotification();
-          if (!state.notificationInterval) {
-            state.notificationInterval = setInterval(scheduleNotification, 60 * 60 * 1000);
+          } else {
+            setSettingsFeedback('contact.denied');
           }
           return;
         }
-        notificationPrefs.enabled = false;
-        saveNotifications();
-        persistCurrentPreferences();
+        disableNotificationsPreference();
         setSettingsFeedback('contact.disabled');
-        updateNotificationStatus('contact.disabled');
-        if (state.notificationInterval) {
-          clearInterval(state.notificationInterval);
-          state.notificationInterval = null;
-        }
       };
     }
     if (dom.settingsDeleteAccount) {
@@ -10893,6 +11102,19 @@
     switchStorageScope(getStorageScopeId());
     syncPrimaryNavLayout();
     window.addEventListener('resize', syncPrimaryNavLayout);
+    if (supportsServiceWorkerNotifications()) {
+      if ('requestIdleCallback' in window) {
+        requestIdleCallback(() => {
+          registerNotificationServiceWorker();
+          warmPushManager();
+        });
+      } else {
+        setTimeout(() => {
+          registerNotificationServiceWorker();
+          warmPushManager();
+        }, 300);
+      }
+    }
     updateAdminAccessUI();
     initVoiceRecorder();
     if ('speechSynthesis' in window) {
@@ -10909,6 +11131,7 @@
       setTimeout(() => ingestDailyJokes(), 800);
     }
     applyLanguage(settings.language);
+    ensureCoreNotificationItems();
     if ('requestIdleCallback' in window) {
       requestIdleCallback(() => {
         refreshAuthSession();
@@ -10920,7 +11143,9 @@
     }
     updateNavButtons();
     if (notificationPrefs.enabled) {
-      scheduleNotification();
+      ensureCoreNotificationItems();
+      void registerNotificationServiceWorker();
+      void scheduleNotification();
       if (!state.notificationInterval) {
         state.notificationInterval = setInterval(scheduleNotification, 60 * 60 * 1000);
       }
