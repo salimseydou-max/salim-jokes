@@ -50,6 +50,12 @@ export default async function handler(req, res) {
   } catch (error) {
     console.error("POST /api/auth/login failed:", error);
     const safe = toSafeAuthError(error);
+    if (safe.status === 401) {
+      return res.status(200).json({
+        success: false,
+        ...safe.body,
+      });
+    }
     return res.status(safe.status).json(safe.body);
   }
 }
