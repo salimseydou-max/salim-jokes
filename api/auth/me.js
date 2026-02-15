@@ -4,7 +4,7 @@ import {
   toSafeAuthError,
   updateUserProfile,
 } from "../../lib/auth.js";
-import parseBody from "./parseBody.js";
+import parseRequestBody from "../../lib/parseRequestBody.js";
 
 export default async function handler(req, res) {
   if (req.method !== "GET" && req.method !== "PATCH") {
@@ -22,7 +22,7 @@ export default async function handler(req, res) {
     }
 
     if (req.method === "PATCH") {
-      const body = await parseBody(req);
+      const body = await parseRequestBody(req);
       const result = await updateUserProfile(auth.user.id, {
         displayName: body.displayName,
         avatarUrl: body.avatarUrl,

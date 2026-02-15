@@ -3,7 +3,7 @@ import {
   signupUser,
   toSafeAuthError,
 } from "../../lib/auth.js";
-import parseBody from "./parseBody.js";
+import parseRequestBody from "../../lib/parseRequestBody.js";
 
 function getClientIp(req) {
   const forwarded = req?.headers?.["x-forwarded-for"];
@@ -22,7 +22,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const body = await parseBody(req);
+    const body = await parseRequestBody(req);
     const result = await signupUser({
       email: body.email,
       password: body.password,
