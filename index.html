@@ -10347,6 +10347,26 @@
         ctx.fillText(line, width / 2, startY + index * lineHeight);
       });
 
+      // Add subtle ownership marks between joke lines on exported images.
+      const watermarkLabel = 'lolwith_salim';
+      const watermarkPositions = [];
+      if (lines.length > 1) {
+        for (let index = 0; index < lines.length - 1; index += 1) {
+          watermarkPositions.push(startY + index * lineHeight + lineHeight / 2);
+        }
+      } else {
+        watermarkPositions.push(startY + lineHeight * 0.58);
+      }
+      ctx.save();
+      ctx.textAlign = 'center';
+      ctx.font = `700 ${Math.max(14, Math.floor(fontSize * 0.34))}px 'Comic Neue', 'Comic Sans MS', sans-serif`;
+      ctx.fillStyle = palette.accent;
+      ctx.globalAlpha = 0.2;
+      watermarkPositions.forEach((positionY) => {
+        ctx.fillText(watermarkLabel, width / 2, positionY);
+      });
+      ctx.restore();
+
       ctx.textAlign = 'left';
       ctx.fillStyle = textColor;
       ctx.font = "700 32px 'Comic Neue', 'Comic Sans MS', sans-serif";
@@ -10355,16 +10375,29 @@
       ctx.fillText('😂', padding + ctx.measureText(BRANDING.site).width + 10, height - padding - 10);
 
       const followText = 'follow me lolwith_salim';
-      ctx.font = "600 24px 'Comic Neue', 'Comic Sans MS', sans-serif";
-      ctx.fillStyle = muted;
+      ctx.font = "700 26px 'Comic Neue', 'Comic Sans MS', sans-serif";
+      const followTextWidth = ctx.measureText(followText).width;
+      const followBoxX = padding - 12;
+      const followBoxY = height - padding - 1;
+      const followBoxHeight = 38;
+      const followBoxWidth = followTextWidth + 24;
+      ctx.save();
+      drawRoundedRect(ctx, followBoxX, followBoxY, followBoxWidth, followBoxHeight, 18);
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.94)';
+      ctx.fill();
+      ctx.strokeStyle = palette.border;
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+      ctx.restore();
+      ctx.fillStyle = textColor;
       ctx.textAlign = 'left';
-      ctx.fillText(followText, padding, height - padding + 26);
+      ctx.fillText(followText, padding, height - padding + 25);
 
-      const iconSize = 36;
-      const iconGap = 10;
+      const iconSize = 30;
+      const iconGap = 8;
       const iconsWidth = iconSize * 4 + iconGap * 3;
       const iconsX = width - padding - iconsWidth;
-      const iconsY = height - padding + 6;
+      const iconsY = height - padding + 9;
       drawSocialIcons(ctx, iconsX, iconsY, iconSize, iconGap);
       ctx.strokeStyle = palette.accent;
       ctx.lineWidth = 3;
