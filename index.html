@@ -2933,6 +2933,7 @@
     const DUPLICATE_CHECK_CANDIDATE_LIMIT = 12;
     const DUPLICATE_WARNING_THRESHOLD = 75;
     const DUPLICATE_BLOCK_THRESHOLD = 90;
+    const SERVICE_WORKER_SCRIPT_URL = '/sw.js?v=auth-ui-fix-20260215';
     const AUTH_ENDPOINTS = {
       signup: '/api/auth/signup',
       login: '/api/auth/login',
@@ -7004,7 +7005,7 @@
         return state.notificationServiceWorker;
       }
       try {
-        const registration = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+        const registration = await navigator.serviceWorker.register(SERVICE_WORKER_SCRIPT_URL, { scope: '/' });
         state.notificationServiceWorker = registration;
         bindServiceWorkerControllerChangeListener();
         trackServiceWorkerUpdates(registration);
@@ -7826,7 +7827,11 @@
         state.currentUserEmail = safeUser.email || '';
         state.currentUserName = safeUser?.profile?.displayName || safeUser.email || '';
         state.currentUserProfile = safeUser;
-        applyRemoteAccountProfileData(safeUser);
+        try {
+          applyRemoteAccountProfileData(safeUser);
+        } catch (error) {
+          console.error('Failed applying remote profile snapshot:', error);
+        }
         if (!resolvedOptions.skipCache) {
           saveCachedAuthSession(safeUser);
         }
@@ -7839,7 +7844,11 @@
           clearCachedAuthSession();
         }
       }
-      switchStorageScope(getStorageScopeId());
+      try {
+        switchStorageScope(getStorageScopeId());
+      } catch (error) {
+        console.error('Failed switching auth storage scope:', error);
+      }
       if (state.currentUserId && !resolvedOptions.fromCache) {
         maybeAddImportantUpdateNotification();
       }
@@ -11845,7 +11854,15 @@
     }
 
     function loadSubmissions() {
-      return JSON.parse(localStorage.getItem(STORAGE_KEYS.submissions) || '[]');
+      try {
+        const stored = JSON.parse(localStorage.getItem(STORAGE_KEYS.submissions) || '[]');
+        if (!Array.isArray(stored)) {
+          return [];
+        }
+        return stored.map((entry) => normalizeProfileSubmissionEntry(entry)).filter(Boolean);
+      } catch (error) {
+        return [];
+      }
     }
 
     function saveSubmissions() {

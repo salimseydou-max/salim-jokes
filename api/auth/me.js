@@ -27,7 +27,7 @@ export default async function handler(req, res) {
   try {
     const auth = await getAuthenticatedUserFromRequest(req);
     if (!auth || !auth.user) {
-      clearAuthSessionCookie(res);
+      clearAuthSessionCookie(res, req);
       return res.status(200).json({
         authenticated: false,
         user: null,
