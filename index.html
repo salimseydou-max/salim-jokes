@@ -1004,19 +1004,85 @@
     }
     .media-icons {
       display: inline-flex;
-      gap: 0.2rem;
-      font-size: 0.8rem;
+      gap: 0.25rem;
+      align-items: center;
     }
-    .media-icon {
+    .social-logo {
+      --logo-size: 22px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      width: 18px;
-      height: 18px;
+      width: var(--logo-size);
+      height: var(--logo-size);
       border-radius: 999px;
-      font-size: 0.6rem;
-      font-weight: 700;
+      position: relative;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    .social-logo--instagram {
+      background: radial-gradient(circle at 30% 107%, #fdf497 0%, #fdf497 6%, #fd5949 45%, #d6249f 60%, #285aeb 90%);
+    }
+    .social-logo--instagram::before {
+      content: "";
+      position: absolute;
+      width: 46%;
+      height: 46%;
+      border: 2px solid #ffffff;
+      border-radius: 22%;
+    }
+    .social-logo--instagram::after {
+      content: "";
+      position: absolute;
+      width: 14%;
+      height: 14%;
+      border-radius: 999px;
+      background: #ffffff;
+      right: 24%;
+      top: 24%;
+    }
+    .social-logo--tiktok {
+      background: #111111;
       color: #ffffff;
+      font-size: calc(var(--logo-size) * 0.6);
+      font-weight: 700;
+    }
+    .social-logo--tiktok::before {
+      content: "♪";
+      text-shadow: -1px 0 #25f4ee, 1px 0 #fe2c55;
+      transform: translateY(-2%);
+    }
+    .social-logo--whatsapp {
+      background: #ffffff;
+      border: 2px solid #25d366;
+      color: #25d366;
+      font-size: calc(var(--logo-size) * 0.52);
+      font-weight: 700;
+    }
+    .social-logo--whatsapp::before {
+      content: "☎";
+      transform: translateY(-1%);
+    }
+    .social-logo--x {
+      background: #111111;
+    }
+    .social-logo--x::before,
+    .social-logo--x::after {
+      content: "";
+      position: absolute;
+      width: 64%;
+      height: 12%;
+      border-radius: 99px;
+      background: #ffffff;
+      transform-origin: center;
+    }
+    .social-logo--x::before {
+      transform: rotate(52deg);
+    }
+    .social-logo--x::after {
+      transform: rotate(-52deg);
+    }
+    .media-icons .social-logo {
+      --logo-size: 18px;
     }
     .site-watermark {
       position: fixed;
@@ -1320,6 +1386,31 @@
       gap: 0.8rem;
       justify-content: center;
       font-weight: 600;
+    }
+    .social-follow-note {
+      width: 100%;
+      text-align: center;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .social-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      padding: 0.22rem 0.52rem;
+      text-decoration: none;
+      color: inherit;
+      transition: transform 0.18s ease, border-color 0.18s ease;
+    }
+    .social-link:hover {
+      transform: translateY(-1px);
+      border-color: var(--accent);
+    }
+    .social-link-label {
+      font-size: 0.82rem;
+      line-height: 1;
     }
     .toast-container {
       position: fixed;
@@ -2557,9 +2648,23 @@
         <div class="card">
           <h3 data-i18n="contact.socialLabel">Social</h3>
           <div class="footer-links">
-            <a href="https://wa.me/" target="_blank" rel="noreferrer">WhatsApp</a>
-            <a href="https://www.tiktok.com/" target="_blank" rel="noreferrer">TikTok</a>
-            <a href="https://www.instagram.com/" target="_blank" rel="noreferrer">Instagram</a>
+            <span class="social-follow-note">Follow me on all platforms</span>
+            <a class="social-link" href="https://wa.me/" target="_blank" rel="noreferrer" aria-label="Follow on WhatsApp">
+              <span class="social-logo social-logo--whatsapp" aria-hidden="true"></span>
+              <span class="social-link-label">WhatsApp</span>
+            </a>
+            <a class="social-link" href="https://www.tiktok.com/@lolwith_salim" target="_blank" rel="noreferrer" aria-label="Follow on TikTok">
+              <span class="social-logo social-logo--tiktok" aria-hidden="true"></span>
+              <span class="social-link-label">TikTok</span>
+            </a>
+            <a class="social-link" href="https://www.instagram.com/lolwith_salim/" target="_blank" rel="noreferrer" aria-label="Follow on Instagram">
+              <span class="social-logo social-logo--instagram" aria-hidden="true"></span>
+              <span class="social-link-label">Instagram</span>
+            </a>
+            <a class="social-link" href="https://x.com/lolwith_salim" target="_blank" rel="noreferrer" aria-label="Follow on X">
+              <span class="social-logo social-logo--x" aria-hidden="true"></span>
+              <span class="social-link-label">X</span>
+            </a>
           </div>
         </div>
         <div class="card">
@@ -2583,10 +2688,23 @@
         <div data-i18n="footer.copyright">© 2026 Voice Joke Club</div>
         <div data-i18n="footer.rights">All rights reserved.</div>
         <div class="footer-links">
-          <span data-i18n="footer.social">Follow</span>
-          <a href="https://wa.me/" target="_blank" rel="noreferrer">WhatsApp</a>
-          <a href="https://www.tiktok.com/" target="_blank" rel="noreferrer">TikTok</a>
-          <a href="https://www.instagram.com/" target="_blank" rel="noreferrer">Instagram</a>
+          <span class="social-follow-note">Follow me on all platforms</span>
+          <a class="social-link" href="https://wa.me/" target="_blank" rel="noreferrer" aria-label="Follow on WhatsApp">
+            <span class="social-logo social-logo--whatsapp" aria-hidden="true"></span>
+            <span class="social-link-label">WhatsApp</span>
+          </a>
+          <a class="social-link" href="https://www.tiktok.com/@lolwith_salim" target="_blank" rel="noreferrer" aria-label="Follow on TikTok">
+            <span class="social-logo social-logo--tiktok" aria-hidden="true"></span>
+            <span class="social-link-label">TikTok</span>
+          </a>
+          <a class="social-link" href="https://www.instagram.com/lolwith_salim/" target="_blank" rel="noreferrer" aria-label="Follow on Instagram">
+            <span class="social-logo social-logo--instagram" aria-hidden="true"></span>
+            <span class="social-link-label">Instagram</span>
+          </a>
+          <a class="social-link" href="https://x.com/lolwith_salim" target="_blank" rel="noreferrer" aria-label="Follow on X">
+            <span class="social-logo social-logo--x" aria-hidden="true"></span>
+            <span class="social-link-label">X</span>
+          </a>
         </div>
       </div>
     </footer>
@@ -10046,24 +10164,92 @@
     }
 
     function drawSocialIcons(ctx, x, y, size, gap) {
-      const platforms = [
-        { label: 'IG', color: '#E1306C' },
-        { label: 'TT', color: '#111111' },
-        { label: 'WA', color: '#25D366' },
-        { label: 'X', color: '#111111' }
-      ];
-      ctx.font = `700 ${Math.floor(size * 0.42)}px 'Comic Neue', sans-serif`;
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
+      const platforms = ['instagram', 'tiktok', 'whatsapp', 'x'];
       platforms.forEach((platform, index) => {
         const cx = x + index * (size + gap) + size / 2;
         const cy = y + size / 2;
-        ctx.fillStyle = platform.color;
+
+        if (platform === 'instagram') {
+          const gradient = ctx.createLinearGradient(cx - size / 2, cy + size / 2, cx + size / 2, cy - size / 2);
+          gradient.addColorStop(0, '#fdf497');
+          gradient.addColorStop(0.35, '#fd5949');
+          gradient.addColorStop(0.62, '#d6249f');
+          gradient.addColorStop(1, '#285aeb');
+          ctx.fillStyle = gradient;
+          ctx.beginPath();
+          ctx.arc(cx, cy, size / 2, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = Math.max(2, size * 0.1);
+          const cameraSize = size * 0.42;
+          drawRoundedRect(
+            ctx,
+            cx - cameraSize / 2,
+            cy - cameraSize / 2,
+            cameraSize,
+            cameraSize,
+            cameraSize * 0.24
+          );
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.arc(cx, cy, size * 0.1, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.fillStyle = '#ffffff';
+          ctx.beginPath();
+          ctx.arc(cx + size * 0.14, cy - size * 0.14, size * 0.04, 0, Math.PI * 2);
+          ctx.fill();
+          return;
+        }
+
+        if (platform === 'tiktok') {
+          ctx.fillStyle = '#111111';
+          ctx.beginPath();
+          ctx.arc(cx, cy, size / 2, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.font = `700 ${Math.floor(size * 0.62)}px 'Comic Neue', 'Comic Sans MS', sans-serif`;
+          ctx.fillStyle = '#25f4ee';
+          ctx.fillText('♪', cx - size * 0.06, cy + size * 0.03);
+          ctx.fillStyle = '#fe2c55';
+          ctx.fillText('♪', cx + size * 0.06, cy - size * 0.01);
+          ctx.fillStyle = '#ffffff';
+          ctx.fillText('♪', cx, cy + size * 0.01);
+          return;
+        }
+
+        if (platform === 'whatsapp') {
+          ctx.fillStyle = '#ffffff';
+          ctx.beginPath();
+          ctx.arc(cx, cy, size / 2, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.strokeStyle = '#25D366';
+          ctx.lineWidth = Math.max(2, size * 0.1);
+          ctx.beginPath();
+          ctx.arc(cx, cy, size / 2 - ctx.lineWidth / 2, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.font = `700 ${Math.floor(size * 0.52)}px 'Comic Neue', 'Comic Sans MS', sans-serif`;
+          ctx.fillStyle = '#25D366';
+          ctx.fillText('☎', cx, cy + size * 0.02);
+          return;
+        }
+
+        ctx.fillStyle = '#111111';
         ctx.beginPath();
         ctx.arc(cx, cy, size / 2, 0, Math.PI * 2);
         ctx.fill();
-        ctx.fillStyle = '#ffffff';
-        ctx.fillText(platform.label, cx, cy + 1);
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = Math.max(2, size * 0.12);
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(cx - size * 0.22, cy - size * 0.27);
+        ctx.lineTo(cx + size * 0.2, cy + size * 0.26);
+        ctx.moveTo(cx + size * 0.2, cy - size * 0.27);
+        ctx.lineTo(cx - size * 0.22, cy + size * 0.26);
+        ctx.stroke();
       });
     }
 
@@ -10168,7 +10354,7 @@
       ctx.font = "700 28px 'Comic Neue', 'Comic Sans MS', sans-serif";
       ctx.fillText('😂', padding + ctx.measureText(BRANDING.site).width + 10, height - padding - 10);
 
-      const followText = t('image.followMe', { handle: BRANDING.followHandle });
+      const followText = 'Follow me on all platforms';
       ctx.font = "600 24px 'Comic Neue', 'Comic Sans MS', sans-serif";
       ctx.fillStyle = muted;
       ctx.textAlign = 'left';
@@ -10712,20 +10898,14 @@
       const overlay = document.createElement('div');
       overlay.className = 'media-overlay';
       const follow = document.createElement('span');
-      follow.textContent = t('image.followMe', { handle: BRANDING.followHandle });
+      follow.textContent = 'Follow me on all platforms';
       const iconsWrap = document.createElement('span');
       iconsWrap.className = 'media-icons';
-      const icons = [
-        { label: 'IG', color: '#E1306C' },
-        { label: 'TT', color: '#111111' },
-        { label: 'WA', color: '#25D366' },
-        { label: 'X', color: '#111111' }
-      ];
+      const icons = ['instagram', 'tiktok', 'whatsapp', 'x'];
       icons.forEach((icon) => {
         const span = document.createElement('span');
-        span.className = 'media-icon';
-        span.textContent = icon.label;
-        span.style.backgroundColor = icon.color;
+        span.className = `social-logo social-logo--${icon}`;
+        span.setAttribute('aria-hidden', 'true');
         iconsWrap.appendChild(span);
       });
       overlay.appendChild(follow);
