@@ -1,9 +1,5 @@
-const OPENROUTER_API_KEY =
-  process.env.OPENROUTER_API_KEY ||
-  "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";
+import { getOpenRouterConfig } from "../config/ai.js";
 
-const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
-const MODEL = "openai/gpt-4o-mini";
 const MAX_CANDIDATES = 12;
 const BLOCK_THRESHOLD = 90;
 const WARNING_THRESHOLD = 75;
@@ -68,39 +64,62 @@ function parseSimilarityScore(value) {
   return parsed;
 }
 
-async function getSimilarityScore(newJoke, existingJoke) {
-  const response = await fetch(OPENROUTER_URL, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${OPENROUTER_API_KEY}`,
+function createTimeoutSignal(timeoutMs) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), Math.max(1000, Number(timeoutMs) || 8000));
+  return {
+    signal: controller.signal,
+    clear: () => clearTimeout(timer),
+  };
+}
+
+async function getSimilarityScore(newJoke, existingJoke, config) {
+  const timeout = createTimeoutSignal(config.timeoutMs);
+  try {
+    const headers = {
+      Authorization: `Bearer ${config.apiKey}`,
       "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: MODEL,
-      messages: [
-        {
-          role: "user",
-          content:
-            "Compare these two jokes and return only a similarity percentage number from 0 to 100. " +
-            "Consider semantic meaning, paraphrases, and translations across languages.\n\n" +
-            `Joke A:\n${newJoke}\n\n` +
-            `Joke B:\n${existingJoke}`,
-        },
-      ],
-    }),
-  });
+    };
+    if (config.appUrl) {
+      headers["HTTP-Referer"] = config.appUrl;
+    }
+    if (config.appName) {
+      headers["X-Title"] = config.appName;
+    }
 
-  if (!response.ok) {
-    throw new Error(`OpenRouter similarity request failed: ${response.status}`);
-  }
+    const response = await fetch(config.apiUrl, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        model: config.model,
+        messages: [
+          {
+            role: "user",
+            content:
+              "Compare these two jokes and return only a similarity percentage number from 0 to 100. " +
+              "Consider semantic meaning, paraphrases, and translations across languages.\n\n" +
+              `Joke A:\n${newJoke}\n\n` +
+              `Joke B:\n${existingJoke}`,
+          },
+        ],
+      }),
+      signal: timeout.signal,
+    });
 
-  const data = await response.json();
-  const content = data?.choices?.[0]?.message?.content || "";
-  const score = parseSimilarityScore(content);
-  if (score === null) {
-    throw new Error("Could not parse similarity score");
+    if (!response.ok) {
+      throw new Error(`OpenRouter similarity request failed: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const content = data?.choices?.[0]?.message?.content || "";
+    const score = parseSimilarityScore(content);
+    if (score === null) {
+      throw new Error("Could not parse similarity score");
+    }
+    return score;
+  } finally {
+    timeout.clear();
   }
-  return score;
 }
 
 export default async function handler(req, res) {
@@ -109,6 +128,7 @@ export default async function handler(req, res) {
   }
 
   try {
+    const openRouterConfig = getOpenRouterConfig();
     const body = req.body && typeof req.body === "object" ? req.body : {};
     const jokeText = sanitizeText(body.jokeText || body.joke || "");
     if (!jokeText) {
@@ -124,7 +144,7 @@ export default async function handler(req, res) {
       });
     }
 
-    if (!OPENROUTER_API_KEY) {
+    if (!openRouterConfig.apiKey) {
       console.error("Missing OPENROUTER_API_KEY for duplicate checks");
       return res.status(200).json({
         decision: "allow",
@@ -141,7 +161,7 @@ export default async function handler(req, res) {
 
     for (let i = 0; i < candidates.length; i += 1) {
       try {
-        const score = await getSimilarityScore(jokeText, candidates[i]);
+        const score = await getSimilarityScore(jokeText, candidates[i], openRouterConfig);
         comparedCount += 1;
         if (score > bestScore) {
           bestScore = score;

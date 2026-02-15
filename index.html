@@ -2652,6 +2652,11 @@
           <h3 data-i18n="community.trending">Trending Jokes</h3>
           <div id="trending-list" class="list"></div>
         </div>
+        <div class="card">
+          <h3 data-i18n="community.viral">Viral Content</h3>
+          <div id="viral-list" class="list"></div>
+          <div id="viral-status" class="muted" aria-live="polite"></div>
+        </div>
       </div>
     </section>
 
@@ -3069,6 +3074,8 @@
       topRatedList: document.getElementById('top-rated-list'),
       leaderboardList: document.getElementById('leaderboard-list'),
       trendingList: document.getElementById('trending-list'),
+      viralList: document.getElementById('viral-list'),
+      viralStatus: document.getElementById('viral-status'),
       notifyEnable: document.getElementById('notify-enable'),
       notifyDisable: document.getElementById('notify-disable'),
       notifyFeedback: document.getElementById('notify-feedback'),
@@ -3196,7 +3203,8 @@
       lastViewedJokes: 'lastViewedJokesV1',
       userPreferences: 'userPreferenceStoreV1',
       progress: 'jokeProgressV1',
-      sessionSeen: 'jokeSessionSeenV1'
+      sessionSeen: 'jokeSessionSeenV1',
+      viralContent: 'viralContentCacheV1'
     };
 
     const languageMeta = {
@@ -3256,6 +3264,39 @@
       like: '/api/auth/like',
       favorite: '/api/jokes/favorite'
     };
+    const VIRAL_CONTENT_ENDPOINT = '/api/viral-content';
+    const VIRAL_CONTENT_MAX_ITEMS = 8;
+    const VIRAL_CONTENT_REFRESH_INTERVAL_MS = 5 * 60 * 1000;
+    const VIRAL_CONTENT_REQUEST_TIMEOUT_MS = 6500;
+    const VIRAL_CONTENT_FALLBACK_ITEMS = [
+      {
+        id: 'local-viral-1',
+        title: 'Fast one-liner clips are trending now',
+        summary: 'Short, clean jokes with quick punchlines are leading engagement.',
+        source: 'Voice Joke Club',
+        kind: 'trending',
+        score: 86,
+        url: ''
+      },
+      {
+        id: 'local-viral-2',
+        title: 'Relatable school humor is going viral',
+        summary: 'Classroom and exam-themed jokes are being shared heavily.',
+        source: 'Voice Joke Club',
+        kind: 'viral',
+        score: 84,
+        url: ''
+      },
+      {
+        id: 'local-viral-3',
+        title: 'Family-friendly meme captions keep rising',
+        summary: 'Caption-style humor with positive tone is sustaining momentum.',
+        source: 'Voice Joke Club',
+        kind: 'trending',
+        score: 81,
+        url: ''
+      }
+    ];
     const ADMIN_CODE = 'salim-admin'; // Replace with a private admin key in production.
     const SAFE_CATEGORIES = [
       'random',
@@ -3486,6 +3527,13 @@
         'community.topRated': 'Top Rated Jokes',
         'community.leaderboard': 'Leaderboard',
         'community.trending': 'Trending Jokes',
+        'community.viral': 'Viral Content',
+        'community.viralLoading': 'Loading viral content...',
+        'community.viralEmpty': 'No viral content available right now.',
+        'community.viralLive': 'Live viral feed updated.',
+        'community.viralCached': 'Showing cached viral content.',
+        'community.viralFallback': 'Showing fallback viral content.',
+        'community.viralFailed': 'Viral content is temporarily unavailable.',
         'community.empty': 'No reactions yet. Be the first to react!',
         'saved.title': 'Saved Jokes',
         'saved.subtitle': 'Search, review, and manage the jokes you saved.',
@@ -6332,7 +6380,13 @@
       voices: [],
       recorder: null,
       voiceChunks: [],
-      voiceDataUrl: null
+      voiceDataUrl: null,
+      viralContentItems: [],
+      viralContentUpdatedAt: 0,
+      viralContentSource: 'none',
+      isViralContentLoading: false,
+      viralContentRefreshTimer: null,
+      viralContentLastError: ''
     };
 
     const settings = loadSettings();
@@ -6360,6 +6414,15 @@
     const sessionSeen = loadSessionSeen();
     const sessionProgress = loadSessionProgress();
     const viewedStore = loadViewedStore();
+    const cachedViralContent = loadViralContentCache();
+    if (cachedViralContent && Array.isArray(cachedViralContent.items)) {
+      state.viralContentItems = dedupeViralContentItems(
+        cachedViralContent.items,
+        VIRAL_CONTENT_MAX_ITEMS
+      );
+      state.viralContentUpdatedAt = Number(cachedViralContent.updatedAt) || 0;
+      state.viralContentSource = state.viralContentItems.length ? 'cache' : 'none';
+    }
 
     if (cachedAuthSession && cachedAuthSession.user) {
       state.currentUserId = cachedAuthSession.user.id;
@@ -6448,6 +6511,7 @@
       renderTopRated();
       renderLeaderboard();
       renderTrending();
+      renderViralContent();
       renderAchievements();
       renderModeration();
       renderAdminDashboard();
@@ -9447,6 +9511,12 @@
       if (route === 'settings') {
         renderSettingsSection();
       }
+      if (route === 'community') {
+        renderViralContent();
+        if (isViralContentStale()) {
+          void refreshViralContent({ silent: state.viralContentItems.length > 0 });
+        }
+      }
     }
 
     function showPageTransition() {
@@ -11190,6 +11260,244 @@
       });
       maybeAddTrendingJokesNotification(items);
       renderCategorySuggestions();
+    }
+
+    function normalizeViralContentItem(item, index = 0) {
+      if (!item || typeof item !== 'object') {
+        return null;
+      }
+      const title = sanitizeText(item.title || item.headline || item.name || item.text || '').slice(0, 180);
+      if (!title) {
+        return null;
+      }
+      const summary = sanitizeText(item.summary || item.description || item.caption || '').slice(0, 320);
+      const source = sanitizeText(item.source || item.platform || 'Viral API').slice(0, 60) || 'Viral API';
+      const kindRaw = sanitizeText(item.kind || item.type || '').toLowerCase();
+      const kind = kindRaw.includes('trend') ? 'trending' : 'viral';
+      const scoreValue = Number(item.score || item.engagement || item.popularity || 0);
+      const score = Number.isFinite(scoreValue) && scoreValue > 0 ? Math.round(scoreValue) : 0;
+      const publishedAtMs = Date.parse(item.publishedAt || item.timestamp || item.createdAt || '');
+      const publishedAt = Number.isFinite(publishedAtMs) ? new Date(publishedAtMs).toISOString() : '';
+      const rawUrl = sanitizeText(item.url || item.link || item.permalink || '').slice(0, 500);
+      let url = '';
+      if (rawUrl) {
+        try {
+          const parsed = new URL(rawUrl);
+          if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
+            url = parsed.toString();
+          }
+        } catch (error) {
+          url = '';
+        }
+      }
+      const rawId = sanitizeText(item.id || item.slug || '').slice(0, 120);
+      const id = rawId || `viral-${Math.abs((title + source + index).split('').reduce((sum, char) => sum + char.charCodeAt(0), 0))}`;
+      return {
+        id,
+        title,
+        summary,
+        source,
+        kind,
+        score,
+        url,
+        publishedAt
+      };
+    }
+
+    function dedupeViralContentItems(items = [], maxItems = VIRAL_CONTENT_MAX_ITEMS) {
+      const normalized = Array.isArray(items)
+        ? items.map((item, index) => normalizeViralContentItem(item, index)).filter(Boolean)
+        : [];
+      const seen = new Set();
+      const output = [];
+      for (let index = 0; index < normalized.length; index += 1) {
+        const item = normalized[index];
+        const key = item.url
+          ? `url:${item.url.toLowerCase()}`
+          : `title:${item.title.toLowerCase()}|${item.source.toLowerCase()}`;
+        if (seen.has(key)) {
+          continue;
+        }
+        seen.add(key);
+        output.push(item);
+        if (output.length >= maxItems) {
+          break;
+        }
+      }
+      return output;
+    }
+
+    function getLocalViralFallbackItems(limit = VIRAL_CONTENT_MAX_ITEMS) {
+      return dedupeViralContentItems(VIRAL_CONTENT_FALLBACK_ITEMS, limit);
+    }
+
+    function loadViralContentCache() {
+      return loadFromStorage(STORAGE_KEYS.viralContent, {
+        items: [],
+        updatedAt: 0,
+        source: 'none'
+      });
+    }
+
+    function saveViralContentCache(items = [], source = 'live') {
+      saveToStorage(STORAGE_KEYS.viralContent, {
+        items: dedupeViralContentItems(items, VIRAL_CONTENT_MAX_ITEMS),
+        updatedAt: Date.now(),
+        source: sanitizeText(source, 20) || 'live'
+      });
+    }
+
+    function getViralStatusLabel() {
+      if (state.isViralContentLoading) {
+        return t('community.viralLoading');
+      }
+      if (state.viralContentLastError) {
+        return state.viralContentLastError;
+      }
+      if (state.viralContentSource === 'live') {
+        return t('community.viralLive');
+      }
+      if (state.viralContentSource === 'cache') {
+        return t('community.viralCached');
+      }
+      if (state.viralContentSource === 'fallback') {
+        return t('community.viralFallback');
+      }
+      return '';
+    }
+
+    function renderViralContent() {
+      if (!dom.viralList) {
+        return;
+      }
+      dom.viralList.innerHTML = '';
+      const items = dedupeViralContentItems(state.viralContentItems, VIRAL_CONTENT_MAX_ITEMS);
+      if (!items.length) {
+        const empty = document.createElement('div');
+        empty.className = 'list-item';
+        empty.textContent = t('community.viralEmpty');
+        dom.viralList.appendChild(empty);
+      } else {
+        items.forEach((item) => {
+          const row = document.createElement('div');
+          row.className = 'list-item';
+          const title = document.createElement(item.url ? 'a' : 'span');
+          if (item.url) {
+            title.href = item.url;
+            title.target = '_blank';
+            title.rel = 'noopener noreferrer';
+          }
+          title.textContent = item.title;
+          if (item.summary) {
+            title.title = item.summary;
+          }
+          const score = document.createElement('span');
+          const prefix = item.kind === 'trending' ? '📈' : '🔥';
+          score.textContent = `${prefix} ${item.score}`;
+          row.appendChild(title);
+          row.appendChild(score);
+          dom.viralList.appendChild(row);
+        });
+      }
+      if (dom.viralStatus) {
+        const statusLabel = getViralStatusLabel();
+        if (!statusLabel) {
+          dom.viralStatus.hidden = true;
+          dom.viralStatus.textContent = '';
+          return;
+        }
+        const suffix = state.viralContentUpdatedAt
+          ? ` • ${new Date(state.viralContentUpdatedAt).toLocaleTimeString()}`
+          : '';
+        dom.viralStatus.hidden = false;
+        dom.viralStatus.textContent = `${statusLabel}${suffix}`;
+      }
+    }
+
+    function applyViralContentItems(items, source = 'live', options = {}) {
+      const resolvedOptions = options && typeof options === 'object' ? options : {};
+      const normalized = dedupeViralContentItems(items, VIRAL_CONTENT_MAX_ITEMS);
+      state.viralContentItems = normalized;
+      state.viralContentUpdatedAt = Date.now();
+      state.viralContentSource = source;
+      state.viralContentLastError = resolvedOptions.errorMessage
+        ? sanitizeText(resolvedOptions.errorMessage).slice(0, 160)
+        : '';
+      if (!resolvedOptions.skipCacheWrite) {
+        saveViralContentCache(normalized, source);
+      }
+      renderViralContent();
+    }
+
+    function isViralContentStale(maxAgeMs = VIRAL_CONTENT_REFRESH_INTERVAL_MS) {
+      if (!state.viralContentUpdatedAt) {
+        return true;
+      }
+      return Date.now() - state.viralContentUpdatedAt >= maxAgeMs;
+    }
+
+    async function refreshViralContent(options = {}) {
+      if (state.isViralContentLoading) {
+        return;
+      }
+      const resolvedOptions = options && typeof options === 'object' ? options : {};
+      state.isViralContentLoading = true;
+      if (!resolvedOptions.silent) {
+        renderViralContent();
+      }
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), VIRAL_CONTENT_REQUEST_TIMEOUT_MS);
+      try {
+        const requestedLang = sanitizeText(languageMeta[state.currentLang]?.api || state.currentLang || 'en', 10);
+        const endpoint =
+          `${VIRAL_CONTENT_ENDPOINT}?limit=${VIRAL_CONTENT_MAX_ITEMS}&lang=${encodeURIComponent(requestedLang)}`;
+        const response = await fetch(endpoint, {
+          method: 'GET',
+          headers: { Accept: 'application/json' },
+          signal: controller.signal
+        });
+        let payload = {};
+        try {
+          payload = await response.json();
+        } catch (jsonError) {
+          payload = {};
+        }
+        if (!response.ok) {
+          throw new Error(payload.error || t('community.viralFailed'));
+        }
+        const remoteItems = dedupeViralContentItems(payload.items || [], VIRAL_CONTENT_MAX_ITEMS);
+        if (remoteItems.length) {
+          applyViralContentItems(remoteItems, payload.fallback ? 'fallback' : 'live');
+          return;
+        }
+        throw new Error('No viral items received');
+      } catch (error) {
+        const cached = loadViralContentCache();
+        const cachedItems = dedupeViralContentItems(cached.items || [], VIRAL_CONTENT_MAX_ITEMS);
+        if (cachedItems.length) {
+          applyViralContentItems(cachedItems, 'cache', {
+            skipCacheWrite: true,
+            errorMessage: t('community.viralFailed')
+          });
+        } else {
+          applyViralContentItems(getLocalViralFallbackItems(), 'fallback', {
+            errorMessage: t('community.viralFailed')
+          });
+        }
+      } finally {
+        clearTimeout(timeoutId);
+        state.isViralContentLoading = false;
+        renderViralContent();
+      }
+    }
+
+    function ensureViralContentAutoRefresh() {
+      if (state.viralContentRefreshTimer) {
+        return;
+      }
+      state.viralContentRefreshTimer = setInterval(() => {
+        void refreshViralContent({ silent: true });
+      }, VIRAL_CONTENT_REFRESH_INTERVAL_MS);
     }
 
     function renderCategorySuggestions() {
@@ -13368,7 +13676,8 @@
           STORAGE_KEYS.moderationLog,
           STORAGE_KEYS.dailyIngest,
           STORAGE_KEYS.media,
-          STORAGE_KEYS.stats
+          STORAGE_KEYS.stats,
+          STORAGE_KEYS.viralContent
         ];
         keysToClear.forEach((key) => {
           try {
@@ -13873,6 +14182,25 @@
     }
     applyLanguage(settings.language);
     renderSettingsSection();
+    renderViralContent();
+    ensureViralContentAutoRefresh();
+    if ('requestIdleCallback' in window) {
+      requestIdleCallback(() => {
+        void refreshViralContent({ silent: state.viralContentItems.length > 0 });
+      });
+    } else {
+      setTimeout(() => {
+        void refreshViralContent({ silent: state.viralContentItems.length > 0 });
+      }, 0);
+    }
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        return;
+      }
+      if (isViralContentStale(Math.floor(VIRAL_CONTENT_REFRESH_INTERVAL_MS / 2))) {
+        void refreshViralContent({ silent: true });
+      }
+    });
     ensureCoreNotificationItems();
     updateInstallUi();
     maybeShowInstallBanner();
