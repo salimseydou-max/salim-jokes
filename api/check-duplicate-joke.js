@@ -45,6 +45,30 @@ function normalizeCandidates(existingJokes, newJoke) {
   return output;
 }
 
+function hasExactDuplicate(existingJokes, newJoke) {
+  if (!Array.isArray(existingJokes)) {
+    return false;
+  }
+  const normalizedNew = sanitizeText(newJoke).toLowerCase();
+  if (!normalizedNew) {
+    return false;
+  }
+  for (let i = 0; i < existingJokes.length; i += 1) {
+    const item = existingJokes[i];
+    const raw =
+      typeof item === "string"
+        ? item
+        : item && typeof item === "object"
+          ? item.joke || item.text || ""
+          : "";
+    const normalized = sanitizeText(raw).toLowerCase();
+    if (normalized && normalized === normalizedNew) {
+      return true;
+    }
+  }
+  return false;
+}
+
 function parseSimilarityScore(value) {
   if (typeof value !== "string" || !value.trim()) {
     return null;
@@ -198,7 +222,18 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "Missing joke text" });
     }
 
-    const candidates = normalizeCandidates(body.existingJokes || [], jokeText);
+    const rawExistingJokes = body.existingJokes || [];
+    if (hasExactDuplicate(rawExistingJokes, jokeText)) {
+      return res.status(200).json({
+        decision: "block",
+        similarityScore: 100,
+        comparedCount: 1,
+        aiCheckFailed: false,
+        matchedJoke: sanitizeText(jokeText),
+        source: "exact-match",
+      });
+    }
+    const candidates = normalizeCandidates(rawExistingJokes, jokeText);
     if (!candidates.length) {
       return res.status(200).json({
         decision: "allow",
