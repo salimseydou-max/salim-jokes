@@ -42,7 +42,7 @@ export default async function handler(req, res) {
       userAgent: req?.headers?.["user-agent"] || "",
       ipAddress: getClientIp(req),
     });
-    setAuthSessionCookie(res, result.sessionToken, result.sessionExpiresAt, req);
+    setAuthSessionCookie(res, result.sessionToken, result.sessionExpiresAt);
     return res.status(200).json({
       success: true,
       user: result.user,
