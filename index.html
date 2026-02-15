@@ -2320,7 +2320,10 @@
           </div>
           <div id="settings-password-section" class="card settings-detail-card settings-anchor-target">
             <h3>Change Password</h3>
-            <p>Use a strong password with at least 8 characters, upper/lower letters, and a number.</p>
+            <p>
+              Use a strong password with at least 8 characters, upper/lower letters, and a number.
+              This updates your sign-in backup on this device.
+            </p>
             <form id="settings-password-form" class="settings-password-form">
               <label for="settings-current-password">Current password</label>
               <input id="settings-current-password" type="password" autocomplete="current-password" />
@@ -3248,7 +3251,6 @@
       me: '/api/auth/me',
       profile: '/api/auth/me',
       like: '/api/auth/like',
-      password: '/api/auth/password',
       favorite: '/api/jokes/favorite'
     };
     const ADMIN_CODE = 'salim-admin'; // Replace with a private admin key in production.
@@ -12612,6 +12614,20 @@
       };
     }
 
+    async function hasMatchingLocalCredential(email, password) {
+      const safeEmail = normalizeAuthEmail(email);
+      const safePassword = String(password || '');
+      if (!safeEmail || !safePassword) {
+        return false;
+      }
+      const account = getLocalAuthAccount(safeEmail);
+      if (!account || !account.salt || !account.hash) {
+        return false;
+      }
+      const hash = await deriveLocalAuthHash(safePassword, account.salt);
+      return Boolean(hash && hash === account.hash);
+    }
+
     function getDisplayNameFromEmail(email) {
       const safeEmail = normalizeAuthEmail(email);
       if (!safeEmail) {
@@ -13391,20 +13407,17 @@
         if (dom.settingsPasswordSubmit) {
           dom.settingsPasswordSubmit.disabled = true;
         }
-        setSettingsPasswordInlineFeedback('Updating password...');
+        setSettingsPasswordInlineFeedback('Updating local password backup...');
         try {
-          const payload = await authRequest(AUTH_ENDPOINTS.password, {
-            method: 'POST',
-            body: {
-              currentPassword,
-              newPassword
-            }
-          });
-          applyAuthenticatedUser(payload?.user || state.currentUserProfile, { force: true });
+          const hasCurrentMatch = await hasMatchingLocalCredential(state.currentUserEmail, currentPassword);
+          if (!hasCurrentMatch) {
+            setSettingsPasswordInlineFeedback('Current password is incorrect.');
+            return;
+          }
           await rememberLocalAuthCredential(
             state.currentUserEmail,
             newPassword,
-            payload?.user || state.currentUserProfile,
+            state.currentUserProfile,
             {
               setLastAuthenticated: true,
               passwordChanged: true
@@ -13419,8 +13432,8 @@
           if (dom.settingsConfirmPassword) {
             dom.settingsConfirmPassword.value = '';
           }
-          setSettingsPasswordInlineFeedback('Password updated successfully.');
-          setSettingsFeedbackMessage('Account password was updated.');
+          setSettingsPasswordInlineFeedback('Password updated for this device.');
+          setSettingsFeedbackMessage('Password updated for local sign-in on this device.');
           renderSettingsSection();
         } catch (error) {
           setSettingsPasswordInlineFeedback(getAuthErrorMessage(error));
