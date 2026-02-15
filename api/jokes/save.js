@@ -1,18 +1,5 @@
 import { saveJoke, toSafeRouteError } from "../../lib/database.js";
-
-function parseBody(req) {
-  if (req.body && typeof req.body === "object") {
-    return req.body;
-  }
-  if (typeof req.body === "string" && req.body.trim()) {
-    try {
-      return JSON.parse(req.body);
-    } catch (error) {
-      return {};
-    }
-  }
-  return {};
-}
+import parseRequestBody from "../../lib/parseRequestBody.js";
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
@@ -20,7 +7,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const body = parseBody(req);
+    const body = await parseRequestBody(req);
     const joke = await saveJoke({
       id: body.id,
       text: body.text || body.joke,
