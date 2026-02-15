@@ -3,20 +3,7 @@ import {
   signupUser,
   toSafeAuthError,
 } from "../../lib/auth.js";
-
-function parseBody(req) {
-  if (req.body && typeof req.body === "object") {
-    return req.body;
-  }
-  if (typeof req.body === "string" && req.body.trim()) {
-    try {
-      return JSON.parse(req.body);
-    } catch (error) {
-      return {};
-    }
-  }
-  return {};
-}
+import parseRequestBody from "../../lib/parseRequestBody.js";
 
 function getClientIp(req) {
   const forwarded = req?.headers?.["x-forwarded-for"];
@@ -35,7 +22,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const body = parseBody(req);
+    const body = await parseRequestBody(req);
     const result = await signupUser({
       email: body.email,
       password: body.password,
