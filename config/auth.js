@@ -3,7 +3,6 @@ const DEFAULT_SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 const DEFAULT_PASSWORD_MIN_LENGTH = 8;
 const DEFAULT_MAX_SESSIONS_PER_USER = 6;
 const DEFAULT_SESSION_COOKIE_NAME = "joke_auth_session";
-const DEFAULT_AVATAR_STORAGE_DIR = "/tmp/jokes-auth-avatars";
 
 function toPositiveInt(value, fallback) {
   const parsed = Number(value);
@@ -44,8 +43,5 @@ export function getAuthConfig() {
       (process.env.AUTH_SESSION_COOKIE_NAME || DEFAULT_SESSION_COOKIE_NAME).trim() ||
       DEFAULT_SESSION_COOKIE_NAME,
     secureCookies: toBoolean(process.env.AUTH_SECURE_COOKIES, secureByDefault),
-    avatarStorageDir:
-      (process.env.AUTH_AVATAR_STORAGE_DIR || DEFAULT_AVATAR_STORAGE_DIR).trim() ||
-      DEFAULT_AVATAR_STORAGE_DIR,
   };
 }
