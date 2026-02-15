@@ -310,6 +310,7 @@
       position: relative;
       display: inline-flex;
       align-items: center;
+      overflow: visible;
     }
     .profile-toggle {
       display: inline-flex;
@@ -319,6 +320,7 @@
       min-height: 40px;
       min-width: 40px;
       padding: 0.32rem;
+      touch-action: manipulation;
     }
     .nav-menu-icon {
       font-size: 1.15rem;
@@ -346,27 +348,40 @@
       flex-shrink: 0;
     }
     .profile-dropdown {
+      --dropdown-shift-x: 0px;
+      --dropdown-shift-y: 0px;
       position: absolute;
       top: calc(100% + 0.35rem);
       right: 0;
       min-width: 220px;
+      max-width: min(94vw, 360px);
+      max-height: min(72vh, 500px);
       padding: 0.4rem;
       display: grid;
       gap: 0.25rem;
-      z-index: 30;
+      overflow-x: hidden;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      -webkit-overflow-scrolling: touch;
+      z-index: 46;
       box-shadow: var(--shadow);
       opacity: 0;
-      transform: translateY(-6px);
+      transform: translate3d(
+        var(--dropdown-shift-x),
+        calc(-6px + var(--dropdown-shift-y)),
+        0
+      );
       pointer-events: none;
       transition: opacity 0.16s ease, transform 0.16s ease;
     }
     .profile-dropdown.is-open {
       opacity: 1;
-      transform: translateY(0);
+      transform: translate3d(var(--dropdown-shift-x), var(--dropdown-shift-y), 0);
       pointer-events: auto;
     }
     .settings-dropdown {
       min-width: 260px;
+      max-width: min(94vw, 420px);
     }
     .settings-controls {
       display: grid;
@@ -386,7 +401,7 @@
       align-items: center;
       justify-content: flex-start;
       width: 100%;
-      min-height: 38px;
+      min-height: 40px;
       padding: 0.45rem 0.7rem;
       border-radius: 10px;
       border: 1px solid transparent;
@@ -396,8 +411,12 @@
       font-weight: 600;
       font-size: 0.9rem;
       text-align: left;
+      white-space: normal;
+      overflow-wrap: anywhere;
+      word-break: break-word;
       cursor: pointer;
       transform: none;
+      touch-action: manipulation;
     }
     .profile-dropdown-item:hover {
       background: var(--bg-soft);
@@ -645,6 +664,7 @@
     .section-toggle {
       padding: 0.4rem 1rem;
       min-height: 36px;
+      touch-action: manipulation;
     }
     .section-body[hidden] {
       display: none;
@@ -778,6 +798,7 @@
       display: inline-flex;
       align-items: center;
       min-width: 0;
+      overflow: visible;
     }
     .action-primary-button,
     .action-menu-toggle {
@@ -795,6 +816,7 @@
       gap: 0.35rem;
       box-shadow: var(--shadow);
       white-space: nowrap;
+      touch-action: manipulation;
     }
     .action-menu-toggle.more-toggle {
       width: 44px;
@@ -808,12 +830,15 @@
       border-width: 2px;
     }
     .action-dropdown {
+      --dropdown-shift-x: 0px;
+      --dropdown-shift-y: 0px;
       position: absolute;
       top: calc(100% + 0.35rem);
       right: 0;
-      z-index: 35;
+      z-index: 46;
       min-width: 220px;
       max-width: min(92vw, 340px);
+      max-height: min(72vh, 500px);
       padding: 0.45rem;
       border: 1px solid var(--border);
       border-radius: 14px;
@@ -822,13 +847,21 @@
       display: grid;
       gap: 0.2rem;
       opacity: 0;
-      transform: translateY(-4px);
+      overflow-y: auto;
+      overflow-x: hidden;
+      overscroll-behavior: contain;
+      -webkit-overflow-scrolling: touch;
+      transform: translate3d(
+        var(--dropdown-shift-x),
+        calc(-4px + var(--dropdown-shift-y)),
+        0
+      );
       pointer-events: none;
       transition: opacity 0.16s ease, transform 0.16s ease;
     }
     .action-dropdown.is-open {
       opacity: 1;
-      transform: translateY(0);
+      transform: translate3d(var(--dropdown-shift-x), var(--dropdown-shift-y), 0);
       pointer-events: auto;
     }
     .action-menu-item {
@@ -846,7 +879,10 @@
       display: inline-flex;
       align-items: center;
       gap: 0.5rem;
-      white-space: nowrap;
+      white-space: normal;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+      touch-action: manipulation;
     }
     .action-menu-item:hover {
       background: var(--bg-soft);
@@ -1590,6 +1626,7 @@
       .profile-dropdown {
         right: 0;
         left: auto;
+        max-width: calc(100vw - 1.5rem);
       }
       .auth-required-actions {
         flex-direction: column;
@@ -1637,6 +1674,12 @@
       .install-banner-actions button {
         flex: 1;
         width: 100%;
+      }
+    }
+    @media (pointer: coarse) {
+      .profile-dropdown-item,
+      .action-menu-item {
+        min-height: 44px;
       }
     }
     @media (prefers-reduced-motion: reduce) {
@@ -5946,6 +5989,7 @@
       serviceWorkerUpdateInterval: null,
       isAdUnitLoaded: false,
       lastInstallInteractionAt: 0,
+      lastMenuToggleAt: {},
       voices: [],
       recorder: null,
       voiceChunks: [],
@@ -6348,6 +6392,142 @@
       ].join('|');
     }
 
+    function shouldIgnoreRapidMenuToggle(toggleKey = '', thresholdMs = 260) {
+      if (!toggleKey) {
+        return false;
+      }
+      const now = Date.now();
+      const previous = Number(state.lastMenuToggleAt[toggleKey]) || 0;
+      if (now - previous < thresholdMs) {
+        return true;
+      }
+      state.lastMenuToggleAt[toggleKey] = now;
+      return false;
+    }
+
+    function resetDropdownViewportStyles(panelEl) {
+      if (!panelEl) {
+        return;
+      }
+      panelEl.style.setProperty('--dropdown-shift-x', '0px');
+      panelEl.style.setProperty('--dropdown-shift-y', '0px');
+      panelEl.style.maxHeight = '';
+    }
+
+    function clampDropdownToViewport(panelEl) {
+      if (!panelEl || panelEl.hidden) {
+        return;
+      }
+      const computed = window.getComputedStyle(panelEl);
+      if (!computed || computed.position === 'fixed') {
+        return;
+      }
+      const viewportWidth = window.innerWidth || document.documentElement.clientWidth || 0;
+      const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0;
+      if (!viewportWidth || !viewportHeight) {
+        return;
+      }
+      const viewportPadding = 10;
+      resetDropdownViewportStyles(panelEl);
+      const panelRect = panelEl.getBoundingClientRect();
+      let shiftX = 0;
+      let shiftY = 0;
+      if (panelRect.right > viewportWidth - viewportPadding) {
+        shiftX -= panelRect.right - (viewportWidth - viewportPadding);
+      }
+      if (panelRect.left < viewportPadding) {
+        shiftX += viewportPadding - panelRect.left;
+      }
+      if (panelRect.bottom > viewportHeight - viewportPadding) {
+        shiftY -= panelRect.bottom - (viewportHeight - viewportPadding);
+      }
+      if (panelRect.top + shiftY < viewportPadding) {
+        shiftY += viewportPadding - (panelRect.top + shiftY);
+      }
+      panelEl.style.setProperty('--dropdown-shift-x', `${Math.round(shiftX)}px`);
+      panelEl.style.setProperty('--dropdown-shift-y', `${Math.round(shiftY)}px`);
+      const adjustedTop = panelRect.top + shiftY;
+      const maxVisibleHeight = Math.max(
+        120,
+        Math.floor(viewportHeight - adjustedTop - viewportPadding)
+      );
+      const viewportBoundHeight = Math.max(
+        120,
+        Math.floor(viewportHeight - viewportPadding * 2)
+      );
+      panelEl.style.maxHeight = `${Math.min(maxVisibleHeight, viewportBoundHeight)}px`;
+    }
+
+    let dropdownLayoutFrame = 0;
+
+    function syncOpenDropdownLayouts() {
+      if (state.isProfileMenuOpen) {
+        clampDropdownToViewport(dom.navProfileDropdown);
+      }
+      if (state.isSettingsMenuOpen) {
+        clampDropdownToViewport(dom.settingsDropdown);
+      }
+      if (state.isNotificationMenuOpen) {
+        clampDropdownToViewport(dom.notificationDropdown);
+      }
+      if (state.openJokeActionMenu) {
+        const activeMenu = getJokeActionMenus().find((entry) => entry.name === state.openJokeActionMenu);
+        if (activeMenu && activeMenu.panel) {
+          clampDropdownToViewport(activeMenu.panel);
+        }
+      }
+    }
+
+    function scheduleOpenDropdownLayoutSync() {
+      if (dropdownLayoutFrame) {
+        cancelAnimationFrame(dropdownLayoutFrame);
+      }
+      dropdownLayoutFrame = requestAnimationFrame(() => {
+        dropdownLayoutFrame = 0;
+        syncOpenDropdownLayouts();
+      });
+    }
+
+    function hasOpenDropdownMenus() {
+      return Boolean(
+        state.isProfileMenuOpen ||
+        state.isSettingsMenuOpen ||
+        state.isNotificationMenuOpen ||
+        state.openJokeActionMenu
+      );
+    }
+
+    function eventTargetsElement(event, element) {
+      if (!event || !element) {
+        return false;
+      }
+      if (typeof event.composedPath === 'function') {
+        return event.composedPath().includes(element);
+      }
+      return element.contains(event.target);
+    }
+
+    function handleGlobalPressToCloseMenus(event) {
+      if (state.isProfileMenuOpen && dom.navProfileMenu && !eventTargetsElement(event, dom.navProfileMenu)) {
+        closeProfileMenu();
+      }
+      if (state.isSettingsMenuOpen && dom.settingsMenu && !eventTargetsElement(event, dom.settingsMenu)) {
+        closeSettingsMenu();
+      }
+      if (state.isNotificationMenuOpen && dom.notificationMenu && !eventTargetsElement(event, dom.notificationMenu)) {
+        closeNotificationMenu();
+      }
+      if (state.openJokeActionMenu && dom.jokeActions && !eventTargetsElement(event, dom.jokeActions)) {
+        closeJokeActionMenus();
+      }
+      if (state.isAuthPromptOpen && dom.authRequiredModal && event.target === dom.authRequiredModal) {
+        closeAuthPrompt({ clearPending: true });
+      }
+      if (state.isPrimaryNavOpen && dom.topBar && !eventTargetsElement(event, dom.topBar)) {
+        setPrimaryNavOpen(false);
+      }
+    }
+
     function setDropdownMenuOpen(nextOpen, panelEl, toggleEl, stateKey) {
       if (!panelEl || !toggleEl || !stateKey) {
         return;
@@ -6360,9 +6540,11 @@
       toggleEl.setAttribute('aria-expanded', String(next));
       if (next) {
         panelEl.hidden = false;
+        resetDropdownViewportStyles(panelEl);
         requestAnimationFrame(() => {
           if (state[stateKey]) {
             panelEl.classList.add('is-open');
+            scheduleOpenDropdownLayoutSync();
           }
         });
         return;
@@ -6371,6 +6553,7 @@
       const hideTask = () => {
         if (!state[stateKey]) {
           panelEl.hidden = true;
+          resetDropdownViewportStyles(panelEl);
         }
       };
       if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
@@ -7264,9 +7447,11 @@
         entry.toggle.setAttribute('aria-expanded', String(isOpen));
         if (isOpen) {
           entry.panel.hidden = false;
+          resetDropdownViewportStyles(entry.panel);
           requestAnimationFrame(() => {
             if (state.openJokeActionMenu === entry.name) {
               entry.panel.classList.add('is-open');
+              scheduleOpenDropdownLayoutSync();
             }
           });
           return;
@@ -7275,6 +7460,7 @@
         const hideTask = () => {
           if (state.openJokeActionMenu !== entry.name) {
             entry.panel.hidden = true;
+            resetDropdownViewportStyles(entry.panel);
           }
         };
         if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
@@ -11440,12 +11626,18 @@
     if (dom.reactionToggle) {
       dom.reactionToggle.onclick = (event) => {
         event.preventDefault();
+        if (shouldIgnoreRapidMenuToggle('reaction')) {
+          return;
+        }
         setJokeActionMenuOpen(state.openJokeActionMenu === 'reaction' ? '' : 'reaction');
       };
     }
     if (dom.shareToggle) {
       dom.shareToggle.onclick = async (event) => {
         event.preventDefault();
+        if (shouldIgnoreRapidMenuToggle('share')) {
+          return;
+        }
         const handledByNativeShare = await tryPrimaryMobileNativeShare();
         if (handledByNativeShare) {
           return;
@@ -11456,6 +11648,9 @@
     if (dom.moreActionsToggle) {
       dom.moreActionsToggle.onclick = (event) => {
         event.preventDefault();
+        if (shouldIgnoreRapidMenuToggle('more')) {
+          return;
+        }
         setJokeActionMenuOpen(state.openJokeActionMenu === 'more' ? '' : 'more');
       };
     }
@@ -11651,6 +11846,9 @@
     if (dom.mobileNavToggle) {
       dom.mobileNavToggle.onclick = (event) => {
         event.preventDefault();
+        if (shouldIgnoreRapidMenuToggle('primary-nav')) {
+          return;
+        }
         setPrimaryNavOpen(!state.isPrimaryNavOpen);
       };
     }
@@ -11672,6 +11870,9 @@
     if (dom.settingsToggle) {
       dom.settingsToggle.onclick = (event) => {
         event.preventDefault();
+        if (shouldIgnoreRapidMenuToggle('settings-menu')) {
+          return;
+        }
         setProfileMenuOpen(false);
         setNotificationMenuOpen(false);
         setSettingsMenuOpen(!state.isSettingsMenuOpen);
@@ -11680,6 +11881,9 @@
     if (dom.notificationToggle) {
       dom.notificationToggle.onclick = (event) => {
         event.preventDefault();
+        if (shouldIgnoreRapidMenuToggle('notification-menu')) {
+          return;
+        }
         setProfileMenuOpen(false);
         setSettingsMenuOpen(false);
         setNotificationMenuOpen(!state.isNotificationMenuOpen);
@@ -11800,6 +12004,9 @@
     if (dom.navProfileToggle) {
       dom.navProfileToggle.onclick = (event) => {
         event.preventDefault();
+        if (shouldIgnoreRapidMenuToggle('profile-menu')) {
+          return;
+        }
         setSettingsMenuOpen(false);
         setNotificationMenuOpen(false);
         setProfileMenuOpen(!state.isProfileMenuOpen);
@@ -11996,24 +12203,22 @@
         }
       };
     }
+    const outsidePressHandler = (event) => {
+      if (typeof event.button === 'number' && event.button !== 0) {
+        return;
+      }
+      handleGlobalPressToCloseMenus(event);
+    };
+    if (window.PointerEvent) {
+      document.addEventListener('pointerdown', outsidePressHandler);
+    } else {
+      document.addEventListener('touchstart', outsidePressHandler, { passive: true });
+      document.addEventListener('mousedown', outsidePressHandler);
+    }
     document.addEventListener('click', (event) => {
-      if (state.isProfileMenuOpen && dom.navProfileMenu && !dom.navProfileMenu.contains(event.target)) {
-        closeProfileMenu();
-      }
-      if (state.isSettingsMenuOpen && dom.settingsMenu && !dom.settingsMenu.contains(event.target)) {
-        closeSettingsMenu();
-      }
-      if (state.isNotificationMenuOpen && dom.notificationMenu && !dom.notificationMenu.contains(event.target)) {
-        closeNotificationMenu();
-      }
-      if (state.openJokeActionMenu && dom.jokeActions && !dom.jokeActions.contains(event.target)) {
-        closeJokeActionMenus();
-      }
-      if (state.isAuthPromptOpen && dom.authRequiredModal && event.target === dom.authRequiredModal) {
-        closeAuthPrompt({ clearPending: true });
-      }
-      if (state.isPrimaryNavOpen && dom.topBar && !dom.topBar.contains(event.target)) {
-        setPrimaryNavOpen(false);
+      // Keyboard-triggered clicks have detail 0 and need the same outside-close behavior.
+      if (event.detail === 0) {
+        handleGlobalPressToCloseMenus(event);
       }
     });
     window.addEventListener('keydown', (event) => {
@@ -12069,7 +12274,22 @@
     recordInstallVisit();
     switchStorageScope(getStorageScopeId());
     syncPrimaryNavLayout();
-    window.addEventListener('resize', syncPrimaryNavLayout);
+    window.addEventListener('resize', () => {
+      syncPrimaryNavLayout();
+      if (hasOpenDropdownMenus()) {
+        scheduleOpenDropdownLayoutSync();
+      }
+    });
+    window.addEventListener(
+      'scroll',
+      () => {
+        if (!hasOpenDropdownMenus()) {
+          return;
+        }
+        scheduleOpenDropdownLayoutSync();
+      },
+      { passive: true }
+    );
     initAdUnitLazyLoad();
     if (supportsServiceWorkerNotifications()) {
       if ('requestIdleCallback' in window) {
