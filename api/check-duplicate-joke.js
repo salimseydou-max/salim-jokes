@@ -3,6 +3,8 @@ import { getOpenRouterConfig } from "../config/ai.js";
 const MAX_CANDIDATES = 12;
 const BLOCK_THRESHOLD = 90;
 const WARNING_THRESHOLD = 75;
+const LOCAL_BLOCK_THRESHOLD = 84;
+const LOCAL_WARNING_THRESHOLD = 70;
 
 function sanitizeText(value) {
   if (!value) {
@@ -62,6 +64,67 @@ function parseSimilarityScore(value) {
     return 100;
   }
   return parsed;
+}
+
+function tokenizeForSimilarity(text) {
+  return sanitizeText(text)
+    .toLowerCase()
+    .replace(/[^a-z0-9\u00c0-\u024f\u0600-\u06ff\s]/gi, " ")
+    .split(/\s+/)
+    .map((token) => token.trim())
+    .filter((token) => token.length >= 3);
+}
+
+function buildTokenSignature(text) {
+  return new Set(tokenizeForSimilarity(text));
+}
+
+function buildTrigramSignature(text) {
+  const normalized = sanitizeText(text)
+    .toLowerCase()
+    .replace(/[^a-z0-9\u00c0-\u024f\u0600-\u06ff\s]/gi, " ")
+    .replace(/\s+/g, "_");
+  const signature = new Set();
+  if (normalized.length < 3) {
+    return signature;
+  }
+  for (let i = 0; i < normalized.length - 2; i += 1) {
+    signature.add(normalized.slice(i, i + 3));
+  }
+  return signature;
+}
+
+function getSetSimilarity(left, right) {
+  if (!left.size || !right.size) {
+    return 0;
+  }
+  let overlap = 0;
+  left.forEach((item) => {
+    if (right.has(item)) {
+      overlap += 1;
+    }
+  });
+  const union = new Set([...left, ...right]).size;
+  return union ? overlap / union : 0;
+}
+
+function getLocalSimilarityScore(a, b) {
+  const left = sanitizeText(a).toLowerCase();
+  const right = sanitizeText(b).toLowerCase();
+  if (!left || !right) {
+    return 0;
+  }
+  if (left === right) {
+    return 100;
+  }
+  const containmentRatio = Math.min(left.length, right.length) / Math.max(left.length, right.length);
+  if (containmentRatio >= 0.72 && (left.includes(right) || right.includes(left))) {
+    return Math.round(86 + containmentRatio * 10);
+  }
+  const tokenSimilarity = getSetSimilarity(buildTokenSignature(left), buildTokenSignature(right));
+  const trigramSimilarity = getSetSimilarity(buildTrigramSignature(left), buildTrigramSignature(right));
+  const blended = tokenSimilarity * 0.68 + trigramSimilarity * 0.32;
+  return Math.round(Math.max(0, Math.min(100, blended * 100)));
 }
 
 function createTimeoutSignal(timeoutMs) {
@@ -144,18 +207,44 @@ export default async function handler(req, res) {
       });
     }
 
+    let bestScore = 0;
+    let bestMatch = "";
+    for (let i = 0; i < candidates.length; i += 1) {
+      const score = getLocalSimilarityScore(jokeText, candidates[i]);
+      if (score > bestScore) {
+        bestScore = score;
+        bestMatch = candidates[i];
+      }
+      if (bestScore >= BLOCK_THRESHOLD) {
+        return res.status(200).json({
+          decision: "block",
+          similarityScore: Math.round(bestScore),
+          comparedCount: i + 1,
+          aiCheckFailed: false,
+          matchedJoke: bestMatch,
+          source: "local-semantic",
+        });
+      }
+    }
+
     if (!openRouterConfig.apiKey) {
       console.error("Missing OPENROUTER_API_KEY for duplicate checks");
+      const localDecision =
+        bestScore >= LOCAL_BLOCK_THRESHOLD
+          ? "block"
+          : bestScore >= LOCAL_WARNING_THRESHOLD
+            ? "warn"
+            : "allow";
       return res.status(200).json({
-        decision: "allow",
-        similarityScore: 0,
-        comparedCount: 0,
+        decision: localDecision,
+        similarityScore: Math.round(bestScore),
+        comparedCount: candidates.length,
         aiCheckFailed: true,
+        matchedJoke: localDecision === "allow" ? "" : bestMatch,
+        source: "local-semantic",
       });
     }
 
-    let bestScore = 0;
-    let bestMatch = "";
     let comparedCount = 0;
     let hadAiFailure = false;
 
@@ -177,11 +266,19 @@ export default async function handler(req, res) {
     }
 
     if (!comparedCount) {
+      const localDecision =
+        bestScore >= LOCAL_BLOCK_THRESHOLD
+          ? "block"
+          : bestScore >= LOCAL_WARNING_THRESHOLD
+            ? "warn"
+            : "allow";
       return res.status(200).json({
-        decision: "allow",
-        similarityScore: 0,
-        comparedCount: 0,
+        decision: localDecision,
+        similarityScore: Math.round(bestScore),
+        comparedCount: candidates.length,
         aiCheckFailed: true,
+        matchedJoke: localDecision === "allow" ? "" : bestMatch,
+        source: "local-semantic",
       });
     }
 
@@ -199,6 +296,7 @@ export default async function handler(req, res) {
       comparedCount,
       aiCheckFailed: hadAiFailure,
       matchedJoke: decision === "allow" ? "" : bestMatch,
+      source: "hybrid",
     });
   } catch (error) {
     console.error("Duplicate check error:", error);
