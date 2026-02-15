@@ -347,6 +347,15 @@
       background: var(--bg-soft);
       flex-shrink: 0;
     }
+    .nav-profile-name {
+      max-width: 120px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 0.82rem;
+      font-weight: 700;
+      line-height: 1;
+    }
     .profile-dropdown {
       --dropdown-shift-x: 0px;
       --dropdown-shift-y: 0px;
@@ -1901,7 +1910,8 @@
                 alt="Profile avatar"
                 src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='96' viewBox='0 0 96 96'%3E%3Crect width='96' height='96' rx='48' fill='%23dfe7ff'/%3E%3Ccircle cx='48' cy='37' r='17' fill='%23657899'/%3E%3Cpath d='M20 82c3-16 14-26 28-26s25 10 28 26' fill='%23657899'/%3E%3C/svg%3E"
               />
-              <span id="nav-profile-label" class="visually-hidden" data-i18n="auth.accountMenu">Account menu</span>
+              <span id="nav-profile-label" class="nav-profile-name" hidden>Profile</span>
+              <span class="visually-hidden" data-i18n="auth.accountMenu">Account menu</span>
             </button>
             <div id="nav-profile-dropdown" class="profile-dropdown card" role="menu" hidden>
               <a
@@ -7692,6 +7702,24 @@
           dom.navProfileAvatar.alt = t('auth.guest');
         }
       }
+      if (dom.navProfileLabel) {
+        if (isAuthenticated) {
+          const preferredName =
+            sanitizeText(state.currentUserName || state.currentUserEmail || '').slice(0, 80) ||
+            t('auth.profile');
+          dom.navProfileLabel.hidden = false;
+          dom.navProfileLabel.textContent = preferredName;
+          if (dom.navProfileToggle) {
+            dom.navProfileToggle.setAttribute('aria-label', `${t('auth.accountMenu')}: ${preferredName}`);
+          }
+        } else {
+          dom.navProfileLabel.hidden = true;
+          dom.navProfileLabel.textContent = '';
+          if (dom.navProfileToggle) {
+            dom.navProfileToggle.setAttribute('aria-label', t('auth.accountMenu'));
+          }
+        }
+      }
       updateAuthNavActive(getRouteFromHash());
     }
 
@@ -8017,6 +8045,14 @@
               fromCache: true
             };
           }
+          if (state.currentUserId && state.currentUserProfile) {
+            handleRouteChange();
+            return {
+              authenticated: true,
+              user: state.currentUserProfile,
+              preservedLocal: true
+            };
+          }
         }
         const nextUser = authenticated ? payload.user : null;
         if (shouldIgnoreStaleAuthRefresh(authSignatureAtStart, nextUser, resolvedOptions)) {
@@ -8046,6 +8082,14 @@
               authenticated: true,
               user: cached.user,
               fromCache: true
+            };
+          }
+          if (state.currentUserId && state.currentUserProfile) {
+            handleRouteChange();
+            return {
+              authenticated: true,
+              user: state.currentUserProfile,
+              preservedLocal: true
             };
           }
           if (shouldIgnoreStaleAuthRefresh(authSignatureAtStart, null, resolvedOptions)) {
