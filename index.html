@@ -10309,7 +10309,8 @@
         text: readVar('--text', '#1f1f1f'),
         muted: readVar('--muted', '#5c5c5c'),
         border: readVar('--border', '#d8d9e8'),
-        accent: readVar('--accent', '#3d5af1')
+        accent: readVar('--accent', '#3d5af1'),
+        overlay: readVar('--media-overlay', 'rgba(255, 255, 255, 0.92)')
       };
     }
 
@@ -10348,7 +10349,6 @@
       const ctx = canvas.getContext('2d');
       const palette = getImageExportTheme();
       const textColor = palette.text;
-      const muted = palette.muted;
       const card = palette.card;
       const padding = 80;
       const bottomSpace = 200;
@@ -10427,7 +10427,7 @@
       const followBoxWidth = followTextWidth + 24;
       ctx.save();
       drawRoundedRect(ctx, followBoxX, followBoxY, followBoxWidth, followBoxHeight, 18);
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.94)';
+      ctx.fillStyle = palette.overlay;
       ctx.fill();
       ctx.strokeStyle = palette.border;
       ctx.lineWidth = 1.5;
