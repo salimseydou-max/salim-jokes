@@ -3,20 +3,7 @@ import {
   setAuthSessionCookie,
   toSafeAuthError,
 } from "../../lib/auth.js";
-
-function parseBody(req) {
-  if (req.body && typeof req.body === "object") {
-    return req.body;
-  }
-  if (typeof req.body === "string" && req.body.trim()) {
-    try {
-      return JSON.parse(req.body);
-    } catch (error) {
-      return {};
-    }
-  }
-  return {};
-}
+import parseBody from "./parseBody.js";
 
 function getClientIp(req) {
   const forwarded = req?.headers?.["x-forwarded-for"];
@@ -35,7 +22,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const body = parseBody(req);
+    const body = await parseBody(req);
     const result = await loginUser({
       email: body.email,
       password: body.password,
