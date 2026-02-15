@@ -3365,13 +3365,21 @@
       'pov-dark': 'dark',
       'pov-story': 'story'
     };
-    const JOKE_SIMILARITY_THRESHOLD = 0.74;
-    const JOKE_DUPLICATE_SIMILARITY_THRESHOLD = 0.86;
-    const JOKE_MIN_WORDS = 5;
-    const JOKE_MAX_WORDS = 90;
-    const JOKE_MIN_STORY_WORDS = 18;
+    const JOKE_SIMILARITY_THRESHOLD = 0.62;
+    const JOKE_DUPLICATE_SIMILARITY_THRESHOLD = 0.78;
+    const JOKE_MIN_WORDS = 8;
+    const JOKE_MAX_WORDS = 95;
+    const JOKE_MIN_STORY_WORDS = 22;
     const JOKE_MIN_STORY_LINES = 3;
-    const JOKE_MAX_QUICK_WORDS = 24;
+    const JOKE_MAX_QUICK_WORDS = 26;
+    const JOKE_TOPIC_REPEAT_LIMIT = 2;
+    const JOKE_TOPIC_STOPWORDS = new Set([
+      'the', 'and', 'for', 'with', 'that', 'this', 'you', 'your', 'are', 'was', 'were', 'have',
+      'has', 'had', 'from', 'into', 'about', 'when', 'where', 'what', 'why', 'how', 'then', 'just',
+      'very', 'really', 'mais', 'avec', 'pour', 'dans', 'puis', 'alors', 'que', 'qui',
+      'pero', 'porque', 'donde', 'cuando', 'para', 'como', 'depois', 'entao', 'com',
+      'لكن', 'هذا', 'هذه', 'الى', 'على', 'مع', 'ثم', 'فجأة', 'amma', 'sai', 'domin', 'yana'
+    ]);
     const BRANDING = {
       site: 'Salim Jokes',
       instagram: '@lolwith_salim',
@@ -3809,10 +3817,10 @@
         'toast.saved': 'Joke saved!',
         'toast.removed': 'Saved joke removed.',
         'loadingMessages': [
-          'Tickling the funny bone...',
-          'Warming up the punchline...',
-          'Polishing a tiny laugh...',
-          'Finding a gentle giggle...'
+          'Building a complete joke with setup and punchline...',
+          'Checking quality so the next joke is clear and fun...',
+          'Refreshing with a unique joke that is not repetitive...',
+          'Preparing a better joke with more variety and detail...'
         ]
       },
       fr: {
@@ -5859,11 +5867,23 @@
         .filter((token) => token.length >= 3);
     }
 
+    function buildCharacterTrigramSignature(text) {
+      const normalized = normalizeJokeForComparison(text).replace(/\s+/g, '_');
+      const signature = new Set();
+      if (normalized.length < 3) {
+        return signature;
+      }
+      for (let index = 0; index < normalized.length - 2; index += 1) {
+        signature.add(normalized.slice(index, index + 3));
+      }
+      return signature;
+    }
+
     function buildJokeTokenSignature(text) {
       return new Set(tokenizeJokeForSimilarity(text));
     }
 
-    function getJokeTokenSimilarity(leftSignature, rightSignature) {
+    function getSignatureSimilarity(leftSignature, rightSignature) {
       if (!leftSignature.size || !rightSignature.size) {
         return 0;
       }
@@ -5880,12 +5900,161 @@
       return overlap / union;
     }
 
+    function hasPunchlineSignal(text) {
+      if (!text) {
+        return false;
+      }
+      return (
+        /[?؟]/.test(text) ||
+        /Q:|A:|Setup:|Punchline:|س:|ج:|P:|R:|Tambaya|Amsa/i.test(text) ||
+        /\b(but|then|so|instead|finally|turns out|suddenly|except)\b/i.test(text) ||
+        /\b(mais|puis|alors|finalement|sauf que)\b/i.test(text) ||
+        /\b(pero|luego|entonces|al final|resulta)\b/i.test(text) ||
+        /\b(mas|depois|entao|no fim|acontece)\b/i.test(text) ||
+        /\b(لكن|ثم|فجأة|في النهاية|اتضح)\b/i.test(text) ||
+        /\b(amma|sai|daga baya|a karshe)\b/i.test(text)
+      );
+    }
+
+    function resolveJokeStyle(joke, category, preferredStyle = 'mixed') {
+      if (preferredStyle === 'quick' || preferredStyle === 'story') {
+        return preferredStyle;
+      }
+      const lines = String(joke || '')
+        .split('\n')
+        .map((line) => line.trim())
+        .filter(Boolean).length;
+      const words = countJokeWords(joke);
+      const alias = CATEGORY_ALIASES[category] || category;
+      if (alias === 'story') {
+        return 'story';
+      }
+      if (alias === 'one-line' || alias === 'short' || alias === 'qa') {
+        return 'quick';
+      }
+      return lines >= 3 || words > JOKE_MAX_QUICK_WORDS ? 'story' : 'quick';
+    }
+
+    function scoreJokeQuality(joke, category, preferredStyle = 'mixed') {
+      const safeJoke = ensureSetupPunchline(joke);
+      const style = resolveJokeStyle(safeJoke, category, preferredStyle);
+      const words = countJokeWords(safeJoke);
+      const lines = String(safeJoke)
+        .split('\n')
+        .map((line) => line.trim())
+        .filter(Boolean).length;
+      const tokens = tokenizeJokeForSimilarity(safeJoke);
+      const uniqueTokens = new Set(tokens);
+      const diversity = tokens.length ? uniqueTokens.size / tokens.length : 0;
+      let score = 0;
+      const reasons = [];
+
+      if (!safeJoke) {
+        reasons.push('empty');
+        return { score: 0, style, reasons };
+      }
+      if (containsBlockedContent(safeJoke)) {
+        reasons.push('unsafe');
+        return { score: 0, style, reasons };
+      }
+
+      if (words >= JOKE_MIN_WORDS && words <= JOKE_MAX_WORDS) {
+        score += 22;
+      } else {
+        score -= 18;
+        reasons.push('word-count');
+      }
+
+      if (style === 'story') {
+        if (words >= JOKE_MIN_STORY_WORDS && lines >= JOKE_MIN_STORY_LINES) {
+          score += 24;
+        } else {
+          score -= 24;
+          reasons.push('story-structure');
+        }
+      } else if (style === 'quick') {
+        if (words <= JOKE_MAX_QUICK_WORDS && lines <= 2) {
+          score += 18;
+        } else {
+          score -= 16;
+          reasons.push('quick-structure');
+        }
+      }
+
+      if (diversity >= 0.58) {
+        score += 20;
+      } else if (diversity >= 0.48) {
+        score += 12;
+      } else {
+        score -= 14;
+        reasons.push('low-diversity');
+      }
+
+      if (hasPunchlineSignal(safeJoke)) {
+        score += 20;
+      } else if (words >= 14 && lines >= 2) {
+        score += 8;
+      } else {
+        score -= 12;
+        reasons.push('missing-punchline');
+      }
+
+      if (/[.!?؟]$/.test(safeJoke)) {
+        score += 6;
+      } else {
+        score -= 4;
+      }
+
+      if (/(very very|really really|ha ha ha|lol lol)/i.test(safeJoke)) {
+        score -= 16;
+        reasons.push('repetitive');
+      }
+
+      const normalized = normalizeJokeForComparison(safeJoke);
+      if (/^(nice|good|great|okay|calm|cool)\b/.test(normalized) && words < 12) {
+        score -= 18;
+        reasons.push('generic-opening');
+      }
+
+      return {
+        score: Math.max(0, Math.min(100, Math.round(score))),
+        style,
+        reasons
+      };
+    }
+
+    function extractJokeTopicKey(joke) {
+      const tokens = tokenizeJokeForSimilarity(joke).filter((token) => !JOKE_TOPIC_STOPWORDS.has(token));
+      if (!tokens.length) {
+        return 'misc';
+      }
+      return tokens.slice(0, 2).join('|');
+    }
+
+    function isTopicOverused(joke, existingJokes = [], maxOccurrences = JOKE_TOPIC_REPEAT_LIMIT) {
+      const topic = extractJokeTopicKey(joke);
+      if (!topic || topic === 'misc') {
+        return false;
+      }
+      let occurrences = 0;
+      for (let index = 0; index < existingJokes.length; index += 1) {
+        if (extractJokeTopicKey(existingJokes[index]) === topic) {
+          occurrences += 1;
+          if (occurrences >= maxOccurrences) {
+            return true;
+          }
+        }
+      }
+      return false;
+    }
+
     function isOverlySimilarToAnyJoke(joke, existingJokes = [], threshold = JOKE_SIMILARITY_THRESHOLD) {
       const normalizedTarget = normalizeJokeForComparison(joke);
       if (!normalizedTarget) {
         return true;
       }
       const targetSignature = buildJokeTokenSignature(normalizedTarget);
+      const targetTrigrams = buildCharacterTrigramSignature(normalizedTarget);
       for (let index = 0; index < existingJokes.length; index += 1) {
         const current = normalizeJokeForComparison(existingJokes[index]);
         if (!current) {
@@ -5894,8 +6063,18 @@
         if (current === normalizedTarget) {
           return true;
         }
+        const containmentRatio =
+          Math.min(current.length, normalizedTarget.length) /
+          Math.max(current.length, normalizedTarget.length);
+        if (containmentRatio >= 0.72 && (current.includes(normalizedTarget) || normalizedTarget.includes(current))) {
+          return true;
+        }
         const currentSignature = buildJokeTokenSignature(current);
-        if (getJokeTokenSimilarity(targetSignature, currentSignature) >= threshold) {
+        const currentTrigrams = buildCharacterTrigramSignature(current);
+        const tokenSimilarity = getSignatureSimilarity(targetSignature, currentSignature);
+        const trigramSimilarity = getSignatureSimilarity(targetTrigrams, currentTrigrams);
+        const blendedSimilarity = tokenSimilarity * 0.68 + trigramSimilarity * 0.32;
+        if (blendedSimilarity >= threshold) {
           return true;
         }
       }
@@ -5999,55 +6178,14 @@
     }
 
     function isLikelyBoringJoke(joke) {
-      const words = countJokeWords(joke);
-      if (words < JOKE_MIN_WORDS) {
-        return true;
-      }
-      const tokens = tokenizeJokeForSimilarity(joke);
-      if (!tokens.length) {
-        return true;
-      }
-      const uniqueCount = new Set(tokens).size;
-      const diversity = uniqueCount / tokens.length;
-      if (diversity < 0.45) {
-        return true;
-      }
-      const normalized = normalizeJokeForComparison(joke);
-      if (/^(nice|good|great|okay|calm)\s/.test(normalized) && words < 8) {
-        return true;
-      }
-      if (/(very|really)\s+\1/.test(normalized)) {
-        return true;
-      }
-      return false;
+      const quality = scoreJokeQuality(joke, 'random', 'mixed');
+      return quality.score < 55;
     }
 
     function isWellStructuredJoke(joke, category, preferredStyle = 'mixed') {
-      const words = countJokeWords(joke);
-      const lines = String(joke)
-        .split('\n')
-        .map((line) => line.trim())
-        .filter(Boolean).length;
-      if (words < JOKE_MIN_WORDS || words > JOKE_MAX_WORDS) {
-        return false;
-      }
-      const style =
-        preferredStyle === 'mixed'
-          ? lines >= 3 || words > JOKE_MAX_QUICK_WORDS
-            ? 'story'
-            : 'quick'
-          : preferredStyle;
-      if (style === 'story' || category === 'story') {
-        if (words < JOKE_MIN_STORY_WORDS || lines < JOKE_MIN_STORY_LINES) {
-          return false;
-        }
-      } else if (style === 'quick') {
-        if (words > JOKE_MAX_QUICK_WORDS || lines > 2) {
-          return false;
-        }
-      }
-      const hasHook = /[?؟]|Q:|A:|Setup:|Punchline:|س:|ج:|P:|R:|Tambaya|Amsa|["“”]/i.test(joke);
-      return hasHook || words >= 8;
+      const quality = scoreJokeQuality(joke, category, preferredStyle);
+      const minimum = quality.style === 'story' ? 64 : 58;
+      return quality.score >= minimum;
     }
 
     function isAcceptableGeneratedJoke(candidate, category, existingJokes = [], preferredStyle = 'mixed') {
@@ -6058,10 +6196,12 @@
       if (containsBlockedContent(safeCandidate)) {
         return false;
       }
-      if (isLikelyBoringJoke(safeCandidate)) {
+      const quality = scoreJokeQuality(safeCandidate, category, preferredStyle);
+      const minimum = quality.style === 'story' ? 66 : 60;
+      if (quality.score < minimum) {
         return false;
       }
-      if (!isWellStructuredJoke(safeCandidate, category, preferredStyle)) {
+      if (isTopicOverused(safeCandidate, existingJokes, JOKE_TOPIC_REPEAT_LIMIT)) {
         return false;
       }
       if (isOverlySimilarToAnyJoke(safeCandidate, existingJokes, JOKE_SIMILARITY_THRESHOLD)) {
@@ -10252,6 +10392,7 @@
       const languageLabel = t(`languages.${lang}`).toLowerCase();
       const unique = [];
       const seen = new Set();
+      const topicCounts = {};
       list.forEach((joke) => {
         const formatted = ensureSetupPunchline(coerceJokeText(joke), lang);
         if (!formatted || seen.has(formatted)) {
@@ -10261,6 +10402,11 @@
           return;
         }
         if (!isWellStructuredJoke(formatted, category, 'mixed')) {
+          return;
+        }
+        const topicKey = extractJokeTopicKey(formatted);
+        const topicCount = topicCounts[topicKey] || 0;
+        if (topicKey !== 'misc' && topicCount >= JOKE_TOPIC_REPEAT_LIMIT) {
           return;
         }
         if (isOverlySimilarToAnyJoke(formatted, unique, JOKE_SIMILARITY_THRESHOLD)) {
@@ -10276,6 +10422,7 @@
           return;
         }
         seen.add(formatted);
+        topicCounts[topicKey] = topicCount + 1;
         unique.push(formatted);
       });
       if (!query) {
@@ -10293,10 +10440,16 @@
             if (seen.has(joke)) {
               return;
             }
+            const topicKey = extractJokeTopicKey(joke);
+            const topicCount = topicCounts[topicKey] || 0;
+            if (topicKey !== 'misc' && topicCount >= JOKE_TOPIC_REPEAT_LIMIT) {
+              return;
+            }
             if (isOverlySimilarToAnyJoke(joke, unique, JOKE_SIMILARITY_THRESHOLD)) {
               return;
             }
             seen.add(joke);
+            topicCounts[topicKey] = topicCount + 1;
             unique.push(joke);
           });
         }
@@ -12256,6 +12409,9 @@
       const existingJokes = collectDuplicateCandidates(safeJoke, lang, category);
       if (!existingJokes.length) {
         return { decision: 'allow', similarityScore: 0, aiCheckFailed: false };
+      }
+      if (isOverlySimilarToAnyJoke(safeJoke, existingJokes, JOKE_DUPLICATE_SIMILARITY_THRESHOLD)) {
+        return { decision: 'block', similarityScore: 1, aiCheckFailed: false };
       }
       try {
         const response = await fetch(DUPLICATE_CHECK_ENDPOINT, {
