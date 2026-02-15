@@ -3365,6 +3365,13 @@
       'pov-dark': 'dark',
       'pov-story': 'story'
     };
+    const JOKE_SIMILARITY_THRESHOLD = 0.74;
+    const JOKE_DUPLICATE_SIMILARITY_THRESHOLD = 0.86;
+    const JOKE_MIN_WORDS = 5;
+    const JOKE_MAX_WORDS = 90;
+    const JOKE_MIN_STORY_WORDS = 18;
+    const JOKE_MIN_STORY_LINES = 3;
+    const JOKE_MAX_QUICK_WORDS = 24;
     const BRANDING = {
       site: 'Salim Jokes',
       instagram: '@lolwith_salim',
@@ -3384,11 +3391,17 @@
       /\b(sex|porn|xxx|nude|explicit|nsfw)\b/i,
       /\b(scam|phish|malware|hack|exploit)\b/i,
       /\b(suicide|self-harm|violence|abuse)\b/i,
+      /\b(idiot|stupid|dumb|moron|loser|worthless|shut up|piece of trash)\b/i,
       /\b(haine|viol|meurtre|pornographie|sexe)\b/i,
+      /\b(idiot|stupide|imbecile|debile|nul)\b/i,
       /\b(odio|violencia|asesinato|violacion|porno)\b/i,
+      /\b(idiota|estupido|imbecil|basura|tonto)\b/i,
       /\b(odio|violencia|assassinato|violacao|porno)\b/i,
+      /\b(idiota|estupido|imbecil|burro|lixo)\b/i,
       /\b(كراهية|قتل|اغتصاب|اباحية|عنف|اساءة)\b/i,
-      /\b(kashe|kisa|fyade|tsiraici|cin zarafi)\b/i
+      /\b(غبي|أحمق|حقير|قذر|تافه)\b/i,
+      /\b(kashe|kisa|fyade|tsiraici|cin zarafi)\b/i,
+      /\b(wawa|banza|jahili|munafuki)\b/i
     ];
 
     const translations = {
@@ -5824,6 +5837,256 @@
       });
     }
 
+    function countJokeWords(text) {
+      if (!text) {
+        return 0;
+      }
+      return String(text).trim().split(/\s+/).filter(Boolean).length;
+    }
+
+    function normalizeJokeForComparison(text) {
+      return sanitizeTextWithLines(text)
+        .toLowerCase()
+        .replace(/[^a-z0-9\u00c0-\u024f\u0600-\u06ff\s]/gi, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+    }
+
+    function tokenizeJokeForSimilarity(text) {
+      return normalizeJokeForComparison(text)
+        .split(' ')
+        .map((token) => token.trim())
+        .filter((token) => token.length >= 3);
+    }
+
+    function buildJokeTokenSignature(text) {
+      return new Set(tokenizeJokeForSimilarity(text));
+    }
+
+    function getJokeTokenSimilarity(leftSignature, rightSignature) {
+      if (!leftSignature.size || !rightSignature.size) {
+        return 0;
+      }
+      let overlap = 0;
+      leftSignature.forEach((token) => {
+        if (rightSignature.has(token)) {
+          overlap += 1;
+        }
+      });
+      const union = new Set([...leftSignature, ...rightSignature]).size;
+      if (!union) {
+        return 0;
+      }
+      return overlap / union;
+    }
+
+    function isOverlySimilarToAnyJoke(joke, existingJokes = [], threshold = JOKE_SIMILARITY_THRESHOLD) {
+      const normalizedTarget = normalizeJokeForComparison(joke);
+      if (!normalizedTarget) {
+        return true;
+      }
+      const targetSignature = buildJokeTokenSignature(normalizedTarget);
+      for (let index = 0; index < existingJokes.length; index += 1) {
+        const current = normalizeJokeForComparison(existingJokes[index]);
+        if (!current) {
+          continue;
+        }
+        if (current === normalizedTarget) {
+          return true;
+        }
+        const currentSignature = buildJokeTokenSignature(current);
+        if (getJokeTokenSimilarity(targetSignature, currentSignature) >= threshold) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    function ensureJokeSentenceEnding(text) {
+      const safe = sanitizeTextWithLines(text);
+      if (!safe) {
+        return '';
+      }
+      if (/[.!?؟]$/.test(safe)) {
+        return safe;
+      }
+      return `${safe}.`;
+    }
+
+    function buildStoryStyleJoke(baseText, factory, seed) {
+      const primary = ensureJokeSentenceEnding(baseText);
+      const bridgeTemplates = (factory.formats?.mixed || []).concat(factory.templates?.random || []);
+      const punchTemplates = (factory.formats?.oneLine || [])
+        .concat(factory.formats?.qa || [])
+        .concat(factory.templates?.short || []);
+      const bridgeTemplate = bridgeTemplates.length
+        ? bridgeTemplates[(seed + 11) % bridgeTemplates.length]
+        : '';
+      const punchTemplate = punchTemplates.length
+        ? punchTemplates[(seed + 23) % punchTemplates.length]
+        : '';
+      const bridge = bridgeTemplate ? ensureJokeSentenceEnding(fillTemplateLang(bridgeTemplate, factory, seed + 11)) : '';
+      const punchline = punchTemplate
+        ? ensureJokeSentenceEnding(fillTemplateLang(punchTemplate, factory, seed + 23))
+        : '';
+      const parts = [primary, bridge, punchline].filter(Boolean);
+      const uniqueParts = parts.filter((part, index) => parts.indexOf(part) === index);
+      return uniqueParts.join('\n\n');
+    }
+
+    function buildQuickStyleJoke(baseText, factory, seed) {
+      const quickTemplates = (factory.formats?.oneLine || [])
+        .concat(factory.formats?.qa || [])
+        .concat(factory.templates?.short || []);
+      const quickTemplate = quickTemplates.length ? quickTemplates[(seed + 7) % quickTemplates.length] : '';
+      const selected = quickTemplate ? fillTemplateLang(quickTemplate, factory, seed + 7) : baseText;
+      const compact = ensureJokeSentenceEnding(selected).replace(/\s*\n+\s*/g, ' ');
+      if (countJokeWords(compact) <= JOKE_MAX_QUICK_WORDS) {
+        return compact;
+      }
+      const sentenceOnly = compact.split(/(?<=[.!?؟])\s+/).filter(Boolean)[0] || compact;
+      return ensureJokeSentenceEnding(sentenceOnly);
+    }
+
+    function pickGenerationStyle(category, index) {
+      const alias = CATEGORY_ALIASES[category] || category;
+      if (alias === 'story') {
+        return index % 4 === 2 ? 'quick' : 'story';
+      }
+      if (alias === 'one-line' || alias === 'short' || alias === 'qa') {
+        return index % 6 === 5 ? 'story' : 'quick';
+      }
+      if (alias === 'roast' || alias === 'pun' || alias === 'dad') {
+        return index % 5 === 4 ? 'story' : 'quick';
+      }
+      return index % 5 === 1 || index % 5 === 4 ? 'story' : 'quick';
+    }
+
+    function getTemplatesForStyle(factory, category, preferredStyle) {
+      const alias = CATEGORY_ALIASES[category] || category;
+      const categoryTemplates =
+        (factory.templates && (factory.templates[alias] || factory.templates.random)) || [];
+      if (preferredStyle === 'story') {
+        return (factory.formats?.story || []).concat(factory.formats?.mixed || [], categoryTemplates);
+      }
+      if (preferredStyle === 'quick') {
+        return (factory.formats?.oneLine || [])
+          .concat(factory.formats?.qa || [], factory.templates?.short || [], categoryTemplates);
+      }
+      return categoryTemplates;
+    }
+
+    function buildGeneratedJokeCandidate(factory, category, seed, preferredStyle = 'mixed') {
+      const style = preferredStyle === 'mixed' ? pickGenerationStyle(category, seed) : preferredStyle;
+      const templates = getTemplatesForStyle(factory, category, style);
+      if (!templates.length) {
+        return '';
+      }
+      const template = templates[seed % templates.length];
+      const raw = fillTemplateLang(template, factory, seed);
+      if (!raw) {
+        return '';
+      }
+      let formatted = raw;
+      if (style === 'story') {
+        formatted = buildStoryStyleJoke(raw, factory, seed);
+      } else if (style === 'quick') {
+        formatted = buildQuickStyleJoke(raw, factory, seed);
+      } else {
+        formatted = ensureJokeSentenceEnding(raw);
+      }
+      return ensureSetupPunchline(formatted);
+    }
+
+    function isLikelyBoringJoke(joke) {
+      const words = countJokeWords(joke);
+      if (words < JOKE_MIN_WORDS) {
+        return true;
+      }
+      const tokens = tokenizeJokeForSimilarity(joke);
+      if (!tokens.length) {
+        return true;
+      }
+      const uniqueCount = new Set(tokens).size;
+      const diversity = uniqueCount / tokens.length;
+      if (diversity < 0.45) {
+        return true;
+      }
+      const normalized = normalizeJokeForComparison(joke);
+      if (/^(nice|good|great|okay|calm)\s/.test(normalized) && words < 8) {
+        return true;
+      }
+      if (/(very|really)\s+\1/.test(normalized)) {
+        return true;
+      }
+      return false;
+    }
+
+    function isWellStructuredJoke(joke, category, preferredStyle = 'mixed') {
+      const words = countJokeWords(joke);
+      const lines = String(joke)
+        .split('\n')
+        .map((line) => line.trim())
+        .filter(Boolean).length;
+      if (words < JOKE_MIN_WORDS || words > JOKE_MAX_WORDS) {
+        return false;
+      }
+      const style =
+        preferredStyle === 'mixed'
+          ? lines >= 3 || words > JOKE_MAX_QUICK_WORDS
+            ? 'story'
+            : 'quick'
+          : preferredStyle;
+      if (style === 'story' || category === 'story') {
+        if (words < JOKE_MIN_STORY_WORDS || lines < JOKE_MIN_STORY_LINES) {
+          return false;
+        }
+      } else if (style === 'quick') {
+        if (words > JOKE_MAX_QUICK_WORDS || lines > 2) {
+          return false;
+        }
+      }
+      const hasHook = /[?؟]|Q:|A:|Setup:|Punchline:|س:|ج:|P:|R:|Tambaya|Amsa|["“”]/i.test(joke);
+      return hasHook || words >= 8;
+    }
+
+    function isAcceptableGeneratedJoke(candidate, category, existingJokes = [], preferredStyle = 'mixed') {
+      const safeCandidate = ensureSetupPunchline(candidate);
+      if (!safeCandidate) {
+        return false;
+      }
+      if (containsBlockedContent(safeCandidate)) {
+        return false;
+      }
+      if (isLikelyBoringJoke(safeCandidate)) {
+        return false;
+      }
+      if (!isWellStructuredJoke(safeCandidate, category, preferredStyle)) {
+        return false;
+      }
+      if (isOverlySimilarToAnyJoke(safeCandidate, existingJokes, JOKE_SIMILARITY_THRESHOLD)) {
+        return false;
+      }
+      return true;
+    }
+
+    function generateUniqueSafeFallbackJokes(factory, category, needed, startSeed, existingJokes = []) {
+      const output = [];
+      const maxAttempts = Math.max(120, needed * 120);
+      let attempts = 0;
+      while (output.length < needed && attempts < maxAttempts) {
+        const seed = startSeed + attempts + 37;
+        const style = pickGenerationStyle(category, seed);
+        const candidate = buildGeneratedJokeCandidate(factory, category, seed, style);
+        const pool = existingJokes.concat(output);
+        if (isAcceptableGeneratedJoke(candidate, category, pool, style)) {
+          output.push(candidate);
+        }
+        attempts += 1;
+      }
+      return output;
+    }
+
     function renderAdminStats() {
       if (!dom.adminStats) {
         return;
@@ -5994,16 +6257,51 @@
     }
 
     function generateCategoryJokesLang(factory, category, count) {
-      const templates = getCategoryTemplates(factory, category);
-      const results = new Set();
+      const results = [];
       let seed = 0;
-      while (results.size < count && seed < count * 40) {
-        const template = templates[seed % templates.length];
-        const joke = fillTemplateLang(template, factory, seed);
-        results.add(joke);
+      let filteredOut = 0;
+      const maxAttempts = Math.max(220, count * 140);
+      while (results.length < count && seed < maxAttempts) {
+        const preferredStyle = pickGenerationStyle(category, seed);
+        const joke = buildGeneratedJokeCandidate(factory, category, seed, preferredStyle);
+        if (!isAcceptableGeneratedJoke(joke, category, results, preferredStyle)) {
+          filteredOut += 1;
+          seed += 1;
+          continue;
+        }
+        results.push(joke);
         seed += 1;
       }
-      return Array.from(results);
+      if (results.length < count) {
+        const refill = generateUniqueSafeFallbackJokes(
+          factory,
+          category,
+          count - results.length,
+          seed + filteredOut,
+          results
+        );
+        refill.forEach((joke) => {
+          if (results.length < count) {
+            results.push(joke);
+          }
+        });
+      }
+      if (!results.length) {
+        const templates = getCategoryTemplates(factory, category);
+        if (!templates.length) {
+          return results;
+        }
+        let backupSeed = 0;
+        while (results.length < count && backupSeed < count * 60) {
+          const template = templates[backupSeed % templates.length];
+          const candidate = ensureJokeSentenceEnding(fillTemplateLang(template, factory, backupSeed));
+          if (!containsBlockedContent(candidate)) {
+            results.push(candidate);
+          }
+          backupSeed += 1;
+        }
+      }
+      return results.slice(0, count);
     }
 
     function getCategoryTemplates(factory, category) {
@@ -9959,6 +10257,15 @@
         if (!formatted || seen.has(formatted)) {
           return;
         }
+        if (containsBlockedContent(formatted) || isLikelyBoringJoke(formatted)) {
+          return;
+        }
+        if (!isWellStructuredJoke(formatted, category, 'mixed')) {
+          return;
+        }
+        if (isOverlySimilarToAnyJoke(formatted, unique, JOKE_SIMILARITY_THRESHOLD)) {
+          return;
+        }
         const searchable = formatted.toLowerCase();
         if (
           query &&
@@ -9971,6 +10278,29 @@
         seen.add(formatted);
         unique.push(formatted);
       });
+      if (!query) {
+        const minRequired = Math.min(24, Math.max(8, Math.floor((list.length || 0) * 0.4)));
+        if (unique.length < minRequired) {
+          const factory = languageFactories[lang] || languageFactories.en;
+          const refill = generateUniqueSafeFallbackJokes(
+            factory,
+            category,
+            minRequired - unique.length,
+            hashString(`${lang}-${category}-${list.length}`),
+            unique
+          );
+          refill.forEach((joke) => {
+            if (seen.has(joke)) {
+              return;
+            }
+            if (isOverlySimilarToAnyJoke(joke, unique, JOKE_SIMILARITY_THRESHOLD)) {
+              return;
+            }
+            seen.add(joke);
+            unique.push(joke);
+          });
+        }
+      }
       return unique;
     }
 
@@ -10337,7 +10667,7 @@
           return true;
         }
         return false;
-      }).map((item) => sanitizeText(item.joke));
+      }).map((item) => sanitizeTextWithLines(item.joke));
       const combined = [...list, ...community];
       return combined.length ? combined : (base.random || localJokes.en.random);
     }
@@ -10404,8 +10734,19 @@
           try {
             const data = await fetchJokeFromApi(meta.api, category);
             const joke = buildJoke(data);
-            if (joke && joke.length <= MAX_JOKE_LENGTH && !hasSeenJoke(joke, lang, category)) {
-              return { joke, source: 'api', wasRepeat: false };
+            const safeJoke = ensureSetupPunchline(joke, lang);
+            const localCandidates = getLocalJokes(lang, category).slice(0, 140);
+            const styleHint = safeJoke.includes('\n') ? 'story' : 'quick';
+            if (
+              safeJoke &&
+              safeJoke.length <= MAX_JOKE_LENGTH &&
+              !containsBlockedContent(safeJoke) &&
+              !isLikelyBoringJoke(safeJoke) &&
+              isWellStructuredJoke(safeJoke, category, styleHint) &&
+              !hasSeenJoke(safeJoke, lang, category) &&
+              !isOverlySimilarToAnyJoke(safeJoke, localCandidates, JOKE_SIMILARITY_THRESHOLD + 0.06)
+            ) {
+              return { joke: safeJoke, source: 'api', wasRepeat: false };
             }
           } catch (error) {
             const retryable = error?.retryable !== false;
@@ -11729,7 +12070,7 @@
     }
 
     function validateSubmission(text) {
-      const trimmed = sanitizeText(text);
+      const trimmed = sanitizeTextWithLines(text);
       if (trimmed.length < 8 || trimmed.length > 280) {
         return false;
       }
@@ -11757,6 +12098,51 @@
       return 'random';
     }
 
+    function collectLanguageCatalogJokes(lang, maxItems = 420) {
+      const output = [];
+      const seen = new Set();
+      const append = (value) => {
+        if (output.length >= maxItems) {
+          return true;
+        }
+        const safe = sanitizeTextWithLines(value);
+        const normalized = normalizeJokeForComparison(safe);
+        if (!normalized || seen.has(normalized)) {
+          return false;
+        }
+        seen.add(normalized);
+        output.push(safe);
+        return output.length >= maxItems;
+      };
+      for (let index = 0; index < categories.length; index += 1) {
+        const list = getLocalJokes(lang, categories[index]);
+        for (let i = 0; i < list.length; i += 1) {
+          if (append(list[i])) {
+            return output;
+          }
+        }
+      }
+      for (let i = submissions.length - 1; i >= 0; i -= 1) {
+        const item = submissions[i];
+        if (!item || item.lang !== lang || item.status === 'rejected') {
+          continue;
+        }
+        if (append(item.joke)) {
+          return output;
+        }
+      }
+      for (let i = approvedJokes.length - 1; i >= 0; i -= 1) {
+        const item = approvedJokes[i];
+        if (!item || item.lang !== lang) {
+          continue;
+        }
+        if (append(item.joke)) {
+          return output;
+        }
+      }
+      return output;
+    }
+
     function isDuplicateJoke(joke, lang) {
       const normalized = sanitizeText(joke).toLowerCase();
       if (!normalized) {
@@ -11779,6 +12165,10 @@
           (item) => item.lang === lang && sanitizeText(item.joke).toLowerCase() === normalized
         )
       ) {
+        return true;
+      }
+      const catalog = collectLanguageCatalogJokes(lang, 420);
+      if (isOverlySimilarToAnyJoke(normalized, catalog, JOKE_DUPLICATE_SIMILARITY_THRESHOLD)) {
         return true;
       }
       return false;
@@ -11901,8 +12291,15 @@
     }
 
     function screenSubmission(text) {
-      const trimmed = sanitizeText(text);
+      const trimmed = sanitizeTextWithLines(text);
       if (trimmed.length < 8 || trimmed.length > 280) {
+        return { status: 'invalid', reasons: ['moderation.reason.length'] };
+      }
+      if (containsBlockedContent(trimmed)) {
+        return { status: 'invalid', reasons: ['moderation.reason.unsafe'] };
+      }
+      const inferredCategory = inferCategoryFromJoke(trimmed);
+      if (!isWellStructuredJoke(trimmed, inferredCategory, 'mixed') || isLikelyBoringJoke(trimmed)) {
         return { status: 'invalid', reasons: ['moderation.reason.length'] };
       }
       const reasons = [];
@@ -11911,9 +12308,6 @@
       }
       if (/([a-zA-Z])\1{5,}/.test(trimmed)) {
         reasons.push('moderation.reason.spam');
-      }
-      if (containsBlockedContent(trimmed)) {
-        reasons.push('moderation.reason.unsafe');
       }
       if (reasons.length) {
         return { status: 'flagged', reasons };
@@ -11931,7 +12325,7 @@
       source = 'user',
       langOverride = null
     ) {
-      const safeJoke = sanitizeText(joke);
+      const safeJoke = sanitizeTextWithLines(joke);
       const safeName = sanitizeText(name);
       const entry = {
         id: Date.now().toString(36),
@@ -12186,7 +12580,7 @@
       if (!item) {
         return;
       }
-      const safeJoke = sanitizeText(item.joke);
+      const safeJoke = sanitizeTextWithLines(item.joke);
       if (!validateSubmission(safeJoke)) {
         setFeedback('feedback.submissionInvalid');
         return;
@@ -12224,13 +12618,17 @@
       if (updated === null) {
         return;
       }
-      const safeJoke = sanitizeText(updated);
+      const safeJoke = sanitizeTextWithLines(updated);
       if (!validateSubmission(safeJoke)) {
         setFeedback('feedback.submissionInvalid');
         return;
       }
       item.joke = safeJoke;
       const screened = screenSubmission(safeJoke);
+      if (screened.status === 'invalid') {
+        setFeedback('feedback.submissionInvalid');
+        return;
+      }
       item.status = screened.status === 'flagged' ? 'flagged' : 'pending';
       item.flagReasons = screened.reasons;
       saveSubmissions();
@@ -12291,10 +12689,14 @@
 
     async function ingestLanguageJokes(lang) {
       const meta = languageMeta[lang] || languageMeta.en;
-      const targets = 2;
+      const targets = 4;
       let added = 0;
-      for (let attempt = 0; attempt < 4 && added < targets; attempt += 1) {
+      let filteredOut = 0;
+      const acceptedInRun = [];
+      for (let attempt = 0; attempt < 14 && added < targets; attempt += 1) {
+        const preferredStyle = pickGenerationStyle('random', attempt);
         let jokeText = '';
+        let suggestedCategory = 'random';
         if (meta.api) {
           try {
             const data = await fetchJokeFromApi(meta.api, 'random');
@@ -12307,37 +12709,104 @@
           }
         }
         if (!jokeText) {
-          const fallback = generateFallbackJoke(lang);
+          const fallback = generateFallbackJoke(lang, {
+            preferredStyle,
+            existingJokes: acceptedInRun
+          });
           jokeText = fallback.joke;
+          suggestedCategory = fallback.category || 'random';
         }
-        const safeJoke = sanitizeText(jokeText);
+        const safeJoke = sanitizeTextWithLines(jokeText);
         if (!safeJoke || safeJoke.length > MAX_JOKE_LENGTH) {
+          filteredOut += 1;
           continue;
         }
-        if (isDuplicateJoke(safeJoke, lang)) {
+        const category = suggestedCategory || inferCategoryFromJoke(safeJoke);
+        if (
+          containsBlockedContent(safeJoke) ||
+          isLikelyBoringJoke(safeJoke) ||
+          !isWellStructuredJoke(safeJoke, category, preferredStyle)
+        ) {
+          filteredOut += 1;
           continue;
         }
-        const category = inferCategoryFromJoke(safeJoke);
+        if (
+          isOverlySimilarToAnyJoke(safeJoke, acceptedInRun, JOKE_SIMILARITY_THRESHOLD) ||
+          isDuplicateJoke(safeJoke, lang)
+        ) {
+          filteredOut += 1;
+          continue;
+        }
         const screen = screenSubmission(safeJoke);
         if (screen.status !== 'pending') {
+          filteredOut += 1;
           continue;
         }
         const duplicateCheck = await checkDuplicateJokeSimilarity(safeJoke, lang, category);
         if (duplicateCheck.decision !== 'allow') {
+          filteredOut += 1;
           continue;
         }
         addSubmission(safeJoke, 'Auto', category, null, 'pending', [], 'auto', lang);
+        acceptedInRun.push(safeJoke);
         added += 1;
+      }
+      if (added < targets && filteredOut >= 3) {
+        for (let refillAttempt = 0; refillAttempt < 120 && added < targets; refillAttempt += 1) {
+          const preferredStyle = refillAttempt % 3 === 0 ? 'story' : 'quick';
+          const fallback = generateFallbackJoke(lang, {
+            preferredStyle,
+            existingJokes: acceptedInRun
+          });
+          const safeJoke = sanitizeTextWithLines(fallback.joke);
+          if (!safeJoke || safeJoke.length > MAX_JOKE_LENGTH) {
+            continue;
+          }
+          const category = fallback.category || 'random';
+          if (
+            !isAcceptableGeneratedJoke(safeJoke, category, acceptedInRun, preferredStyle) ||
+            isDuplicateJoke(safeJoke, lang)
+          ) {
+            continue;
+          }
+          const screen = screenSubmission(safeJoke);
+          if (screen.status !== 'pending') {
+            continue;
+          }
+          addSubmission(safeJoke, 'Auto', category, null, 'pending', [], 'auto', lang);
+          acceptedInRun.push(safeJoke);
+          added += 1;
+        }
       }
     }
 
-    function generateFallbackJoke(lang) {
+    function generateFallbackJoke(lang, options = {}) {
       const factory = languageFactories[lang] || languageFactories.en;
-      const category = SAFE_CATEGORIES[Math.floor(Math.random() * SAFE_CATEGORIES.length)];
+      const resolvedOptions = options && typeof options === 'object' ? options : {};
+      const preferredStyle =
+        typeof resolvedOptions.preferredStyle === 'string' ? resolvedOptions.preferredStyle : 'mixed';
+      const existingJokes = Array.isArray(resolvedOptions.existingJokes)
+        ? resolvedOptions.existingJokes
+        : [];
+      const seedBase = Math.floor(Math.random() * 9999);
+      for (let attempt = 0; attempt < 90; attempt += 1) {
+        const category = SAFE_CATEGORIES[(seedBase + attempt) % SAFE_CATEGORIES.length];
+        const style = preferredStyle === 'mixed'
+          ? pickGenerationStyle(category, seedBase + attempt)
+          : preferredStyle;
+        const joke = buildGeneratedJokeCandidate(factory, category, seedBase + attempt, style);
+        if (!isAcceptableGeneratedJoke(joke, category, existingJokes, style)) {
+          continue;
+        }
+        return { joke, category };
+      }
+      const category = SAFE_CATEGORIES[seedBase % SAFE_CATEGORIES.length];
       const templates = getCategoryTemplates(factory, category);
-      const seed = Math.floor(Math.random() * 9999);
-      const template = templates[seed % templates.length] || '{general}';
-      const joke = fillTemplateLang(template, factory, seed);
+      if (!templates.length) {
+        return { joke: ensureJokeSentenceEnding(fillTemplateLang('{general}', factory, seedBase)), category };
+      }
+      const template = templates[seedBase % templates.length] || templates[0];
+      const joke = ensureJokeSentenceEnding(fillTemplateLang(template, factory, seedBase));
       return { joke, category };
     }
 
