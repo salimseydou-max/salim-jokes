@@ -1,7 +1,7 @@
 const DEFAULT_AUTH_STORAGE_FILE = "/tmp/jokes-auth.json";
-const DEFAULT_SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+const DEFAULT_SESSION_TTL_MS = 10 * 365 * 24 * 60 * 60 * 1000;
 const DEFAULT_PASSWORD_MIN_LENGTH = 8;
-const DEFAULT_MAX_SESSIONS_PER_USER = 6;
+const DEFAULT_MAX_SESSIONS_PER_USER = 0;
 const DEFAULT_SESSION_COOKIE_NAME = "joke_auth_session";
 
 function toPositiveInt(value, fallback) {
