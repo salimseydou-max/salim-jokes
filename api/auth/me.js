@@ -39,6 +39,12 @@ export default async function handler(req, res) {
       const result = await updateUserProfile(auth.user.id, {
         displayName: body.displayName,
         avatarUrl: body.avatarUrl,
+        phoneNumber: body.phoneNumber,
+        locale: body.locale,
+        timezone: body.timezone,
+        preferences: body.preferences,
+        savedJokes: body.savedJokes,
+        submittedJokes: body.submittedJokes,
       });
       return res.status(200).json({
         success: true,

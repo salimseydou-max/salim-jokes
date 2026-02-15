@@ -1936,6 +1936,14 @@
             required
             data-i18n-placeholder="auth.emailPlaceholder"
           />
+          <label for="signup-phone">Phone number (optional)</label>
+          <input
+            id="signup-phone"
+            type="tel"
+            autocomplete="tel"
+            maxlength="24"
+            placeholder="+1234567890"
+          />
           <label for="signup-password" data-i18n="auth.password">Password</label>
           <input
             id="signup-password"
@@ -1975,9 +1983,20 @@
                 <strong id="profile-email">--</strong>
               </div>
               <div class="list-item">
+                <span>Phone</span>
+                <strong id="profile-phone">--</strong>
+              </div>
+              <div class="list-item">
                 <span data-i18n="auth.memberSince">Member since</span>
                 <strong id="profile-created-at">--</strong>
               </div>
+            </div>
+            <div class="settings-controls">
+              <label class="inline-label" for="profile-display-name-input">Display name</label>
+              <input id="profile-display-name-input" type="text" maxlength="80" autocomplete="name" />
+              <label class="inline-label" for="profile-phone-input">Phone number (optional)</label>
+              <input id="profile-phone-input" type="tel" maxlength="24" autocomplete="tel" placeholder="+1234567890" />
+              <button type="button" id="profile-save-account" class="ghost">Save account details</button>
             </div>
             <div class="form-actions">
               <button type="button" id="profile-refresh" class="ghost" data-i18n="auth.refresh">
@@ -1997,7 +2016,7 @@
               <input
                 id="profile-avatar-input"
                 type="file"
-                accept="image/png,image/jpeg,image/jpg,image/webp,image/gif"
+                accept="image/png,image/jpeg,image/jpg,image/webp"
                 hidden
               />
             </div>
@@ -2814,12 +2833,17 @@
       signupForm: document.getElementById('signup-form'),
       signupName: document.getElementById('signup-name'),
       signupEmail: document.getElementById('signup-email'),
+      signupPhone: document.getElementById('signup-phone'),
       signupPassword: document.getElementById('signup-password'),
       signupFeedback: document.getElementById('signup-feedback'),
       profileRefresh: document.getElementById('profile-refresh'),
       profileDisplayName: document.getElementById('profile-display-name'),
       profileEmail: document.getElementById('profile-email'),
+      profilePhone: document.getElementById('profile-phone'),
       profileCreatedAt: document.getElementById('profile-created-at'),
+      profileDisplayNameInput: document.getElementById('profile-display-name-input'),
+      profilePhoneInput: document.getElementById('profile-phone-input'),
+      profileSaveAccount: document.getElementById('profile-save-account'),
       profileFavoritesCount: document.getElementById('profile-favorites-count'),
       profileLikedCount: document.getElementById('profile-liked-count'),
       profileSavedCount: document.getElementById('profile-saved-count'),
@@ -6216,6 +6240,7 @@
       settings.language = lang;
       saveSettings();
       persistCurrentPreferences();
+      scheduleProfileStateSync();
       applyTranslations();
       renderJokeOfDay();
       if (!options.skipFetch) {
@@ -6230,6 +6255,7 @@
       settings.theme = theme;
       saveSettings();
       persistCurrentPreferences();
+      scheduleProfileStateSync();
       dom.darkToggle.textContent = theme === 'dark' ? t('buttons.light') : t('buttons.dark');
       dom.darkToggle.setAttribute('aria-pressed', theme === 'dark');
       applyThemeContrast();
@@ -7127,12 +7153,14 @@
           }
           notificationPrefs.enabled = false;
           saveNotifications();
+          scheduleProfileStateSync();
           updateNotificationStatus('contact.denied');
           return false;
         }
       }
       notificationPrefs.enabled = true;
       saveNotifications();
+      scheduleProfileStateSync();
       if (dom.settingsNotificationsToggle) {
         dom.settingsNotificationsToggle.checked = true;
       }
@@ -7150,6 +7178,7 @@
     function disableNotificationsPreference() {
       notificationPrefs.enabled = false;
       saveNotifications();
+      scheduleProfileStateSync();
       if (dom.settingsNotificationsToggle) {
         dom.settingsNotificationsToggle.checked = false;
       }
@@ -7504,6 +7533,12 @@
           closeProfileMenu();
         }
       }
+      if (dom.notificationMenu) {
+        dom.notificationMenu.hidden = !isAuthenticated;
+        if (!isAuthenticated) {
+          closeNotificationMenu();
+        }
+      }
       if (dom.navLoginLink) {
         dom.navLoginLink.hidden = isAuthenticated;
       }
@@ -7576,7 +7611,16 @@
       if (!state.currentUserProfile || !state.currentUserId) {
         dom.profileDisplayName.textContent = '--';
         dom.profileEmail.textContent = '--';
+        if (dom.profilePhone) {
+          dom.profilePhone.textContent = '--';
+        }
         dom.profileCreatedAt.textContent = '--';
+        if (dom.profileDisplayNameInput) {
+          dom.profileDisplayNameInput.value = '';
+        }
+        if (dom.profilePhoneInput) {
+          dom.profilePhoneInput.value = '';
+        }
         if (dom.profileAvatarImage) {
           dom.profileAvatarImage.removeAttribute('src');
         }
@@ -7596,6 +7640,7 @@
 
       const profile = state.currentUserProfile.profile || {};
       const displayName = profile.displayName || state.currentUserName || t('auth.guest');
+      const phoneNumber = normalizePhoneNumberInput(profile.phoneNumber || '');
       const favorites = Array.isArray(profile.favorites) ? profile.favorites : [];
       const likedJokes = Array.isArray(profile.likedJokes) ? profile.likedJokes : [];
       const avatarUrl = getUserAvatarUrl(state.currentUserProfile);
@@ -7608,7 +7653,16 @@
 
       dom.profileDisplayName.textContent = displayName;
       dom.profileEmail.textContent = state.currentUserEmail || '--';
+      if (dom.profilePhone) {
+        dom.profilePhone.textContent = phoneNumber || '--';
+      }
       dom.profileCreatedAt.textContent = createdText;
+      if (dom.profileDisplayNameInput) {
+        dom.profileDisplayNameInput.value = displayName;
+      }
+      if (dom.profilePhoneInput) {
+        dom.profilePhoneInput.value = phoneNumber;
+      }
       if (dom.profileAvatarImage) {
         if (avatarUrl) {
           dom.profileAvatarImage.src = avatarUrl;
@@ -7763,7 +7817,7 @@
           : {};
       const safeUser = user && typeof user === 'object' ? user : null;
       const nextSignature = buildAuthSignature(safeUser);
-      if (state.authSignature === nextSignature) {
+      if (state.authSignature === nextSignature && !resolvedOptions.force) {
         return false;
       }
       state.authSignature = nextSignature;
@@ -7772,6 +7826,7 @@
         state.currentUserEmail = safeUser.email || '';
         state.currentUserName = safeUser?.profile?.displayName || safeUser.email || '';
         state.currentUserProfile = safeUser;
+        applyRemoteAccountProfileData(safeUser);
         if (!resolvedOptions.skipCache) {
           saveCachedAuthSession(safeUser);
         }
@@ -7867,6 +7922,197 @@
       }
     }
 
+    let profileSyncTimer = 0;
+    let profileSyncInFlight = false;
+    let profileSyncQueued = false;
+    let isApplyingRemoteProfileState = false;
+
+    function normalizePhoneNumberInput(value) {
+      const raw = String(value || '').trim();
+      if (!raw) {
+        return '';
+      }
+      const hasLeadingPlus = raw.startsWith('+');
+      const digits = raw.replace(/\D/g, '');
+      if (digits.length < 7 || digits.length > 15) {
+        return '';
+      }
+      return `${hasLeadingPlus ? '+' : ''}${digits}`;
+    }
+
+    function normalizeProfileSubmissionEntry(entry) {
+      if (!entry || typeof entry !== 'object') {
+        return null;
+      }
+      const joke = sanitizeText(entry.joke || entry.text || '');
+      if (!joke) {
+        return null;
+      }
+      return {
+        id: sanitizeText(entry.id || Date.now().toString(36), 80) || Date.now().toString(36),
+        joke,
+        name: sanitizeText(entry.name || ''),
+        userId: state.currentUserId || null,
+        category: sanitizeText(entry.category || 'random', 40).toLowerCase() || 'random',
+        extraCategories: [],
+        lang: sanitizeText(entry.lang || entry.language || state.currentLang || 'en', 20).toLowerCase() || 'en',
+        voiceDataUrl: null,
+        status: ['pending', 'flagged', 'approved', 'rejected'].includes(String(entry.status || '').toLowerCase())
+          ? String(entry.status).toLowerCase()
+          : 'pending',
+        flagReasons: Array.isArray(entry.flagReasons)
+          ? entry.flagReasons.map((reason) => sanitizeText(reason, 80)).filter(Boolean).slice(0, 8)
+          : [],
+        source: sanitizeText(entry.source || 'user', 20) || 'user',
+        createdAt: entry.createdAt && !Number.isNaN(Date.parse(entry.createdAt))
+          ? new Date(entry.createdAt).toISOString()
+          : new Date().toISOString()
+      };
+    }
+
+    function getCurrentUserSubmissionSnapshot() {
+      if (!state.currentUserId) {
+        return [];
+      }
+      return submissions
+        .filter((entry) => entry && entry.userId === state.currentUserId)
+        .map((entry) => normalizeProfileSubmissionEntry(entry))
+        .filter(Boolean)
+        .slice(0, 300);
+    }
+
+    function replaceCurrentUserSubmissions(entries = [], options = {}) {
+      if (!state.currentUserId) {
+        return;
+      }
+      const resolvedOptions = options && typeof options === 'object' ? options : {};
+      const normalized = Array.isArray(entries)
+        ? entries.map((entry) => normalizeProfileSubmissionEntry(entry)).filter(Boolean)
+        : [];
+      const others = submissions.filter((entry) => entry && entry.userId !== state.currentUserId);
+      submissions.length = 0;
+      others.concat(normalized).forEach((entry) => {
+        submissions.push(entry);
+      });
+      saveSubmissions();
+      renderModeration();
+      if (!resolvedOptions.skipRemoteSync) {
+        scheduleProfileStateSync();
+      }
+    }
+
+    function applyRemoteAccountProfileData(user) {
+      if (!user || !user.id || !user.profile || typeof user.profile !== 'object') {
+        return;
+      }
+      const profile = user.profile;
+      isApplyingRemoteProfileState = true;
+      try {
+        if (Array.isArray(profile.savedJokes)) {
+          const normalizedSaved = uniqueById(
+            profile.savedJokes.map((entry) => normalizeSavedEntry(entry)).filter(Boolean)
+          );
+          setSavedJokesList(normalizedSaved, { skipRemoteSync: true });
+        }
+        if (Array.isArray(profile.submittedJokes)) {
+          replaceCurrentUserSubmissions(profile.submittedJokes, { skipRemoteSync: true });
+        }
+        const preferences =
+          profile.preferences && typeof profile.preferences === 'object' ? profile.preferences : {};
+        const preferencePatch = {};
+        if (
+          typeof preferences.language === 'string' &&
+          preferences.language &&
+          languageMeta[preferences.language]
+        ) {
+          preferencePatch.language = preferences.language;
+        }
+        if (typeof preferences.theme === 'string' && preferences.theme) {
+          preferencePatch.theme = preferences.theme;
+        }
+        if (typeof preferences.notificationsEnabled === 'boolean') {
+          preferencePatch.notificationsEnabled = preferences.notificationsEnabled;
+        }
+        if (Object.keys(preferencePatch).length) {
+          upsertUserPreferenceScope(`user:${user.id}`, preferencePatch);
+        }
+      } finally {
+        isApplyingRemoteProfileState = false;
+      }
+    }
+
+    function buildProfileSyncPayload() {
+      if (!state.currentUserId) {
+        return null;
+      }
+      const savedJokes = getSavedJokesList()
+        .map((entry) => normalizeSavedEntry(entry))
+        .filter(Boolean)
+        .slice(0, 500);
+      let timezone = '';
+      try {
+        timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+      } catch (error) {
+        timezone = '';
+      }
+      return {
+        locale: state.currentLang,
+        timezone,
+        preferences: {
+          language: settings.language,
+          theme: settings.theme,
+          notificationsEnabled: Boolean(notificationPrefs.enabled)
+        },
+        savedJokes,
+        submittedJokes: getCurrentUserSubmissionSnapshot()
+      };
+    }
+
+    function scheduleProfileStateSync() {
+      if (!state.currentUserId || isApplyingRemoteProfileState) {
+        return;
+      }
+      profileSyncQueued = true;
+      if (profileSyncTimer) {
+        clearTimeout(profileSyncTimer);
+      }
+      profileSyncTimer = setTimeout(() => {
+        profileSyncTimer = 0;
+        void flushProfileStateSync();
+      }, 450);
+    }
+
+    async function flushProfileStateSync() {
+      if (!state.currentUserId || isApplyingRemoteProfileState || profileSyncInFlight) {
+        return;
+      }
+      if (!profileSyncQueued) {
+        return;
+      }
+      const payloadBody = buildProfileSyncPayload();
+      if (!payloadBody) {
+        return;
+      }
+      profileSyncQueued = false;
+      profileSyncInFlight = true;
+      try {
+        const payload = await authRequest(AUTH_ENDPOINTS.profile, {
+          method: 'PATCH',
+          body: payloadBody
+        });
+        if (payload && payload.user) {
+          applyAuthenticatedUser(payload.user, { preserveCache: true });
+        }
+      } catch (error) {
+        console.error('Account sync failed:', error);
+      } finally {
+        profileSyncInFlight = false;
+        if (profileSyncQueued) {
+          void flushProfileStateSync();
+        }
+      }
+    }
+
     window.jokeAuth = {
       async signup(email, password, extras = {}) {
         let timezone = extras.timezone || '';
@@ -7883,11 +8129,16 @@
             email,
             password,
             displayName: extras.displayName,
+            phoneNumber: extras.phoneNumber,
             locale: state.currentLang,
-            timezone
+            timezone,
+            language: settings.language,
+            theme: settings.theme,
+            notificationsEnabled: Boolean(notificationPrefs.enabled)
           }
         });
         applyAuthenticatedUser(payload.user || null);
+        scheduleProfileStateSync();
         return payload;
       },
       async login(email, password) {
@@ -7901,6 +8152,7 @@
           throw loginError;
         }
         applyAuthenticatedUser(payload.user || null);
+        scheduleProfileStateSync();
         return payload;
       },
       async logout() {
@@ -7909,12 +8161,34 @@
         return payload;
       },
       async updateProfile(updates = {}) {
+        const body = {};
+        if (Object.prototype.hasOwnProperty.call(updates, 'displayName')) {
+          body.displayName = updates.displayName;
+        }
+        if (Object.prototype.hasOwnProperty.call(updates, 'avatarUrl')) {
+          body.avatarUrl = updates.avatarUrl;
+        }
+        if (Object.prototype.hasOwnProperty.call(updates, 'phoneNumber')) {
+          body.phoneNumber = updates.phoneNumber;
+        }
+        if (Object.prototype.hasOwnProperty.call(updates, 'locale')) {
+          body.locale = updates.locale;
+        }
+        if (Object.prototype.hasOwnProperty.call(updates, 'timezone')) {
+          body.timezone = updates.timezone;
+        }
+        if (Object.prototype.hasOwnProperty.call(updates, 'preferences')) {
+          body.preferences = updates.preferences;
+        }
+        if (Object.prototype.hasOwnProperty.call(updates, 'savedJokes')) {
+          body.savedJokes = updates.savedJokes;
+        }
+        if (Object.prototype.hasOwnProperty.call(updates, 'submittedJokes')) {
+          body.submittedJokes = updates.submittedJokes;
+        }
         const payload = await authRequest(AUTH_ENDPOINTS.profile, {
           method: 'PATCH',
-          body: {
-            displayName: updates.displayName,
-            avatarUrl: updates.avatarUrl
-          }
+          body
         });
         applyAuthenticatedUser(payload.user || null);
         return payload;
@@ -10593,6 +10867,9 @@
       };
       submissions.push(entry);
       saveSubmissions();
+      if (state.currentUserId) {
+        scheduleProfileStateSync();
+      }
       if (status === 'flagged') {
         addModerationLog('flagged', entry, reasons);
       }
@@ -11117,13 +11394,17 @@
       return savedStore.guest;
     }
 
-    function setSavedJokesList(list) {
+    function setSavedJokesList(list, options = {}) {
+      const resolvedOptions = options && typeof options === 'object' ? options : {};
       if (state.currentUserId) {
         savedStore.users[state.currentUserId] = uniqueById(list);
       } else {
         savedStore.guest = uniqueById(list);
       }
       saveSavedStore();
+      if (state.currentUserId && !resolvedOptions.skipRemoteSync) {
+        scheduleProfileStateSync();
+      }
     }
 
     function loadComments() {
@@ -11181,6 +11462,9 @@
       if (/^https?:\/\/[^\s]+$/i.test(text)) {
         return text.slice(0, 2048);
       }
+      if (/^\/api\/auth\/avatar\?key=[a-zA-Z0-9_\-:.%]+(?:&v=\d+)?$/i.test(text)) {
+        return text.slice(0, 2048);
+      }
       if (text.startsWith('data:image/svg+xml,')) {
         return text.slice(0, 2048);
       }
@@ -11231,6 +11515,21 @@
         const parsed = Number(value);
         return Number.isFinite(parsed) && parsed >= 0 ? Math.floor(parsed) : 0;
       };
+      const normalizeSubmissions = (input) => {
+        if (!Array.isArray(input)) {
+          return [];
+        }
+        return input
+          .map((entry) => normalizeProfileSubmissionEntry(entry))
+          .filter(Boolean)
+          .slice(0, 300);
+      };
+      const normalizeSaved = (input) => {
+        if (!Array.isArray(input)) {
+          return [];
+        }
+        return uniqueById(input.map((entry) => normalizeSavedEntry(entry)).filter(Boolean)).slice(0, 500);
+      };
 
       return {
         id,
@@ -11241,8 +11540,11 @@
         profile: {
           displayName,
           avatarUrl: sanitizeCachedAvatarUrl(profile.avatarUrl),
+          phoneNumber: normalizePhoneNumberInput(profile.phoneNumber || ''),
           favorites: normalizeIdList(profile.favorites),
           likedJokes: normalizeIdList(profile.likedJokes),
+          savedJokes: normalizeSaved(profile.savedJokes),
+          submittedJokes: normalizeSubmissions(profile.submittedJokes),
           basics: profile.basics && typeof profile.basics === 'object'
             ? {
                 locale: sanitizeText(profile.basics.locale, 40),
@@ -11252,9 +11554,10 @@
           preferences: profile.preferences && typeof profile.preferences === 'object'
             ? {
                 language: sanitizeText(profile.preferences.language, 20),
-                theme: sanitizeText(profile.preferences.theme, 20)
+                theme: sanitizeText(profile.preferences.theme, 20),
+                notificationsEnabled: Boolean(profile.preferences.notificationsEnabled)
               }
-            : { language: '', theme: '' },
+            : { language: '', theme: '', notificationsEnabled: false },
           subscription: profile.subscription && typeof profile.subscription === 'object'
             ? {
                 plan: sanitizeText(profile.subscription.plan, 32),
@@ -11516,6 +11819,9 @@
 
     function saveSubmissions() {
       localStorage.setItem(STORAGE_KEYS.submissions, JSON.stringify(submissions));
+      if (state.currentUserId && !isApplyingRemoteProfileState) {
+        scheduleProfileStateSync();
+      }
     }
 
     function loadViewedStore() {
@@ -12090,6 +12396,8 @@
         }
         const displayName = (dom.signupName?.value || '').trim();
         const email = (dom.signupEmail?.value || '').trim();
+        const rawPhone = (dom.signupPhone?.value || '').trim();
+        const phoneNumber = normalizePhoneNumberInput(rawPhone);
         const password = dom.signupPassword?.value || '';
         if (!email || !password) {
           if (dom.signupFeedback) {
@@ -12103,15 +12411,24 @@
           }
           return;
         }
+        if (rawPhone && !phoneNumber) {
+          if (dom.signupFeedback) {
+            dom.signupFeedback.textContent = 'Please enter a valid phone number or leave it empty.';
+          }
+          return;
+        }
         const submitButton = dom.signupForm.querySelector('button[type="submit"]');
         if (submitButton) {
           submitButton.disabled = true;
         }
         try {
-          await window.jokeAuth.signup(email, password, { displayName });
+          await window.jokeAuth.signup(email, password, { displayName, phoneNumber });
           closeAuthPrompt();
           if (dom.signupPassword) {
             dom.signupPassword.value = '';
+          }
+          if (dom.signupPhone) {
+            dom.signupPhone.value = '';
           }
           showToast(t('auth.created'));
           redirectAfterAuthSuccess();
@@ -12134,6 +12451,44 @@
         await refreshAuthSession();
         if (dom.profileFeedback) {
           dom.profileFeedback.textContent = t('auth.profileRefreshed');
+        }
+      };
+    }
+    if (dom.profileSaveAccount) {
+      dom.profileSaveAccount.onclick = async () => {
+        if (!state.currentUserId) {
+          if (dom.profileFeedback) {
+            dom.profileFeedback.textContent = t('auth.loginRequired');
+          }
+          return;
+        }
+        const displayName = (dom.profileDisplayNameInput?.value || '').trim();
+        const rawPhone = (dom.profilePhoneInput?.value || '').trim();
+        const phoneNumber = normalizePhoneNumberInput(rawPhone);
+        if (rawPhone && !phoneNumber) {
+          if (dom.profileFeedback) {
+            dom.profileFeedback.textContent = 'Please enter a valid phone number or leave it empty.';
+          }
+          return;
+        }
+        dom.profileSaveAccount.disabled = true;
+        if (dom.profileFeedback) {
+          dom.profileFeedback.textContent = t('auth.refreshing');
+        }
+        try {
+          await window.jokeAuth.updateProfile({
+            displayName,
+            phoneNumber
+          });
+          if (dom.profileFeedback) {
+            dom.profileFeedback.textContent = t('auth.profileRefreshed');
+          }
+        } catch (error) {
+          if (dom.profileFeedback) {
+            dom.profileFeedback.textContent = getAuthErrorMessage(error);
+          }
+        } finally {
+          dom.profileSaveAccount.disabled = false;
         }
       };
     }

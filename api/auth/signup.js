@@ -40,8 +40,12 @@ export default async function handler(req, res) {
       email: body.email,
       password: body.password,
       displayName: body.displayName,
+      phoneNumber: body.phoneNumber,
       locale: body.locale,
       timezone: body.timezone,
+      language: body.language,
+      theme: body.theme,
+      notificationsEnabled: body.notificationsEnabled,
       userAgent: req?.headers?.["user-agent"] || "",
       ipAddress: getClientIp(req),
     });
