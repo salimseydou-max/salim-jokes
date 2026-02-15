@@ -3,7 +3,7 @@ const DEFAULT_URL = "/#/jokes";
 const DEFAULT_ICON = "/icons/icon-192.png";
 const DEFAULT_BADGE = "/icons/favicon-32.png";
 
-const CACHE_VERSION = "legacy-icon-v3";
+const CACHE_VERSION = "auth-persistence-v4";
 const CORE_CACHE = `vjc-core-cache-${CACHE_VERSION}`;
 const RUNTIME_CACHE = `vjc-runtime-cache-${CACHE_VERSION}`;
 const API_CACHE = `vjc-api-cache-${CACHE_VERSION}`;
@@ -106,7 +106,7 @@ async function networkFirst(request, cacheName, fallbackUrl = "") {
 
 async function handleNavigationRequest(request) {
   try {
-    const networkResponse = await fetch(request);
+    const networkResponse = await fetch(request, { cache: "no-store" });
     await putInCache(CORE_CACHE, APP_SHELL_URL, networkResponse.clone());
     return networkResponse;
   } catch (error) {
@@ -182,6 +182,7 @@ self.addEventListener("install", (event) => {
           }
         })
       );
+      await self.skipWaiting();
     })()
   );
 });
