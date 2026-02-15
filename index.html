@@ -506,6 +506,68 @@
     .settings-danger {
       border-color: #d66b6b;
     }
+    .settings-detail-grid {
+      display: grid;
+      gap: 0.85rem;
+      margin-top: 0.85rem;
+    }
+    .settings-detail-card {
+      display: grid;
+      gap: 0.55rem;
+    }
+    .settings-detail-card h3 {
+      margin: 0;
+    }
+    .settings-detail-card p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+    .settings-detail-list {
+      margin: 0;
+      padding-left: 1.1rem;
+      display: grid;
+      gap: 0.28rem;
+    }
+    .settings-detail-kv {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.7rem;
+      border: 1px solid var(--border);
+      background: var(--bg-soft);
+      border-radius: 10px;
+      padding: 0.5rem 0.6rem;
+      font-size: 0.9rem;
+    }
+    .settings-detail-kv strong {
+      text-align: right;
+      overflow-wrap: anywhere;
+    }
+    .settings-inline-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.55rem;
+    }
+    .settings-inline-actions .ghost {
+      width: auto;
+      min-width: 160px;
+    }
+    .settings-password-form {
+      display: grid;
+      gap: 0.5rem;
+    }
+    .settings-password-form input {
+      width: 100%;
+    }
+    .settings-inline-feedback {
+      min-height: 1.1rem;
+      color: var(--muted);
+      font-size: 0.86rem;
+    }
+    .settings-anchor-target {
+      scroll-margin-top: 120px;
+    }
     .notification-badge {
       display: inline-flex;
       align-items: center;
@@ -1744,6 +1806,13 @@
         justify-content: flex-start;
         white-space: normal;
       }
+      .settings-detail-kv {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .settings-inline-actions .ghost {
+        width: 100%;
+      }
       .notification-header {
         flex-wrap: wrap;
       }
@@ -2206,8 +2275,94 @@
               <button id="settings-delete-account" type="button" class="ghost" data-i18n="auth.settingsDelete">Delete</button>
             </div>
           </div>
-          <div id="settings-feedback" class="feedback" aria-live="polite"></div>
         </div>
+        <div class="settings-detail-grid">
+          <div id="settings-privacy-section" class="card settings-detail-card settings-anchor-target">
+            <h3>Privacy Policy</h3>
+            <p>
+              We collect only the data needed to keep your account working: profile details, favorites, likes,
+              and app preferences. We do not sell your personal data.
+            </p>
+            <div class="settings-detail-kv">
+              <span>Account email</span>
+              <strong id="settings-privacy-email-value">--</strong>
+            </div>
+            <div class="settings-detail-kv">
+              <span>Member since</span>
+              <strong id="settings-privacy-member-since-value">--</strong>
+            </div>
+            <ul class="settings-detail-list">
+              <li>Used to personalize your app and sync account activity.</li>
+              <li>Stored account data includes display name, favorites, liked jokes, and preferences.</li>
+              <li>You can export your data and clear local device data anytime below.</li>
+              <li>You can request account deletion from the Delete Account action.</li>
+            </ul>
+          </div>
+          <div id="settings-data-controls-section" class="card settings-detail-card settings-anchor-target">
+            <h3>Data and Privacy Controls</h3>
+            <p>Review your stored data and control what stays on this device.</p>
+            <div class="settings-detail-kv">
+              <span>Saved jokes on this device</span>
+              <strong id="settings-data-saved-count">0</strong>
+            </div>
+            <div class="settings-detail-kv">
+              <span>Favorites in your account</span>
+              <strong id="settings-data-favorites-count">0</strong>
+            </div>
+            <div class="settings-detail-kv">
+              <span>Liked jokes in your account</span>
+              <strong id="settings-data-liked-count">0</strong>
+            </div>
+            <div class="settings-inline-actions">
+              <button id="settings-export-data" type="button" class="ghost">Export my data (JSON)</button>
+              <button id="settings-clear-device-data" type="button" class="ghost">Clear local device data</button>
+            </div>
+          </div>
+          <div id="settings-password-section" class="card settings-detail-card settings-anchor-target">
+            <h3>Change Password</h3>
+            <p>Use a strong password with at least 8 characters, upper/lower letters, and a number.</p>
+            <form id="settings-password-form" class="settings-password-form">
+              <label for="settings-current-password">Current password</label>
+              <input id="settings-current-password" type="password" autocomplete="current-password" />
+              <label for="settings-new-password">New password</label>
+              <input id="settings-new-password" type="password" autocomplete="new-password" />
+              <label for="settings-confirm-password">Confirm new password</label>
+              <input id="settings-confirm-password" type="password" autocomplete="new-password" />
+              <button id="settings-password-submit" type="submit">Update password</button>
+            </form>
+            <div id="settings-password-inline-feedback" class="settings-inline-feedback" aria-live="polite"></div>
+            <div class="settings-detail-kv">
+              <span>Last password update</span>
+              <strong id="settings-password-last-updated">--</strong>
+            </div>
+          </div>
+          <div id="settings-security-section" class="card settings-detail-card settings-anchor-target">
+            <h3>Account Security</h3>
+            <p>Review your active account details and current sign-in safety signals.</p>
+            <div class="settings-detail-kv">
+              <span>Signed in as</span>
+              <strong id="settings-security-email-value">--</strong>
+            </div>
+            <div class="settings-detail-kv">
+              <span>Last login</span>
+              <strong id="settings-security-last-login-value">--</strong>
+            </div>
+            <div class="settings-detail-kv">
+              <span>Current device</span>
+              <strong id="settings-security-device-value">--</strong>
+            </div>
+            <div class="settings-detail-kv">
+              <span>Session source</span>
+              <strong id="settings-security-session-source-value">--</strong>
+            </div>
+            <ul class="settings-detail-list">
+              <li>Never share your password or verification codes.</li>
+              <li>Log out on shared devices when finished.</li>
+              <li>Change your password immediately if you notice suspicious activity.</li>
+            </ul>
+          </div>
+        </div>
+        <div id="settings-feedback" class="feedback" aria-live="polite"></div>
       </div>
     </section>
 
@@ -2987,7 +3142,29 @@
       settingsChangePassword: document.getElementById('settings-change-password'),
       settingsAccountSecurity: document.getElementById('settings-account-security'),
       settingsNotificationsToggle: document.getElementById('settings-notifications-toggle'),
-      settingsDeleteAccount: document.getElementById('settings-delete-account')
+      settingsDeleteAccount: document.getElementById('settings-delete-account'),
+      settingsPrivacySection: document.getElementById('settings-privacy-section'),
+      settingsDataControlsSection: document.getElementById('settings-data-controls-section'),
+      settingsPasswordSection: document.getElementById('settings-password-section'),
+      settingsSecuritySection: document.getElementById('settings-security-section'),
+      settingsPrivacyEmailValue: document.getElementById('settings-privacy-email-value'),
+      settingsPrivacyMemberSinceValue: document.getElementById('settings-privacy-member-since-value'),
+      settingsDataSavedCount: document.getElementById('settings-data-saved-count'),
+      settingsDataFavoritesCount: document.getElementById('settings-data-favorites-count'),
+      settingsDataLikedCount: document.getElementById('settings-data-liked-count'),
+      settingsExportData: document.getElementById('settings-export-data'),
+      settingsClearDeviceData: document.getElementById('settings-clear-device-data'),
+      settingsPasswordForm: document.getElementById('settings-password-form'),
+      settingsCurrentPassword: document.getElementById('settings-current-password'),
+      settingsNewPassword: document.getElementById('settings-new-password'),
+      settingsConfirmPassword: document.getElementById('settings-confirm-password'),
+      settingsPasswordSubmit: document.getElementById('settings-password-submit'),
+      settingsPasswordInlineFeedback: document.getElementById('settings-password-inline-feedback'),
+      settingsPasswordLastUpdated: document.getElementById('settings-password-last-updated'),
+      settingsSecurityEmailValue: document.getElementById('settings-security-email-value'),
+      settingsSecurityLastLoginValue: document.getElementById('settings-security-last-login-value'),
+      settingsSecurityDeviceValue: document.getElementById('settings-security-device-value'),
+      settingsSecuritySessionSourceValue: document.getElementById('settings-security-session-source-value')
     };
 
     const STORAGE_KEYS = {
@@ -3008,6 +3185,7 @@
       notifications: 'notificationPrefsV1',
       authSession: 'authSessionV1',
       authKnownEmails: 'authKnownEmailsV1',
+      authLocalAccounts: 'authLocalAccountsV1',
       pwaInstall: 'pwaInstallPrefsV1',
       lastViewedJokes: 'lastViewedJokesV1',
       userPreferences: 'userPreferenceStoreV1',
@@ -3070,6 +3248,7 @@
       me: '/api/auth/me',
       profile: '/api/auth/me',
       like: '/api/auth/like',
+      password: '/api/auth/password',
       favorite: '/api/jokes/favorite'
     };
     const ADMIN_CODE = 'salim-admin'; // Replace with a private admin key in production.
@@ -6125,6 +6304,7 @@
       currentUserName: '',
       currentUserProfile: null,
       authSignature: 'guest',
+      authSessionSource: 'guest',
       authRedirectRoute: 'jokes',
       isProfileMenuOpen: false,
       isSettingsMenuOpen: false,
@@ -6183,6 +6363,23 @@
         cachedAuthSession.user?.profile?.displayName || cachedAuthSession.user.email || '';
       state.currentUserProfile = cachedAuthSession.user;
       state.authSignature = buildAuthSignature(cachedAuthSession.user);
+      state.authSessionSource = 'cached-session';
+    } else {
+      const localAuthStore = loadLocalAuthStore();
+      const fallbackEmail = normalizeAuthEmail(localAuthStore.lastAuthenticatedEmail || '');
+      const fallbackAccount = fallbackEmail
+        ? localAuthStore.accounts.find((entry) => entry.email === fallbackEmail)
+        : null;
+      const fallbackUser = normalizeCachedAuthUser(fallbackAccount?.user);
+      if (fallbackUser && fallbackUser.id) {
+        state.currentUserId = fallbackUser.id;
+        state.currentUserEmail = fallbackUser.email || '';
+        state.currentUserName =
+          fallbackUser?.profile?.displayName || fallbackUser.email || '';
+        state.currentUserProfile = fallbackUser;
+        state.authSignature = buildAuthSignature(fallbackUser);
+        state.authSessionSource = 'cached-session';
+      }
     }
 
     function t(key, params = {}) {
@@ -6242,6 +6439,7 @@
       renderSavedSection();
       updateAuthUI();
       renderProfileSection();
+      renderSettingsSection();
       renderTopRated();
       renderLeaderboard();
       renderTrending();
@@ -6479,6 +6677,13 @@
         return;
       }
       dom.settingsFeedback.textContent = key ? t(key, params) : '';
+    }
+
+    function setSettingsFeedbackMessage(message = '') {
+      if (!dom.settingsFeedback) {
+        return;
+      }
+      dom.settingsFeedback.textContent = message;
     }
 
     function normalizeRouteValue(route) {
@@ -7720,6 +7925,12 @@
           }
         }
       }
+      if (isAuthenticated) {
+        const route = getRouteFromHash();
+        if (route === 'login' || route === 'signup') {
+          location.hash = '#/profile';
+        }
+      }
       updateAuthNavActive(getRouteFromHash());
     }
 
@@ -7829,6 +8040,156 @@
       }
       renderProfileCollection(dom.profileFavoritesList, favorites, 'auth.profileEmptyFavorites');
       renderProfileCollection(dom.profileLikedList, likedJokes, 'auth.profileEmptyLikes');
+    }
+
+    function formatAuthDate(value, includeTime = false) {
+      const raw = String(value || '').trim();
+      if (!raw) {
+        return '--';
+      }
+      const parsed = new Date(raw);
+      if (Number.isNaN(parsed.getTime())) {
+        return '--';
+      }
+      if (includeTime) {
+        return parsed.toLocaleString(state.currentLang);
+      }
+      return parsed.toLocaleDateString(state.currentLang);
+    }
+
+    function detectDeviceLabel() {
+      const ua = (navigator.userAgent || '').toLowerCase();
+      const platform = sanitizeText(navigator.platform || '', 80) || 'Unknown platform';
+      if (ua.includes('android')) {
+        return `Android (${platform})`;
+      }
+      if (ua.includes('iphone') || ua.includes('ipad') || ua.includes('ios')) {
+        return `iOS (${platform})`;
+      }
+      if (ua.includes('windows')) {
+        return `Windows (${platform})`;
+      }
+      if (ua.includes('mac os') || ua.includes('macintosh')) {
+        return `macOS (${platform})`;
+      }
+      if (ua.includes('linux')) {
+        return `Linux (${platform})`;
+      }
+      return platform;
+    }
+
+    function getSessionSourceLabel() {
+      if (state.authSessionSource === 'server-session') {
+        return 'Server verified';
+      }
+      if (state.authSessionSource === 'cached-session') {
+        return 'Restored from local cache';
+      }
+      if (state.authSessionSource === 'local-password-fallback') {
+        return 'Verified by this device backup';
+      }
+      return 'Not signed in';
+    }
+
+    function setSettingsPasswordInlineFeedback(message = '') {
+      if (!dom.settingsPasswordInlineFeedback) {
+        return;
+      }
+      dom.settingsPasswordInlineFeedback.textContent = message;
+    }
+
+    function buildExportableUserData() {
+      const profile = state.currentUserProfile || null;
+      const commentsTotal = Object.values(commentStore || {}).reduce((total, entries) => {
+        if (!Array.isArray(entries)) {
+          return total;
+        }
+        return total + entries.length;
+      }, 0);
+      return {
+        exportedAt: new Date().toISOString(),
+        account: profile,
+        appPreferences: {
+          language: settings.language,
+          theme: settings.theme,
+          notificationsEnabled: Boolean(notificationPrefs.enabled)
+        },
+        localData: {
+          savedJokes: getSavedJokesList(),
+          commentsCount: commentsTotal,
+          recentViewed: Array.isArray(lastViewedJokesStore) ? lastViewedJokesStore.slice(0, 40) : []
+        }
+      };
+    }
+
+    function downloadJsonFile(filename, payload) {
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+      const objectUrl = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = objectUrl;
+      link.download = filename;
+      link.click();
+      setTimeout(() => URL.revokeObjectURL(objectUrl), 1200);
+    }
+
+    function renderSettingsSection() {
+      const isAuthenticated = Boolean(state.currentUserId && state.currentUserProfile);
+      const profile = state.currentUserProfile && state.currentUserProfile.profile
+        ? state.currentUserProfile.profile
+        : {};
+      const favoritesCount = Array.isArray(profile.favorites) ? profile.favorites.length : 0;
+      const likedCount = Array.isArray(profile.likedJokes) ? profile.likedJokes.length : 0;
+      const savedCount = getSavedJokesList().length;
+      const email = state.currentUserEmail || state.currentUserProfile?.email || '--';
+
+      if (dom.settingsPrivacyEmailValue) {
+        dom.settingsPrivacyEmailValue.textContent = isAuthenticated ? email : '--';
+      }
+      if (dom.settingsPrivacyMemberSinceValue) {
+        dom.settingsPrivacyMemberSinceValue.textContent = isAuthenticated
+          ? formatAuthDate(state.currentUserProfile?.createdAt, false)
+          : '--';
+      }
+      if (dom.settingsDataSavedCount) {
+        dom.settingsDataSavedCount.textContent = String(savedCount);
+      }
+      if (dom.settingsDataFavoritesCount) {
+        dom.settingsDataFavoritesCount.textContent = String(favoritesCount);
+      }
+      if (dom.settingsDataLikedCount) {
+        dom.settingsDataLikedCount.textContent = String(likedCount);
+      }
+      if (dom.settingsSecurityEmailValue) {
+        dom.settingsSecurityEmailValue.textContent = isAuthenticated ? email : '--';
+      }
+      if (dom.settingsSecurityLastLoginValue) {
+        dom.settingsSecurityLastLoginValue.textContent = isAuthenticated
+          ? formatAuthDate(state.currentUserProfile?.lastLoginAt, true)
+          : '--';
+      }
+      if (dom.settingsSecurityDeviceValue) {
+        dom.settingsSecurityDeviceValue.textContent = detectDeviceLabel();
+      }
+      if (dom.settingsSecuritySessionSourceValue) {
+        dom.settingsSecuritySessionSourceValue.textContent = getSessionSourceLabel();
+      }
+      if (dom.settingsPasswordForm) {
+        const canEditPassword = isAuthenticated;
+        dom.settingsPasswordForm.querySelectorAll('input, button').forEach((field) => {
+          field.disabled = !canEditPassword;
+        });
+        if (!canEditPassword) {
+          setSettingsPasswordInlineFeedback('Sign in to change your password.');
+        } else if (dom.settingsPasswordInlineFeedback && dom.settingsPasswordInlineFeedback.textContent === 'Sign in to change your password.') {
+          setSettingsPasswordInlineFeedback('');
+        }
+      }
+      const localAccount = getLocalAuthAccount(email);
+      if (dom.settingsPasswordLastUpdated) {
+        dom.settingsPasswordLastUpdated.textContent = localAccount?.passwordChangedAt
+          ? formatAuthDate(localAccount.passwordChangedAt, true)
+          : '--';
+      }
     }
 
     function isStrongPassword(password) {
@@ -7974,7 +8335,15 @@
         state.currentUserEmail = safeUser.email || '';
         state.currentUserName = safeUser?.profile?.displayName || safeUser.email || '';
         state.currentUserProfile = safeUser;
+        if (resolvedOptions.localPasswordFallback) {
+          state.authSessionSource = 'local-password-fallback';
+        } else if (resolvedOptions.fromCache) {
+          state.authSessionSource = 'cached-session';
+        } else {
+          state.authSessionSource = 'server-session';
+        }
         rememberKnownAuthEmail(safeUser.email || '');
+        rememberLocalAuthUserSnapshot(safeUser);
         try {
           applyRemoteAccountProfileData(safeUser);
         } catch (error) {
@@ -7988,6 +8357,7 @@
         state.currentUserEmail = '';
         state.currentUserName = '';
         state.currentUserProfile = null;
+        state.authSessionSource = 'guest';
         if (!resolvedOptions.preserveCache) {
           clearCachedAuthSession();
         }
@@ -8005,6 +8375,7 @@
       updateSessionProgressUI();
       updateAuthUI();
       renderProfileSection();
+      renderSettingsSection();
       renderNotificationMenu();
       return true;
     }
@@ -8375,6 +8746,15 @@
           }
         });
         applyAuthenticatedUser(payload.user || null);
+        await rememberLocalAuthCredential(
+          normalizedEmail,
+          password,
+          payload.user || state.currentUserProfile,
+          {
+            setLastAuthenticated: true,
+            passwordChanged: true
+          }
+        );
         scheduleProfileStateSync();
         return payload;
       },
@@ -8386,12 +8766,26 @@
         });
         if (payload && payload.success !== false) {
           applyAuthenticatedUser(payload.user || null);
+          await rememberLocalAuthCredential(
+            normalizedEmail,
+            password,
+            payload.user || state.currentUserProfile,
+            {
+              setLastAuthenticated: true
+            }
+          );
           scheduleProfileStateSync();
           return payload;
         }
 
         const loginError = new Error(payload?.error || t('auth.error'));
         loginError.code = payload?.code || 'AUTH_INVALID_CREDENTIALS';
+        if (loginError.code === 'AUTH_INVALID_CREDENTIALS') {
+          const localFallback = await tryLocalCredentialLogin(normalizedEmail, password);
+          if (localFallback) {
+            return localFallback;
+          }
+        }
         if (loginError.code !== 'AUTH_INVALID_CREDENTIALS' || !hasKnownAuthEmail(normalizedEmail)) {
           throw loginError;
         }
@@ -8400,9 +8794,21 @@
           const recovered = await this.signup(normalizedEmail, password, {
             displayName: getDisplayNameFromEmail(normalizedEmail)
           });
+          await rememberLocalAuthCredential(
+            normalizedEmail,
+            password,
+            recovered?.user || state.currentUserProfile,
+            {
+              setLastAuthenticated: true
+            }
+          );
           return recovered;
         } catch (recoveryError) {
           if (String(recoveryError?.code || '') === 'AUTH_ACCOUNT_EXISTS') {
+            const localFallback = await tryLocalCredentialLogin(normalizedEmail, password);
+            if (localFallback) {
+              return localFallback;
+            }
             throw loginError;
           }
           throw recoveryError;
@@ -8411,6 +8817,7 @@
       async logout() {
         const payload = await authRequest(AUTH_ENDPOINTS.logout, { method: 'POST' });
         applyAuthenticatedUser(null);
+        clearLocalAuthCurrentUserHint();
         return payload;
       },
       async updateProfile(updates = {}) {
@@ -9032,6 +9439,9 @@
       if (route === 'profile') {
         renderProfileSection();
       }
+      if (route === 'settings') {
+        renderSettingsSection();
+      }
     }
 
     function showPageTransition() {
@@ -9181,6 +9591,7 @@
       if (dom.profileSavedCount) {
         dom.profileSavedCount.textContent = String(list.length);
       }
+      renderSettingsSection();
     }
 
     function toggleCurrentSavedJoke() {
@@ -11999,6 +12410,208 @@
       return loadKnownAuthEmails().includes(safeEmail);
     }
 
+    function normalizeLocalAuthStore(input) {
+      const source = input && typeof input === 'object' ? input : {};
+      const accounts = Array.isArray(source.accounts) ? source.accounts : [];
+      const normalizedAccounts = [];
+      const seen = new Set();
+      accounts.forEach((entry) => {
+        if (!entry || typeof entry !== 'object') {
+          return;
+        }
+        const email = normalizeAuthEmail(entry.email);
+        if (!email || seen.has(email)) {
+          return;
+        }
+        const salt = sanitizeText(entry.salt, 120).replace(/[^a-zA-Z0-9_\-]/g, '');
+        const hash = sanitizeText(entry.hash, 160).toLowerCase().replace(/[^a-f0-9]/g, '');
+        if (!salt || !hash) {
+          return;
+        }
+        seen.add(email);
+        normalizedAccounts.push({
+          email,
+          salt,
+          hash,
+          user: normalizeCachedAuthUser(entry.user),
+          updatedAt: sanitizeText(entry.updatedAt, 80),
+          passwordChangedAt: sanitizeText(entry.passwordChangedAt, 80)
+        });
+      });
+      return {
+        accounts: normalizedAccounts.slice(0, 100),
+        lastAuthenticatedEmail: normalizeAuthEmail(source.lastAuthenticatedEmail || '')
+      };
+    }
+
+    function loadLocalAuthStore() {
+      try {
+        const stored = JSON.parse(localStorage.getItem(STORAGE_KEYS.authLocalAccounts) || '{}');
+        return normalizeLocalAuthStore(stored);
+      } catch (error) {
+        return { accounts: [], lastAuthenticatedEmail: '' };
+      }
+    }
+
+    function saveLocalAuthStore(store) {
+      try {
+        localStorage.setItem(
+          STORAGE_KEYS.authLocalAccounts,
+          JSON.stringify(normalizeLocalAuthStore(store))
+        );
+      } catch (error) {
+        // Ignore localStorage failures.
+      }
+    }
+
+    function getLocalAuthAccount(email) {
+      const safeEmail = normalizeAuthEmail(email);
+      if (!safeEmail) {
+        return null;
+      }
+      const store = loadLocalAuthStore();
+      return store.accounts.find((entry) => entry.email === safeEmail) || null;
+    }
+
+    function createLocalAuthSalt() {
+      if (window.crypto && typeof window.crypto.getRandomValues === 'function') {
+        const bytes = new Uint8Array(12);
+        window.crypto.getRandomValues(bytes);
+        return Array.from(bytes)
+          .map((value) => value.toString(16).padStart(2, '0'))
+          .join('');
+      }
+      return `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 12)}`;
+    }
+
+    async function deriveLocalAuthHash(password, salt) {
+      const safePassword = String(password || '');
+      if (!safePassword || !salt) {
+        return '';
+      }
+      const payload = `${salt}:${safePassword}`;
+      if (
+        window.crypto &&
+        window.crypto.subtle &&
+        typeof window.crypto.subtle.digest === 'function' &&
+        typeof TextEncoder !== 'undefined'
+      ) {
+        const encoded = new TextEncoder().encode(payload);
+        const digest = await window.crypto.subtle.digest('SHA-256', encoded);
+        return Array.from(new Uint8Array(digest))
+          .map((value) => value.toString(16).padStart(2, '0'))
+          .join('');
+      }
+      let fallbackHash = 2166136261;
+      for (let index = 0; index < payload.length; index += 1) {
+        fallbackHash ^= payload.charCodeAt(index);
+        fallbackHash +=
+          (fallbackHash << 1) + (fallbackHash << 4) + (fallbackHash << 7) + (fallbackHash << 8) + (fallbackHash << 24);
+      }
+      return Math.abs(fallbackHash).toString(16);
+    }
+
+    async function rememberLocalAuthCredential(email, password, user, options = {}) {
+      const safeEmail = normalizeAuthEmail(email);
+      const safePassword = String(password || '');
+      if (!safeEmail || !safePassword) {
+        return null;
+      }
+      const store = loadLocalAuthStore();
+      const existing = store.accounts.find((entry) => entry.email === safeEmail) || null;
+      const salt = existing?.salt || createLocalAuthSalt();
+      const hash = await deriveLocalAuthHash(safePassword, salt);
+      if (!hash) {
+        return null;
+      }
+      const safeUser =
+        normalizeCachedAuthUser(user) ||
+        normalizeCachedAuthUser(existing?.user) ||
+        normalizeCachedAuthUser(loadCachedAuthSession().user);
+      const nowIso = new Date().toISOString();
+      const nextEntry = {
+        email: safeEmail,
+        salt,
+        hash,
+        user: safeUser,
+        updatedAt: nowIso,
+        passwordChangedAt: options.passwordChanged
+          ? nowIso
+          : sanitizeText(existing?.passwordChangedAt, 80) || nowIso
+      };
+      const nextAccounts = store.accounts.filter((entry) => entry.email !== safeEmail);
+      nextAccounts.unshift(nextEntry);
+      store.accounts = nextAccounts.slice(0, 100);
+      if (options.setLastAuthenticated !== false) {
+        store.lastAuthenticatedEmail = safeEmail;
+      }
+      saveLocalAuthStore(store);
+      return nextEntry;
+    }
+
+    function rememberLocalAuthUserSnapshot(user) {
+      const safeUser = normalizeCachedAuthUser(user);
+      if (!safeUser || !safeUser.email) {
+        return;
+      }
+      const safeEmail = normalizeAuthEmail(safeUser.email);
+      const store = loadLocalAuthStore();
+      const account = store.accounts.find((entry) => entry.email === safeEmail);
+      if (!account) {
+        return;
+      }
+      account.user = safeUser;
+      account.updatedAt = new Date().toISOString();
+      if (!store.lastAuthenticatedEmail) {
+        store.lastAuthenticatedEmail = safeEmail;
+      }
+      saveLocalAuthStore(store);
+    }
+
+    function clearLocalAuthCurrentUserHint() {
+      const store = loadLocalAuthStore();
+      if (!store.lastAuthenticatedEmail) {
+        return;
+      }
+      store.lastAuthenticatedEmail = '';
+      saveLocalAuthStore(store);
+    }
+
+    async function tryLocalCredentialLogin(email, password) {
+      const safeEmail = normalizeAuthEmail(email);
+      const safePassword = String(password || '');
+      if (!safeEmail || !safePassword) {
+        return null;
+      }
+      const account = getLocalAuthAccount(safeEmail);
+      if (!account || !account.salt || !account.hash) {
+        return null;
+      }
+      const hash = await deriveLocalAuthHash(safePassword, account.salt);
+      if (!hash || hash !== account.hash) {
+        return null;
+      }
+      const safeUser = normalizeCachedAuthUser(account.user);
+      if (!safeUser || !safeUser.id) {
+        return null;
+      }
+      applyAuthenticatedUser(safeUser, {
+        force: true,
+        fromCache: true,
+        preserveCache: true,
+        localPasswordFallback: true
+      });
+      scheduleProfileStateSync();
+      const store = loadLocalAuthStore();
+      store.lastAuthenticatedEmail = safeEmail;
+      saveLocalAuthStore(store);
+      return {
+        success: true,
+        user: safeUser,
+        localFallback: true
+      };
+    }
+
     function getDisplayNameFromEmail(email) {
       const safeEmail = normalizeAuthEmail(email);
       if (!safeEmail) {
@@ -12667,25 +13280,155 @@
         dismissInstallBanner();
       };
     }
+    const focusSettingsSection = (section, focusTarget = null) => {
+      if (!section) {
+        return;
+      }
+      section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      if (focusTarget && typeof focusTarget.focus === 'function') {
+        setTimeout(() => {
+          focusTarget.focus();
+        }, 200);
+      }
+    };
     if (dom.settingsPrivacyPolicy) {
       dom.settingsPrivacyPolicy.onclick = () => {
-        setSettingsFeedback('');
-        location.hash = '#/about';
+        setSettingsFeedbackMessage('');
+        focusSettingsSection(dom.settingsPrivacySection);
       };
     }
     if (dom.settingsDataControls) {
       dom.settingsDataControls.onclick = () => {
-        setSettingsFeedback('auth.settingsDataFeedback');
+        setSettingsFeedbackMessage('');
+        focusSettingsSection(dom.settingsDataControlsSection);
       };
     }
     if (dom.settingsChangePassword) {
       dom.settingsChangePassword.onclick = () => {
-        setSettingsFeedback('auth.settingsPasswordFeedback');
+        setSettingsFeedbackMessage('');
+        focusSettingsSection(dom.settingsPasswordSection, dom.settingsCurrentPassword);
       };
     }
     if (dom.settingsAccountSecurity) {
       dom.settingsAccountSecurity.onclick = () => {
-        setSettingsFeedback('auth.settingsSecurityFeedback');
+        setSettingsFeedbackMessage('');
+        focusSettingsSection(dom.settingsSecuritySection);
+      };
+    }
+    if (dom.settingsExportData) {
+      dom.settingsExportData.onclick = () => {
+        if (!state.currentUserId || !state.currentUserProfile) {
+          setSettingsFeedbackMessage('Sign in to export account data.');
+          return;
+        }
+        downloadJsonFile('my-jokes-account-data.json', buildExportableUserData());
+        setSettingsFeedbackMessage('Your account data export is ready.');
+      };
+    }
+    if (dom.settingsClearDeviceData) {
+      dom.settingsClearDeviceData.onclick = () => {
+        const confirmed = window.confirm(
+          'Clear saved jokes and activity from this device? Your online account stays active.'
+        );
+        if (!confirmed) {
+          return;
+        }
+        const keysToClear = [
+          STORAGE_KEYS.saved,
+          STORAGE_KEYS.seen,
+          STORAGE_KEYS.reactions,
+          STORAGE_KEYS.userReactions,
+          STORAGE_KEYS.comments,
+          STORAGE_KEYS.viewed,
+          STORAGE_KEYS.progress,
+          STORAGE_KEYS.sessionSeen,
+          STORAGE_KEYS.sessionProgress,
+          STORAGE_KEYS.lastViewedJokes,
+          STORAGE_KEYS.submissions,
+          STORAGE_KEYS.approved,
+          STORAGE_KEYS.moderationLog,
+          STORAGE_KEYS.dailyIngest,
+          STORAGE_KEYS.media,
+          STORAGE_KEYS.stats
+        ];
+        keysToClear.forEach((key) => {
+          try {
+            localStorage.removeItem(key);
+          } catch (error) {
+            // Ignore localStorage failures.
+          }
+        });
+        setSettingsFeedbackMessage('Local device data cleared. Reloading...');
+        setTimeout(() => window.location.reload(), 280);
+      };
+    }
+    if (dom.settingsPasswordForm) {
+      dom.settingsPasswordForm.onsubmit = async (event) => {
+        event.preventDefault();
+        if (!state.currentUserId || !state.currentUserProfile) {
+          setSettingsPasswordInlineFeedback('Sign in to change your password.');
+          return;
+        }
+        const currentPassword = dom.settingsCurrentPassword?.value || '';
+        const newPassword = dom.settingsNewPassword?.value || '';
+        const confirmPassword = dom.settingsConfirmPassword?.value || '';
+        if (!currentPassword || !newPassword || !confirmPassword) {
+          setSettingsPasswordInlineFeedback('Please complete all password fields.');
+          return;
+        }
+        if (!isStrongPassword(newPassword)) {
+          setSettingsPasswordInlineFeedback(t('auth.passwordRules'));
+          return;
+        }
+        if (newPassword !== confirmPassword) {
+          setSettingsPasswordInlineFeedback('New passwords do not match.');
+          return;
+        }
+        if (currentPassword === newPassword) {
+          setSettingsPasswordInlineFeedback('New password must be different from current password.');
+          return;
+        }
+        if (dom.settingsPasswordSubmit) {
+          dom.settingsPasswordSubmit.disabled = true;
+        }
+        setSettingsPasswordInlineFeedback('Updating password...');
+        try {
+          const payload = await authRequest(AUTH_ENDPOINTS.password, {
+            method: 'POST',
+            body: {
+              currentPassword,
+              newPassword
+            }
+          });
+          applyAuthenticatedUser(payload?.user || state.currentUserProfile, { force: true });
+          await rememberLocalAuthCredential(
+            state.currentUserEmail,
+            newPassword,
+            payload?.user || state.currentUserProfile,
+            {
+              setLastAuthenticated: true,
+              passwordChanged: true
+            }
+          );
+          if (dom.settingsCurrentPassword) {
+            dom.settingsCurrentPassword.value = '';
+          }
+          if (dom.settingsNewPassword) {
+            dom.settingsNewPassword.value = '';
+          }
+          if (dom.settingsConfirmPassword) {
+            dom.settingsConfirmPassword.value = '';
+          }
+          setSettingsPasswordInlineFeedback('Password updated successfully.');
+          setSettingsFeedbackMessage('Account password was updated.');
+          renderSettingsSection();
+        } catch (error) {
+          setSettingsPasswordInlineFeedback(getAuthErrorMessage(error));
+        } finally {
+          if (dom.settingsPasswordSubmit) {
+            dom.settingsPasswordSubmit.disabled = false;
+          }
+        }
       };
     }
     if (dom.settingsNotificationsToggle) {
@@ -13113,6 +13856,7 @@
       setTimeout(() => ingestDailyJokes(), 800);
     }
     applyLanguage(settings.language);
+    renderSettingsSection();
     ensureCoreNotificationItems();
     updateInstallUi();
     maybeShowInstallBanner();
