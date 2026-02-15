@@ -1,6 +1,8 @@
 import {
   clearAuthSessionCookie,
   getAuthenticatedUserFromRequest,
+  readAuthTokenFromRequest,
+  setAuthSessionCookie,
   toSafeAuthError,
   updateUserProfile,
 } from "../../lib/auth.js";
@@ -19,6 +21,11 @@ export default async function handler(req, res) {
         authenticated: false,
         user: null,
       });
+    }
+
+    const token = readAuthTokenFromRequest(req);
+    if (token && auth.session?.expiresAt) {
+      setAuthSessionCookie(res, token, auth.session.expiresAt);
     }
 
     if (req.method === "PATCH") {

@@ -2879,6 +2879,7 @@
       comments: 'commentStoreV1',
       notifications: 'notificationPrefsV1',
       authSession: 'authSessionV1',
+      authKnownEmails: 'authKnownEmailsV1',
       pwaInstall: 'pwaInstallPrefsV1',
       lastViewedJokes: 'lastViewedJokesV1',
       userPreferences: 'userPreferenceStoreV1',
@@ -7827,6 +7828,7 @@
         state.currentUserEmail = safeUser.email || '';
         state.currentUserName = safeUser?.profile?.displayName || safeUser.email || '';
         state.currentUserProfile = safeUser;
+        rememberKnownAuthEmail(safeUser.email || '');
         try {
           applyRemoteAccountProfileData(safeUser);
         } catch (error) {
@@ -8187,6 +8189,7 @@
 
     window.jokeAuth = {
       async signup(email, password, extras = {}) {
+        const normalizedEmail = normalizeAuthEmail(email);
         let timezone = extras.timezone || '';
         try {
           if (typeof Intl !== 'undefined' && Intl.DateTimeFormat) {
@@ -8198,7 +8201,7 @@
         const payload = await authRequest(AUTH_ENDPOINTS.signup, {
           method: 'POST',
           body: {
-            email,
+            email: normalizedEmail,
             password,
             displayName: extras.displayName,
             phoneNumber: extras.phoneNumber,
@@ -8214,18 +8217,34 @@
         return payload;
       },
       async login(email, password) {
+        const normalizedEmail = normalizeAuthEmail(email);
         const payload = await authRequest(AUTH_ENDPOINTS.login, {
           method: 'POST',
-          body: { email, password }
+          body: { email: normalizedEmail, password }
         });
-        if (!payload || payload.success === false) {
-          const loginError = new Error(payload?.error || t('auth.error'));
-          loginError.code = payload?.code || 'AUTH_INVALID_CREDENTIALS';
+        if (payload && payload.success !== false) {
+          applyAuthenticatedUser(payload.user || null);
+          scheduleProfileStateSync();
+          return payload;
+        }
+
+        const loginError = new Error(payload?.error || t('auth.error'));
+        loginError.code = payload?.code || 'AUTH_INVALID_CREDENTIALS';
+        if (loginError.code !== 'AUTH_INVALID_CREDENTIALS' || !hasKnownAuthEmail(normalizedEmail)) {
           throw loginError;
         }
-        applyAuthenticatedUser(payload.user || null);
-        scheduleProfileStateSync();
-        return payload;
+
+        try {
+          const recovered = await this.signup(normalizedEmail, password, {
+            displayName: getDisplayNameFromEmail(normalizedEmail)
+          });
+          return recovered;
+        } catch (recoveryError) {
+          if (String(recoveryError?.code || '') === 'AUTH_ACCOUNT_EXISTS') {
+            throw loginError;
+          }
+          throw recoveryError;
+        }
       },
       async logout() {
         const payload = await authRequest(AUTH_ENDPOINTS.logout, { method: 'POST' });
@@ -11659,6 +11678,78 @@
               likesAdded: 0
             }
       };
+    }
+
+    function normalizeAuthEmail(value) {
+      return sanitizeText(String(value || '')).toLowerCase().slice(0, 320);
+    }
+
+    function normalizeKnownAuthEmails(input) {
+      if (!Array.isArray(input)) {
+        return [];
+      }
+      const seen = new Set();
+      const output = [];
+      input.forEach((value) => {
+        const safe = normalizeAuthEmail(value);
+        if (!safe || seen.has(safe)) {
+          return;
+        }
+        seen.add(safe);
+        output.push(safe);
+      });
+      return output.slice(0, 120);
+    }
+
+    function loadKnownAuthEmails() {
+      try {
+        const stored = JSON.parse(localStorage.getItem(STORAGE_KEYS.authKnownEmails) || '[]');
+        return normalizeKnownAuthEmails(stored);
+      } catch (error) {
+        return [];
+      }
+    }
+
+    function saveKnownAuthEmails(emails) {
+      try {
+        localStorage.setItem(
+          STORAGE_KEYS.authKnownEmails,
+          JSON.stringify(normalizeKnownAuthEmails(emails))
+        );
+      } catch (error) {
+        // Ignore localStorage failures.
+      }
+    }
+
+    function rememberKnownAuthEmail(email) {
+      const safeEmail = normalizeAuthEmail(email);
+      if (!safeEmail) {
+        return;
+      }
+      const knownEmails = loadKnownAuthEmails();
+      if (knownEmails.includes(safeEmail)) {
+        return;
+      }
+      knownEmails.unshift(safeEmail);
+      saveKnownAuthEmails(knownEmails);
+    }
+
+    function hasKnownAuthEmail(email) {
+      const safeEmail = normalizeAuthEmail(email);
+      if (!safeEmail) {
+        return false;
+      }
+      return loadKnownAuthEmails().includes(safeEmail);
+    }
+
+    function getDisplayNameFromEmail(email) {
+      const safeEmail = normalizeAuthEmail(email);
+      if (!safeEmail) {
+        return 'User';
+      }
+      const localPart = safeEmail.split('@')[0] || 'User';
+      const displayName = sanitizeText(localPart.replace(/[._-]+/g, ' ')).slice(0, 80);
+      return displayName || 'User';
     }
 
     function loadCachedAuthSession() {
