@@ -35,16 +35,17 @@ export function getDatabaseConfig() {
   };
 }
 
-export function ensureDatabaseConfig() {
+export function ensureDatabaseConfig(options = {}) {
   const config = getDatabaseConfig();
-  if (!config.apiKey) {
-    throw createConfigError("Database is not configured");
+  const requireApiKey = Boolean(options.requireApiKey) || Boolean(config.apiUrl);
+  if (requireApiKey && !config.apiKey) {
+    throw createConfigError("Database API key is not configured");
   }
   return config;
 }
 
 export function getDatabaseAuthHeaders(extraHeaders = {}) {
-  const config = ensureDatabaseConfig();
+  const config = ensureDatabaseConfig({ requireApiKey: true });
   return {
     ...extraHeaders,
     Authorization: `Bearer ${config.apiKey}`,
