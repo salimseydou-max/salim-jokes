@@ -2344,9 +2344,23 @@
       min-height: 38px;
       padding: 0;
       border-radius: 999px;
-      font-size: 1rem;
+      font-size: 1.2rem;
       line-height: 1;
       font-weight: 700;
+      border: 1px solid var(--border);
+      background: var(--bg-soft);
+      color: var(--text);
+      box-shadow: none;
+      transition: background 0.16s ease, border-color 0.16s ease, transform 0.16s ease;
+    }
+    .joke-card .buttons.joke-nav-buttons .nav-arrow-btn:hover:not(:disabled) {
+      background: var(--card);
+      border-color: var(--accent);
+      transform: translateY(-1px);
+    }
+    .joke-card .buttons.joke-nav-buttons .nav-arrow-btn:disabled {
+      opacity: 0.45;
+      transform: none;
     }
     .joke-card .joke-actions {
       margin-top: 0.55rem;
@@ -3009,8 +3023,8 @@
         <div id="session-progress" class="muted session-progress" aria-live="polite" hidden></div>
         <div id="joke-media" class="joke-media" hidden></div>
         <div class="buttons joke-nav-buttons">
-          <button id="previous" class="nav-arrow-btn" type="button" aria-label="Previous joke" title="Previous joke">&lt;</button>
-          <button id="next" class="nav-arrow-btn" type="button" aria-label="Next joke" title="Next joke">&gt;</button>
+          <button id="previous" class="nav-arrow-btn" type="button" aria-label="Previous joke" title="Previous joke">&#8249;</button>
+          <button id="next" class="nav-arrow-btn" type="button" aria-label="Next joke" title="Next joke">&#8250;</button>
         </div>
         <div id="joke-actions" class="joke-actions">
           <span class="section-label" data-i18n="actions.title">Quick Actions</span>
