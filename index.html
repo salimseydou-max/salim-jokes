@@ -1719,6 +1719,50 @@
     .brand-name {
       letter-spacing: 0.01em;
     }
+    .mobile-bottom-nav {
+      position: fixed;
+      left: 50%;
+      bottom: calc(0.6rem + env(safe-area-inset-bottom));
+      transform: translateX(-50%);
+      width: min(560px, calc(100% - 1rem));
+      display: none;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0.4rem;
+      padding: 0.45rem;
+      border-radius: 18px;
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.97);
+      box-shadow: 0 12px 30px rgba(15, 23, 42, 0.16);
+      backdrop-filter: blur(12px);
+      z-index: 58;
+    }
+    [data-theme="dark"] .mobile-bottom-nav {
+      background: rgba(10, 18, 34, 0.94);
+      box-shadow: 0 14px 32px rgba(0, 0, 0, 0.5);
+    }
+    .mobile-bottom-nav a {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.2rem;
+      min-height: 52px;
+      border-radius: 14px;
+      border: 1px solid transparent;
+      font-size: 0.74rem;
+      font-weight: 700;
+      color: var(--muted);
+      transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+    }
+    .mobile-bottom-nav a.active {
+      background: var(--accent);
+      border-color: transparent;
+      color: var(--button-text);
+    }
+    .mobile-bottom-nav__icon {
+      font-size: 1rem;
+      line-height: 1;
+    }
     .hero {
       gap: 1.2rem;
       padding: 0.7rem 0 0.2rem;
@@ -1964,6 +2008,18 @@
       }
       .joke-feed-card__actions {
         gap: 0.45rem;
+      }
+      body {
+        padding-bottom: calc(82px + env(safe-area-inset-bottom));
+      }
+      .mobile-bottom-nav {
+        display: grid;
+      }
+      .mobile-nav-toggle {
+        display: none !important;
+      }
+      .nav-primary {
+        display: none !important;
       }
     }
     @media (max-width: 680px) {
@@ -2280,9 +2336,9 @@
         ☰
       </button>
       <nav id="primary-nav" class="nav tabs nav-primary" aria-label="Primary Navigation">
-        <a href="#/jokes" data-route="jokes" data-i18n="nav.jokes">Jokes</a>
+        <a href="#/jokes" data-route="jokes" data-i18n="nav.home">Home</a>
         <a href="#/submit" data-route="submit" data-i18n="nav.submit">Submit a Joke</a>
-        <a href="#/community" data-route="community" data-i18n="nav.community">Community</a>
+        <a href="#/about" data-route="about" data-i18n="nav.about">About</a>
       </nav>
       <div class="top-actions">
         <div id="settings-menu" class="profile-menu">
@@ -2434,7 +2490,7 @@
     </div>
   </div>
   <main class="page">
-    <header id="home" class="hero view-section active" data-view="jokes">
+    <header id="home" class="hero view-section" data-view="about" hidden>
       <div class="hero-content">
         <div class="hero-badge" data-i18n="hero.badge">Welcome</div>
         <h1 data-i18n="hero.title">Welcome to Voice Joke Club</h1>
@@ -3362,6 +3418,20 @@
         <div class="skeleton-line short"></div>
       </div>
     </div>
+    <nav class="nav mobile-bottom-nav" aria-label="Mobile primary navigation">
+      <a href="#/jokes" data-route="jokes">
+        <span class="mobile-bottom-nav__icon" aria-hidden="true">🏠</span>
+        <span data-i18n="nav.home">Home</span>
+      </a>
+      <a href="#/submit" data-route="submit">
+        <span class="mobile-bottom-nav__icon" aria-hidden="true">✍️</span>
+        <span data-i18n="nav.submit">Submit</span>
+      </a>
+      <a href="#/about" data-route="about">
+        <span class="mobile-bottom-nav__icon" aria-hidden="true">ℹ️</span>
+        <span data-i18n="nav.about">About</span>
+      </a>
+    </nav>
 
     <div
       id="ad-unit"
@@ -10308,7 +10378,7 @@
       if (!dom.jotdCard) {
         return;
       }
-      dom.jotdCard.hidden = route !== 'jokes';
+      dom.jotdCard.hidden = route !== 'about';
     }
 
     function showView(route) {
@@ -11458,7 +11528,7 @@
       }
       const route = getRouteFromHash();
       updateJokeOfDayVisibility(route);
-      if (route !== 'jokes') {
+      if (route !== 'about') {
         return;
       }
       const today = new Date();
