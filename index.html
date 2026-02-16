@@ -1923,6 +1923,40 @@
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 0.75rem;
     }
+    .joke-pack-list {
+      display: grid;
+      gap: 0.85rem;
+    }
+    .home-feed-pack {
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: var(--bg-soft);
+      padding: 0.7rem;
+      display: grid;
+      gap: 0.65rem;
+    }
+    .home-feed-pack__header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 0.45rem;
+      flex-wrap: wrap;
+    }
+    .home-feed-pack__title {
+      margin: 0;
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .home-feed-pack__time {
+      font-size: 0.82rem;
+      color: var(--muted);
+    }
+    .home-feed-pack__meta {
+      margin: 0;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
     .feed-sentinel {
       width: 100%;
       height: 1px;
@@ -2495,7 +2529,7 @@
       <nav id="primary-nav" class="nav tabs nav-primary" aria-label="Primary Navigation">
         <a href="#/jokes" data-route="jokes" data-i18n="nav.home">Home</a>
         <a href="#/submit" data-route="submit" data-i18n="nav.submit">Submit a Joke</a>
-        <a href="#/fresh-feed" data-route="fresh-feed">Fresh Feed</a>
+        <a href="#/fresh-feed" data-route="fresh-feed" data-i18n="nav.newJokes">New Jokes</a>
         <a href="#/about" data-route="about" data-i18n="nav.about">About</a>
       </nav>
       <div class="top-actions">
@@ -3232,14 +3266,14 @@
     </section>
 
     <section id="fresh-feed" class="section view-section" data-view="fresh-feed" data-emoji="✨" hidden>
-      <h2>Fresh Joke Feed</h2>
-      <p>Discover continuously refreshed free jokes from multiple sources.</p>
+      <h2>New Joke Packs</h2>
+      <p>Each pack drops every 30 minutes with 10 new jokes, labeled by date and time.</p>
       <div id="home-feed-shell" class="card home-feed-shell" aria-live="polite">
         <div class="home-feed-shell__header">
-          <h3>Fresh Joke Feed</h3>
-          <span id="home-feed-status" class="muted">Preparing fresh jokes...</span>
+          <h3>New Joke Packs</h3>
+          <span id="home-feed-status" class="muted">Preparing the next joke pack...</span>
         </div>
-        <div id="home-feed-list" class="list joke-feed-grid"></div>
+        <div id="home-feed-list" class="list joke-pack-list"></div>
         <div id="home-feed-loading" class="skeleton feed-skeleton" hidden aria-hidden="true">
           <div class="skeleton-line medium"></div>
           <div class="skeleton-line"></div>
@@ -3606,7 +3640,7 @@
       </a>
       <a href="#/fresh-feed" data-route="fresh-feed">
         <span class="mobile-bottom-nav__icon" aria-hidden="true">✨</span>
-        <span>Fresh Feed</span>
+        <span data-i18n="nav.newJokes">New Jokes</span>
       </a>
       <a href="#/about" data-route="about">
         <span class="mobile-bottom-nav__icon" aria-hidden="true">ℹ️</span>
@@ -3907,12 +3941,16 @@
     const SESSION_JOKE_LIMIT = 30;
     const SHOW_SESSION_PROGRESS = false;
     const MAX_JOKES_PER_BATCH = SESSION_JOKE_LIMIT;
-    const HOME_FEED_PAGE_SIZE = 8;
-    const HOME_FEED_BUFFER_TARGET = 20;
-    const HOME_FEED_MIN_BUFFER = 6;
-    const HOME_FEED_MAX_ITEMS = 180;
+    const HOME_FEED_PACK_SIZE = 10;
+    const HOME_FEED_PAGE_SIZE = HOME_FEED_PACK_SIZE;
+    const HOME_FEED_BUFFER_TARGET = HOME_FEED_PACK_SIZE * 3;
+    const HOME_FEED_MIN_BUFFER = HOME_FEED_PACK_SIZE;
+    const HOME_FEED_MAX_ITEMS = 240;
+    const HOME_FEED_PACK_INTERVAL_MS = 30 * 60 * 1000;
+    const HOME_FEED_PACK_POLL_MS = 30 * 1000;
+    const HOME_FEED_MAX_BACKFILL_PACKS = 4;
     const HOME_FEED_MAX_SEEN_HASHES = 4000;
-    const HOME_FEED_CACHE_TTL_MS = 8 * 60 * 1000;
+    const HOME_FEED_CACHE_TTL_MS = 36 * 60 * 60 * 1000;
     const HOME_FEED_REMOTE_COOLDOWN_MS = 20 * 1000;
     const MONETIZATION_PREP_DEFAULTS = {
       premiumUnlocked: false,
@@ -4091,6 +4129,7 @@
         'nav.listen': 'Listen',
         'nav.community': 'Community',
         'nav.submit': 'Submit a Joke',
+        'nav.newJokes': 'New Jokes',
         'nav.achievements': 'Achievements',
         'nav.saved': 'Saved Jokes',
         'nav.creator': 'About Creator',
@@ -4500,6 +4539,7 @@
         'nav.listen': 'Ecouter',
         'nav.community': 'Communaute',
         'nav.submit': 'Envoyer une blague',
+        'nav.newJokes': 'Nouvelles blagues',
         'nav.achievements': 'Succes',
         'nav.saved': 'Blagues sauvegardees',
         'nav.creator': 'Createur',
@@ -4788,6 +4828,7 @@
         'nav.listen': 'Escuchar',
         'nav.community': 'Comunidad',
         'nav.submit': 'Enviar un chiste',
+        'nav.newJokes': 'Nuevos chistes',
         'nav.achievements': 'Logros',
         'nav.saved': 'Guardados',
         'nav.creator': 'Creador',
@@ -5076,6 +5117,7 @@
         'nav.listen': 'استمع',
         'nav.community': 'المجتمع',
         'nav.submit': 'ارسل نكتة',
+        'nav.newJokes': 'نكات جديدة',
         'nav.achievements': 'الانجازات',
         'nav.saved': 'المحفوظات',
         'nav.creator': 'عن المبدع',
@@ -5364,6 +5406,7 @@
         'nav.listen': 'Saurara',
         'nav.community': 'Al umma',
         'nav.submit': 'Aika barkwanci',
+        'nav.newJokes': 'Sabbin barkwanci',
         'nav.achievements': 'Nasarori',
         'nav.saved': 'Ajiyayyu',
         'nav.creator': 'Mai kirkira',
@@ -5652,6 +5695,7 @@
         'nav.listen': 'Ouvir',
         'nav.community': 'Comunidade',
         'nav.submit': 'Enviar uma piada',
+        'nav.newJokes': 'Novas piadas',
         'nav.achievements': 'Conquistas',
         'nav.saved': 'Salvos',
         'nav.creator': 'Criador',
@@ -7505,6 +7549,8 @@
       homeFeedQueueTask: null,
       homeFeedLastRemoteAt: 0,
       homeFeedObserver: null,
+      homeFeedPackTimer: null,
+      homeFeedLatestPackSlot: 0,
       homeFeedScopeKey: '',
       homeFeedSeenHashes: new Set(),
       homeFeedSessionHashes: new Set(),
@@ -11019,6 +11065,71 @@
       return 'Local';
     }
 
+    function getHomeFeedPackSlot(timestamp = Date.now()) {
+      const safeTimestamp = Number(timestamp);
+      const resolved = Number.isFinite(safeTimestamp) ? safeTimestamp : Date.now();
+      return Math.max(0, Math.floor(resolved / HOME_FEED_PACK_INTERVAL_MS));
+    }
+
+    function getHomeFeedPackDateFromSlot(slot = getHomeFeedPackSlot()) {
+      const safeSlot = Number.isFinite(Number(slot)) ? Math.max(0, Math.floor(Number(slot))) : 0;
+      return new Date(safeSlot * HOME_FEED_PACK_INTERVAL_MS);
+    }
+
+    function getHomeFeedPackSlotFromEntry(entry) {
+      if (!entry || typeof entry !== 'object') {
+        return getHomeFeedPackSlot();
+      }
+      const slotCandidate = Number(entry.packSlot);
+      if (Number.isFinite(slotCandidate)) {
+        return Math.max(0, Math.floor(slotCandidate));
+      }
+      const dateValue = entry.packCreatedAt || entry.createdAt || Date.now();
+      const timestamp = Date.parse(dateValue);
+      return getHomeFeedPackSlot(Number.isNaN(timestamp) ? Date.now() : timestamp);
+    }
+
+    function getHomeFeedNextPackDate(slot = getHomeFeedPackSlot()) {
+      return getHomeFeedPackDateFromSlot(Math.max(0, Math.floor(Number(slot) || 0)) + 1);
+    }
+
+    function formatHomeFeedPackTimestamp(value) {
+      const date = value instanceof Date ? value : new Date(value || Date.now());
+      if (Number.isNaN(date.getTime())) {
+        return '--';
+      }
+      try {
+        return date.toLocaleString(state.currentLang || 'en', {
+          month: 'short',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+      } catch (error) {
+        return date.toLocaleString('en', {
+          month: 'short',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+      }
+    }
+
+    function formatHomeFeedPackSlot(slot) {
+      return formatHomeFeedPackTimestamp(getHomeFeedPackDateFromSlot(slot));
+    }
+
+    function getLatestHomeFeedPackSlot(entries = state.homeFeedItems) {
+      if (!Array.isArray(entries) || !entries.length) {
+        return 0;
+      }
+      let latest = 0;
+      entries.forEach((entry) => {
+        latest = Math.max(latest, getHomeFeedPackSlotFromEntry(entry));
+      });
+      return latest;
+    }
+
     function buildHomeFeedHash(text, lang = state.currentLang) {
       const normalized = normalizeJokeForComparison(ensureSetupPunchline(text, lang));
       return `feed-${lang}-${hashString(`${lang}|${normalized}`)}`;
@@ -11041,6 +11152,12 @@
       const createdAt = input.createdAt && !Number.isNaN(Date.parse(input.createdAt))
         ? new Date(input.createdAt).toISOString()
         : new Date().toISOString();
+      const packSlot = Number.isFinite(Number(input.packSlot))
+        ? Math.max(0, Math.floor(Number(input.packSlot)))
+        : getHomeFeedPackSlot(Date.parse(input.packCreatedAt || createdAt));
+      const packCreatedAt = input.packCreatedAt && !Number.isNaN(Date.parse(input.packCreatedAt))
+        ? new Date(input.packCreatedAt).toISOString()
+        : getHomeFeedPackDateFromSlot(packSlot).toISOString();
       return {
         id,
         text,
@@ -11049,6 +11166,8 @@
         source,
         hash,
         createdAt,
+        packSlot,
+        packCreatedAt,
         tier: 'free',
         premiumPack: '',
         premiumPreview: false
@@ -11236,6 +11355,38 @@
       return true;
     }
 
+    function collectGeneratedFeedCandidates(limit = HOME_FEED_PACK_SIZE) {
+      const needed = Math.max(0, Number(limit) || HOME_FEED_PACK_SIZE);
+      if (!needed) {
+        return [];
+      }
+      const category = state.currentCategory || 'random';
+      const factory = languageFactories[state.currentLang] || languageFactories.en;
+      const startSeed = hashString(
+        `${state.currentLang}|${category}|${Date.now()}|${state.homeFeedSeenHashes.size}|${state.homeFeedSessionHashes.size}`
+      );
+      const pool = state.homeFeedRecentTexts.slice(0, 120);
+      return generateUniqueSafeFallbackJokes(factory, category, needed * 3, startSeed, pool)
+        .map((text) =>
+          applyMonetizationTagsToFeedEntry(
+            normalizeHomeFeedEntry(
+              {
+                joke: text,
+                language: state.currentLang,
+                category,
+                source: 'ai'
+              },
+              {
+                language: state.currentLang,
+                category,
+                source: 'ai'
+              }
+            )
+          )
+        )
+        .filter(Boolean);
+    }
+
     async function fillHomeFeedBuffer(minCount = HOME_FEED_BUFFER_TARGET) {
       if (state.homeFeedQueueTask) {
         return state.homeFeedQueueTask;
@@ -11262,7 +11413,7 @@
           Date.now() - state.homeFeedLastRemoteAt > HOME_FEED_REMOTE_COOLDOWN_MS ||
           state.homeFeedItems.length < HOME_FEED_PAGE_SIZE;
         if (state.homeFeedBuffer.length < minCount && shouldFetchRemote) {
-          const remote = await fetchRemoteHomeFeedCandidates(Math.max(HOME_FEED_PAGE_SIZE, needed));
+          const remote = await fetchRemoteHomeFeedCandidates(Math.max(HOME_FEED_PACK_SIZE * 2, needed));
           state.homeFeedLastRemoteAt = Date.now();
           for (let index = 0; index < remote.length; index += 1) {
             if (tryEnqueueHomeFeedCandidate(remote[index])) {
@@ -11270,9 +11421,18 @@
             }
           }
         }
-        if (!added && state.homeFeedBuffer.length === 0) {
-          state.homeFeedHasMore = false;
+        if (state.homeFeedBuffer.length < minCount) {
+          const generated = collectGeneratedFeedCandidates(minCount - state.homeFeedBuffer.length);
+          for (let index = 0; index < generated.length; index += 1) {
+            if (tryEnqueueHomeFeedCandidate(generated[index])) {
+              added += 1;
+            }
+            if (state.homeFeedBuffer.length >= minCount) {
+              break;
+            }
+          }
         }
+        state.homeFeedHasMore = true;
         return added;
       })().finally(() => {
         state.homeFeedQueueTask = null;
@@ -11325,7 +11485,7 @@
       if (!entry || !entry.text) {
         return;
       }
-      const siteUrl = `${window.location.origin}${window.location.pathname}#/jokes`;
+      const siteUrl = `${window.location.origin}${window.location.pathname}#/fresh-feed`;
       const shareText = `${entry.text}\n\n${t('brand.name')} · ${siteUrl}`;
       if (navigator.share && shouldPreferNativeMobileShare()) {
         try {
@@ -11347,15 +11507,16 @@
       trackFeedFreeView(entry);
     }
 
-    function createHomeFeedCard(entry, index) {
+    function createHomeFeedCard(entry, index, packIndex = 0) {
       const sourceLabel = getHomeFeedSourceLabel(entry.source);
+      const packTimeLabel = formatHomeFeedPackTimestamp(entry.packCreatedAt || entry.createdAt);
       const card = createJokeFeedCard({
         title: `${getCategoryLabel(entry.category)} · ${sourceLabel}`,
         joke: entry.text,
         emoji: getCategoryEmoji(entry.category),
-        featured: index < 2,
+        featured: packIndex === 0 && index < 2,
         score: '',
-        metaItems: ['Free', sourceLabel],
+        metaItems: ['Free', sourceLabel, packTimeLabel],
         actions: [
           {
             label: t('saved.show'),
@@ -11381,28 +11542,113 @@
       return card;
     }
 
-    function renderHomeFeedCards(entries = [], options = {}) {
+    function sortHomeFeedItemsByPack(entries = []) {
+      return [...entries].sort((left, right) => {
+        const slotDiff = getHomeFeedPackSlotFromEntry(right) - getHomeFeedPackSlotFromEntry(left);
+        if (slotDiff !== 0) {
+          return slotDiff;
+        }
+        const leftTime = Date.parse(left.createdAt || left.packCreatedAt || 0);
+        const rightTime = Date.parse(right.createdAt || right.packCreatedAt || 0);
+        if (!Number.isNaN(leftTime) && !Number.isNaN(rightTime) && rightTime !== leftTime) {
+          return rightTime - leftTime;
+        }
+        return String(right.hash || '').localeCompare(String(left.hash || ''));
+      });
+    }
+
+    function groupHomeFeedEntriesByPack(entries = []) {
+      const buckets = new Map();
+      sortHomeFeedItemsByPack(entries).forEach((entry) => {
+        const slot = getHomeFeedPackSlotFromEntry(entry);
+        if (!buckets.has(slot)) {
+          buckets.set(slot, []);
+        }
+        const list = buckets.get(slot);
+        if (Array.isArray(list) && list.length < HOME_FEED_PACK_SIZE) {
+          list.push(entry);
+        }
+      });
+      return Array.from(buckets.entries()).map(([slot, items]) => ({ slot, items }));
+    }
+
+    function getHomeFeedStatusText(currentSlot = getHomeFeedPackSlot()) {
+      const nextPackAt = formatHomeFeedPackTimestamp(getHomeFeedNextPackDate(currentSlot));
+      const packCount = groupHomeFeedEntriesByPack(state.homeFeedItems).length;
+      return `New Joke Packs: ${packCount} loaded. Next pack at ${nextPackAt}.`;
+    }
+
+    function renderHomeFeedCards(entries = state.homeFeedItems) {
       if (!dom.homeFeedList) {
         return;
       }
-      const append = options && options.append !== false;
-      if (!append) {
-        dom.homeFeedList.innerHTML = '';
+      dom.homeFeedList.innerHTML = '';
+      if (!Array.isArray(entries) || !entries.length) {
+        dom.homeFeedList.appendChild(createEmptyStateCard('No joke packs ready yet. New packs arrive every 30 minutes.'));
+        return;
       }
-      if (!entries.length) {
-        if (!append) {
-          dom.homeFeedList.appendChild(createEmptyStateCard('No jokes ready yet. Pull to refresh soon.'));
-        }
+      const grouped = groupHomeFeedEntriesByPack(entries);
+      if (!grouped.length) {
+        dom.homeFeedList.appendChild(createEmptyStateCard('No joke packs ready yet. New packs arrive every 30 minutes.'));
         return;
       }
       const fragment = document.createDocumentFragment();
-      entries.forEach((entry, index) => {
-        fragment.appendChild(createHomeFeedCard(entry, index));
+      grouped.forEach((group, packIndex) => {
+        const pack = document.createElement('section');
+        pack.className = 'home-feed-pack';
+        pack.dataset.packSlot = String(group.slot);
+
+        const header = document.createElement('div');
+        header.className = 'home-feed-pack__header';
+
+        const title = document.createElement('h4');
+        title.className = 'home-feed-pack__title';
+        title.textContent = `Pack ${packIndex + 1}`;
+        header.appendChild(title);
+
+        const time = document.createElement('span');
+        time.className = 'home-feed-pack__time';
+        time.textContent = formatHomeFeedPackSlot(group.slot);
+        header.appendChild(time);
+        pack.appendChild(header);
+
+        const meta = document.createElement('p');
+        meta.className = 'home-feed-pack__meta';
+        meta.textContent = `${group.items.length} new jokes`;
+        pack.appendChild(meta);
+
+        const grid = document.createElement('div');
+        grid.className = 'joke-feed-grid';
+        group.items.forEach((entry, index) => {
+          grid.appendChild(createHomeFeedCard(entry, index, packIndex));
+        });
+        pack.appendChild(grid);
+        fragment.appendChild(pack);
       });
       dom.homeFeedList.appendChild(fragment);
     }
 
+    function stopHomeFeedPackTimer() {
+      if (state.homeFeedPackTimer) {
+        clearInterval(state.homeFeedPackTimer);
+        state.homeFeedPackTimer = null;
+      }
+    }
+
+    function startHomeFeedPackTimer() {
+      if (state.homeFeedPackTimer) {
+        return;
+      }
+      state.homeFeedPackTimer = setInterval(() => {
+        if (getRouteFromHash() !== 'fresh-feed' || state.searchQuery.trim()) {
+          return;
+        }
+        void syncHomeFeedPacksToCurrentSlot();
+      }, HOME_FEED_PACK_POLL_MS);
+    }
+
     function disconnectHomeFeedObserver() {
+      stopHomeFeedPackTimer();
       if (state.homeFeedObserver) {
         state.homeFeedObserver.disconnect();
         state.homeFeedObserver = null;
@@ -11410,55 +11656,80 @@
     }
 
     function ensureHomeFeedObserver() {
-      if (!dom.homeFeedSentinel || state.homeFeedObserver || !('IntersectionObserver' in window)) {
-        return;
-      }
-      state.homeFeedObserver = new IntersectionObserver(
-        (entries) => {
-          const visible = entries.some((entry) => entry.isIntersecting || entry.intersectionRatio > 0);
-          if (!visible) {
-            return;
-          }
-          void loadMoreHomeFeed();
-        },
-        { rootMargin: '280px 0px' }
-      );
-      state.homeFeedObserver.observe(dom.homeFeedSentinel);
+      startHomeFeedPackTimer();
+    }
+
+    function hasHomeFeedPackForSlot(slot) {
+      const safeSlot = Math.max(0, Math.floor(Number(slot) || 0));
+      return state.homeFeedItems.some((entry) => getHomeFeedPackSlotFromEntry(entry) === safeSlot);
+    }
+
+    function applyPackMetadataToHomeFeedEntries(entries = [], slot = getHomeFeedPackSlot()) {
+      const packSlot = Math.max(0, Math.floor(Number(slot) || 0));
+      const packCreatedAt = getHomeFeedPackDateFromSlot(packSlot).toISOString();
+      return entries.map((entry, index) => ({
+        ...entry,
+        id: sanitizeText(entry.id || `${entry.source || 'feed'}-${packSlot}-${index}-${entry.hash || index}`, 120),
+        packSlot,
+        packCreatedAt,
+        createdAt: entry.createdAt && !Number.isNaN(Date.parse(entry.createdAt))
+          ? new Date(entry.createdAt).toISOString()
+          : packCreatedAt
+      }));
     }
 
     async function loadMoreHomeFeed(options = {}) {
       if (!dom.homeFeedList || state.homeFeedLoading) {
-        return;
+        return 0;
       }
-      if (!state.homeFeedHasMore && !options.force) {
-        return;
+      const slot = Number.isFinite(Number(options.slot))
+        ? Math.max(0, Math.floor(Number(options.slot)))
+        : getHomeFeedPackSlot();
+      if (hasHomeFeedPackForSlot(slot) && !options.force) {
+        return 0;
       }
       state.homeFeedLoading = true;
       setHomeFeedLoading(true);
       try {
-        await fillHomeFeedBuffer(Math.max(HOME_FEED_BUFFER_TARGET, HOME_FEED_PAGE_SIZE + HOME_FEED_MIN_BUFFER));
-        const page = takeHomeFeedPage(HOME_FEED_PAGE_SIZE);
-        if (!page.length) {
-          state.homeFeedHasMore = false;
-          if (!state.homeFeedItems.length) {
-            renderHomeFeedCards([], { append: false });
-            setHomeFeedStatus('No fresh jokes available right now.');
-          } else {
-            setHomeFeedStatus('You are all caught up.');
-          }
-          return;
+        await fillHomeFeedBuffer(Math.max(HOME_FEED_BUFFER_TARGET, HOME_FEED_PACK_SIZE + HOME_FEED_MIN_BUFFER));
+        let page = takeHomeFeedPage(HOME_FEED_PACK_SIZE);
+        if (page.length < HOME_FEED_PACK_SIZE) {
+          await fillHomeFeedBuffer(HOME_FEED_PACK_SIZE + HOME_FEED_MIN_BUFFER);
+          page = page.concat(takeHomeFeedPage(HOME_FEED_PACK_SIZE - page.length));
         }
-        page.forEach((entry) => markHomeFeedSeen(entry));
+        if (page.length < HOME_FEED_PACK_SIZE) {
+          const generated = collectGeneratedFeedCandidates(HOME_FEED_PACK_SIZE - page.length);
+          generated.forEach((entry) => {
+            tryEnqueueHomeFeedCandidate(entry);
+          });
+          page = page.concat(takeHomeFeedPage(HOME_FEED_PACK_SIZE - page.length));
+        }
+        if (!page.length) {
+          if (!state.homeFeedItems.length) {
+            renderHomeFeedCards([]);
+            setHomeFeedStatus('No new joke packs available right now.');
+          } else {
+            setHomeFeedStatus(getHomeFeedStatusText(slot));
+          }
+          return 0;
+        }
+        const packEntries = applyPackMetadataToHomeFeedEntries(page.slice(0, HOME_FEED_PACK_SIZE), slot);
+        packEntries.forEach((entry) => markHomeFeedSeen(entry));
         saveHomeFeedSeenStore();
-        state.homeFeedItems = options && options.replace
-          ? page.slice(0, HOME_FEED_MAX_ITEMS)
-          : state.homeFeedItems.concat(page).slice(-HOME_FEED_MAX_ITEMS);
-        renderHomeFeedCards(page, { append: !(options && options.replace) });
+        const withoutSlot = state.homeFeedItems.filter(
+          (entry) => getHomeFeedPackSlotFromEntry(entry) !== slot
+        );
+        state.homeFeedItems = sortHomeFeedItemsByPack(
+          packEntries.concat(withoutSlot)
+        ).slice(0, HOME_FEED_MAX_ITEMS);
+        state.homeFeedLatestPackSlot = Math.max(state.homeFeedLatestPackSlot, slot);
+        renderHomeFeedCards(state.homeFeedItems);
         saveHomeFeedCache();
-        setHomeFeedStatus(`Fresh feed: ${state.homeFeedItems.length} jokes ready.`);
+        setHomeFeedStatus(getHomeFeedStatusText(slot));
         if (state.homeFeedBuffer.length < HOME_FEED_MIN_BUFFER) {
           void fillHomeFeedBuffer(HOME_FEED_BUFFER_TARGET);
         }
+        return packEntries.length;
       } finally {
         state.homeFeedLoading = false;
         setHomeFeedLoading(false);
@@ -11490,12 +11761,52 @@
       if (!restored.length) {
         return 0;
       }
-      state.homeFeedItems = restored.slice(0, Math.min(HOME_FEED_MAX_ITEMS, HOME_FEED_PAGE_SIZE * 3));
+      state.homeFeedItems = sortHomeFeedItemsByPack(restored).slice(
+        0,
+        Math.min(HOME_FEED_MAX_ITEMS, HOME_FEED_PACK_SIZE * 12)
+      );
+      state.homeFeedLatestPackSlot = getLatestHomeFeedPackSlot(state.homeFeedItems);
       state.homeFeedItems.forEach((entry) => markHomeFeedSeen(entry));
-      renderHomeFeedCards(state.homeFeedItems, { append: false });
+      renderHomeFeedCards(state.homeFeedItems);
       saveHomeFeedSeenStore();
-      setHomeFeedStatus('Showing cached feed while loading new jokes...');
+      setHomeFeedStatus('Showing cached joke packs while checking for new arrivals...');
       return state.homeFeedItems.length;
+    }
+
+    async function syncHomeFeedPacksToCurrentSlot() {
+      const currentSlot = getHomeFeedPackSlot();
+      const latestSlot = Math.max(
+        state.homeFeedLatestPackSlot || 0,
+        getLatestHomeFeedPackSlot(state.homeFeedItems)
+      );
+      state.homeFeedLatestPackSlot = latestSlot;
+
+      if (!state.homeFeedItems.length && !hasHomeFeedPackForSlot(currentSlot)) {
+        await loadMoreHomeFeed({ slot: currentSlot, force: true });
+        return;
+      }
+
+      if (!hasHomeFeedPackForSlot(currentSlot) && currentSlot <= latestSlot) {
+        await loadMoreHomeFeed({ slot: currentSlot, force: true });
+        return;
+      }
+
+      if (currentSlot > latestSlot) {
+        const startSlot = Math.max(
+          latestSlot + 1,
+          currentSlot - HOME_FEED_MAX_BACKFILL_PACKS + 1
+        );
+        for (let slot = startSlot; slot <= currentSlot; slot += 1) {
+          if (hasHomeFeedPackForSlot(slot)) {
+            continue;
+          }
+          // Add one pack per 30-minute slot so users see time-based batches.
+          await loadMoreHomeFeed({ slot, force: true });
+        }
+        return;
+      }
+
+      setHomeFeedStatus(getHomeFeedStatusText(currentSlot));
     }
 
     async function refreshHomeFeed(options = {}) {
@@ -11509,11 +11820,12 @@
         return;
       }
       dom.homeFeedShell.hidden = false;
+      startHomeFeedPackTimer();
       if (state.searchQuery.trim()) {
         disconnectHomeFeedObserver();
         dom.homeFeedList.innerHTML = '';
-        dom.homeFeedList.appendChild(createEmptyStateCard('Feed is paused while search is active.'));
-        setHomeFeedStatus('Feed is paused while search is active.');
+        dom.homeFeedList.appendChild(createEmptyStateCard('New Joke Packs are paused while search is active.'));
+        setHomeFeedStatus('New Joke Packs are paused while search is active.');
         return;
       }
       const scopeKey = getHomeFeedScopeKey();
@@ -11524,6 +11836,7 @@
         state.homeFeedBuffer = [];
         state.homeFeedHasMore = true;
         state.homeFeedCursor = 0;
+        state.homeFeedLatestPackSlot = 0;
         state.homeFeedQueuedHashes = new Set();
         state.homeFeedSessionHashes = new Set();
         state.homeFeedRecentTexts = [];
@@ -11535,13 +11848,11 @@
       }
       ensureHomeFeedObserver();
       if (!state.homeFeedItems.length || resolvedOptions.forceLoadMore) {
-        await loadMoreHomeFeed({
-          replace: !state.homeFeedItems.length,
-          force: true
-        });
+        await syncHomeFeedPacksToCurrentSlot();
       } else if (state.homeFeedBuffer.length < HOME_FEED_MIN_BUFFER) {
         void fillHomeFeedBuffer(HOME_FEED_BUFFER_TARGET);
       }
+      await syncHomeFeedPacksToCurrentSlot();
       updateHomeUpgradeHintVisibility();
     }
 
@@ -12173,9 +12484,11 @@
         } else if (getRouteFromHash() === 'fresh-feed') {
           if (dom.homeFeedList) {
             dom.homeFeedList.innerHTML = '';
-            dom.homeFeedList.appendChild(createEmptyStateCard('Feed is paused while search is active.'));
+            dom.homeFeedList.appendChild(
+              createEmptyStateCard('New Joke Packs are paused while search is active.')
+            );
           }
-          setHomeFeedStatus('Feed is paused while search is active.');
+          setHomeFeedStatus('New Joke Packs are paused while search is active.');
         }
       }
     }
@@ -13656,7 +13969,7 @@
       if (!state.homeFeedScopeKey || !Array.isArray(state.homeFeedItems)) {
         return;
       }
-      const maxCacheItems = Math.min(HOME_FEED_MAX_ITEMS, 60);
+      const maxCacheItems = Math.min(HOME_FEED_MAX_ITEMS, HOME_FEED_PACK_SIZE * 12);
       saveToStorage(STORAGE_KEYS.homeFeedCache, {
         scopeKey: state.homeFeedScopeKey,
         updatedAt: Date.now(),
