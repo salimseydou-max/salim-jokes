@@ -6482,7 +6482,8 @@
       return result;
     }
 
-    const generatedJokesByLang = buildGeneratedJokesByLang();
+    // Build generated jokes lazily to keep initial page load responsive.
+    const generatedJokesByLang = {};
 
     const legacyJokes = {
       en: {
