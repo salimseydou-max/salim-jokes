@@ -6,7 +6,7 @@
   <title>Voice Joke Club</title>
   <meta
     name="description"
-    content="A mobile-first joke app with diverse infinite feed, search, interactions, profile tools, and smooth app navigation."
+    content="A mobile-first joke app with diverse infinite feed, account tools, and smooth modern app navigation."
   />
   <meta name="theme-color" content="#0f172a" />
   <meta name="application-name" content="Voice Joke Club" />
@@ -29,63 +29,75 @@
 <body>
   <div class="app-shell">
     <header class="app-header" aria-label="Voice Joke Club header">
-      <div class="app-header-row">
-        <div>
-          <h1 class="app-title">Voice Joke Club</h1>
-          <p class="app-subtitle">Balanced feed: AI, user, trending, recent, and random.</p>
+      <div class="top-toolbar">
+        <div class="brand-block" role="img" aria-label="Voice Joke Club">
+          <span class="brand-emoji" aria-hidden="true">😂</span>
+          <div class="brand-text">
+            <strong class="app-title">Voice Joke Club</strong>
+            <span class="app-subtitle">Scroll and laugh endlessly</span>
+          </div>
         </div>
-        <button class="icon-button" data-notifications-bell aria-label="Open notifications" aria-expanded="false">
-          <span aria-hidden="true">🔔</span>
-          <span class="notification-badge" data-notifications-badge hidden>0</span>
+
+        <div class="global-search-wrap">
+          <label class="sr-only" for="global-search-input">Search jokes</label>
+          <input
+            id="global-search-input"
+            data-global-search-input
+            class="global-search-input"
+            type="search"
+            placeholder="Search jokes, tags, categories..."
+            autocomplete="off"
+          />
+          <button type="button" class="global-search-clear" data-global-search-clear aria-label="Clear search">
+            ✕
+          </button>
+        </div>
+
+        <button
+          class="icon-button menu-toggle"
+          data-overflow-menu-toggle
+          aria-label="Open app menu"
+          aria-expanded="false"
+        >
+          <span aria-hidden="true">⋮</span>
         </button>
       </div>
 
-      <nav class="tab-bar top-nav" aria-label="Main app sections">
+      <nav class="primary-tabs" aria-label="Primary app sections">
         <button class="tab-button is-active" data-tab-route="/feed" type="button">Feed</button>
-        <button class="tab-button" data-tab-route="/submit" type="button">Submit</button>
-        <button class="tab-button" data-tab-route="/profile" type="button">Profile</button>
-        <button class="tab-button" data-tab-route="/settings" type="button">Settings</button>
-        <button class="tab-button" data-tab-route="/notifications" type="button">Alerts</button>
-        <button class="tab-button" data-tab-route="/about" type="button">About</button>
+        <button class="tab-button" data-tab-route="/submit" type="button">Submit Joke</button>
       </nav>
 
-      <section class="notification-panel" data-notification-panel hidden>
-        <div class="notification-panel-header">
-          <strong>Notifications</strong>
-          <button type="button" class="text-button" data-notification-panel-mark-all>Mark all read</button>
+      <section class="overflow-menu" data-overflow-menu hidden>
+        <div class="overflow-menu-header">
+          <strong>Menu</strong>
+          <button type="button" class="text-button" data-overflow-menu-close>Close</button>
         </div>
-        <div class="notification-panel-list" data-notification-panel-list></div>
+        <div class="overflow-menu-list">
+          <button class="menu-item" data-menu-route="/profile" type="button">Profile</button>
+          <button class="menu-item" data-menu-route="/settings" type="button">Settings</button>
+          <button class="menu-item" data-menu-route="/notifications" type="button">
+            Alerts / Notifications
+            <span class="menu-alert-badge" data-menu-alert-badge hidden>0</span>
+          </button>
+          <button class="menu-item" data-menu-route="/about" type="button">About / Creator</button>
+          <button class="menu-item" data-menu-route="/privacy" type="button">Privacy policy</button>
+          <button class="menu-item" data-menu-route="/help" type="button">Help center</button>
+          <button class="menu-item" data-menu-route="/contact" type="button">Contact support</button>
+        </div>
       </section>
     </header>
 
     <main class="app-main" id="app-main">
       <section class="app-view is-active" data-view="/feed" aria-label="Joke feed section">
-        <div class="feed-search">
-          <label class="sr-only" for="feed-search-input">Search jokes</label>
-          <input
-            id="feed-search-input"
-            data-feed-search-input
-            class="feed-search-input"
-            type="search"
-            placeholder="Search jokes by keyword, category, tag, or text..."
-            autocomplete="off"
-          />
-          <select data-feed-search-category class="feed-search-select" aria-label="Filter by category">
-            <option value="all">All categories</option>
-            <option value="random">Random</option>
-            <option value="dark">Dark</option>
-          </select>
-          <button type="button" class="feed-search-clear" data-feed-search-clear>Clear</button>
-          <p class="feed-search-meta" data-feed-search-meta></p>
-        </div>
-
+        <p class="feed-search-meta" data-feed-search-meta></p>
         <div class="feed-list" data-feed-list aria-live="polite"></div>
         <div class="skeleton-host" data-feed-skeleton hidden></div>
         <div class="feed-loading" data-feed-loading hidden>
           <div class="spinner" aria-label="Loading more jokes" role="status"></div>
         </div>
         <div class="feed-empty" data-feed-empty hidden>
-          No jokes found. Try a new search term or keep scrolling for fresh content.
+          No jokes found. Try a different search keyword or keep scrolling for fresh content.
         </div>
         <div data-feed-sentinel aria-hidden="true"></div>
       </section>
@@ -131,51 +143,60 @@
         <article class="section-card">
           <h2 class="section-title">Profile overview</h2>
           <p class="section-copy">
-            Your profile keeps all account tools in one place: saved jokes, submitted jokes, reaction history,
-            and editable account details.
+            Account details, saved jokes, submitted jokes, reaction history, and comment history are all managed here.
           </p>
           <div class="profile-overview-grid">
-            <div class="summary-chip">
-              <span class="summary-label">Saved jokes</span>
-              <strong data-profile-summary-saved>0</strong>
-            </div>
-            <div class="summary-chip">
-              <span class="summary-label">Submitted</span>
-              <strong data-profile-summary-submitted>0</strong>
-            </div>
-            <div class="summary-chip">
-              <span class="summary-label">Reactions</span>
-              <strong data-profile-summary-reactions>0</strong>
-            </div>
-            <div class="summary-chip">
-              <span class="summary-label">Comments</span>
-              <strong data-profile-summary-comments>0</strong>
-            </div>
+            <div class="summary-chip"><span class="summary-label">Saved jokes</span><strong data-profile-summary-saved>0</strong></div>
+            <div class="summary-chip"><span class="summary-label">Submitted</span><strong data-profile-summary-submitted>0</strong></div>
+            <div class="summary-chip"><span class="summary-label">Reactions</span><strong data-profile-summary-reactions>0</strong></div>
+            <div class="summary-chip"><span class="summary-label">Comments</span><strong data-profile-summary-comments>0</strong></div>
           </div>
         </article>
 
         <article class="section-card" data-profile-auth-card>
-          <h2 class="section-title">Sign in or create an account</h2>
+          <h2 class="section-title">Sign in or create account</h2>
           <p class="section-copy">
-            Use username, email, and password. You may upload an optional profile picture.
+            Sign up with email/password and phone number. Verify email or phone before account creation.
+            Optional Google login is available.
           </p>
           <div class="profile-auth-grid">
             <form class="mini-form" data-profile-login-form>
               <h3 class="mini-form-title">Log in</h3>
-              <input class="form-input" type="email" name="email" placeholder="Email" required />
+              <input class="form-input" type="text" name="identifier" placeholder="Email or phone" required />
               <input class="form-input" type="password" name="password" placeholder="Password" required />
               <button class="submit-button" type="submit">Log in</button>
+              <button class="text-button" type="button" data-profile-google-login>Continue with Google</button>
             </form>
 
             <form class="mini-form" data-profile-signup-form>
               <h3 class="mini-form-title">Create account</h3>
               <input class="form-input" type="text" name="username" placeholder="Username" required />
               <input class="form-input" type="email" name="email" placeholder="Email" required />
+              <input class="form-input" type="tel" name="phoneNumber" placeholder="Phone number" required />
               <input class="form-input" type="password" name="password" placeholder="Password" required />
               <label class="field-label">
                 Optional profile picture
                 <input class="form-input" type="file" name="avatar" accept="image/png,image/jpeg,image/webp" />
               </label>
+
+              <div class="verification-box">
+                <div class="verification-actions">
+                  <button class="text-button" type="button" data-signup-send-email-code>Verify email</button>
+                  <button class="text-button" type="button" data-signup-send-phone-code>Verify phone</button>
+                </div>
+                <div class="verification-inline">
+                  <select class="form-select" data-signup-verification-target>
+                    <option value="email">Email code</option>
+                    <option value="phone">Phone code</option>
+                  </select>
+                  <input class="form-input" data-signup-verification-code type="text" placeholder="Enter 6-digit code" />
+                  <button class="submit-button" type="button" data-signup-verify-code>Confirm</button>
+                </div>
+                <p class="verification-status" data-signup-verification-status>
+                  Verify at least email or phone before creating the account.
+                </p>
+              </div>
+
               <button class="submit-button" type="submit">Create account</button>
             </form>
           </div>
@@ -187,6 +208,7 @@
             <div>
               <h2 class="section-title" data-profile-name>User</h2>
               <p class="section-copy profile-email" data-profile-email></p>
+              <p class="section-copy profile-phone" data-profile-phone></p>
               <p class="section-copy profile-stats" data-profile-stats></p>
             </div>
             <button type="button" class="text-button" data-profile-logout>Log out</button>
@@ -195,7 +217,7 @@
           <form class="mini-form" data-profile-edit-form>
             <h3 class="mini-form-title">Edit account</h3>
             <input class="form-input" type="text" name="displayName" placeholder="Display name" required />
-            <input class="form-input" type="text" name="phoneNumber" placeholder="Phone (optional)" />
+            <input class="form-input" type="text" name="phoneNumber" placeholder="Phone number" />
             <label class="field-label">
               Update profile picture
               <input class="form-input" type="file" name="avatar" accept="image/png,image/jpeg,image/webp" />
@@ -216,6 +238,10 @@
               <h3 class="mini-list-title">Reaction history</h3>
               <div data-profile-reactions-list></div>
             </section>
+            <section class="mini-list-card">
+              <h3 class="mini-list-title">Comment history</h3>
+              <div data-profile-comments-list></div>
+            </section>
           </div>
         </article>
       </section>
@@ -224,26 +250,22 @@
         <article class="section-card">
           <h2 class="section-title">Settings</h2>
           <p class="section-copy">
-            Personal preferences, privacy controls, and social links are managed here only.
+            Centralized preferences for notifications, appearance, privacy, social links, and account management.
           </p>
           <div class="settings-overview-grid">
-            <div class="summary-chip">
-              <span class="summary-label">Notifications</span>
-              <strong>Local + scalable</strong>
-            </div>
-            <div class="summary-chip">
-              <span class="summary-label">Appearance</span>
-              <strong>Theme controls</strong>
-            </div>
-            <div class="summary-chip">
-              <span class="summary-label">Privacy</span>
-              <strong>User controlled</strong>
-            </div>
-            <div class="summary-chip">
-              <span class="summary-label">Social links</span>
-              <strong>Settings only</strong>
-            </div>
+            <div class="summary-chip"><span class="summary-label">Notifications</span><strong>Local + scalable</strong></div>
+            <div class="summary-chip"><span class="summary-label">Appearance</span><strong>Theme controls</strong></div>
+            <div class="summary-chip"><span class="summary-label">Privacy</span><strong>User controlled</strong></div>
+            <div class="summary-chip"><span class="summary-label">Social links</span><strong>Settings only</strong></div>
           </div>
+
+          <article class="mini-list-card settings-account-card">
+            <h3 class="mini-list-title">Personal account info</h3>
+            <p class="section-copy" data-settings-account-info>
+              Sign in to manage your account information.
+            </p>
+          </article>
+
           <form class="settings-form" data-settings-form>
             <div class="settings-group">
               <h3>Appearance</h3>
@@ -304,12 +326,11 @@
       <section class="app-view" data-view="/notifications" hidden aria-label="Notifications section">
         <article class="section-card">
           <div class="section-title-row">
-            <h2 class="section-title">Notifications</h2>
+            <h2 class="section-title">Alerts / Notifications</h2>
             <button type="button" class="text-button" data-notifications-mark-all>Mark all read</button>
           </div>
           <p class="section-copy">
-            You will receive local alerts for new jokes, replies, feature updates, and account activity.
-            This system is ready for future backend push integrations.
+            Alerts include new jokes, replies, app updates, and account activity. Ready for future backend push.
           </p>
           <div class="notification-info-grid">
             <div class="summary-chip"><span class="summary-label">New jokes</span><strong>Enabled</strong></div>
@@ -325,39 +346,77 @@
         <article class="section-card">
           <h2 class="section-title">About Voice Joke Club</h2>
           <p class="section-copy">
-            Voice Joke Club delivers a clean, app-style joke experience with smooth infinite scrolling,
-            search, reactions, comments, and local-first reliability.
-          </p>
-          <p class="section-copy">
-            Content is intentionally blended from multiple sources to keep your feed fresh and varied
-            while preserving fast mobile performance.
+            Voice Joke Club is a mobile-first joke app inspired by modern social feed experiences.
           </p>
           <div class="about-grid">
             <section class="mini-list-card">
+              <h3 class="mini-list-title">About the creator</h3>
+              <p class="section-copy">
+                Built with focus on smooth UX, modular architecture, and scalable social interactions.
+              </p>
+            </section>
+            <section class="mini-list-card">
               <h3 class="mini-list-title">Feed quality</h3>
               <p class="section-copy">
-                Source balancing rotates AI, user, trending, recent, and random jokes to avoid repetitive streams.
+                Source balancing rotates AI, user, trending, recent, and random jokes for a natural mix.
               </p>
             </section>
             <section class="mini-list-card">
               <h3 class="mini-list-title">Interaction tools</h3>
               <p class="section-copy">
-                Each joke supports reactions, comments, copy, share, save, and export as image with compact mobile UI.
+                Reactions, comments, copy, share, save, and image export are optimized for compact mobile cards.
               </p>
             </section>
             <section class="mini-list-card">
-              <h3 class="mini-list-title">Account + controls</h3>
+              <h3 class="mini-list-title">Future ready</h3>
               <p class="section-copy">
-                Profile and Settings provide account management, privacy controls, preferences, and private social links.
-              </p>
-            </section>
-            <section class="mini-list-card">
-              <h3 class="mini-list-title">Scalability</h3>
-              <p class="section-copy">
-                Core modules are built local-first with clear extension points for server sync and push infrastructure.
+                Local-first modules are ready for backend sync, server search, and scalable account infrastructure.
               </p>
             </section>
           </div>
+        </article>
+      </section>
+
+      <section class="app-view" data-view="/privacy" hidden aria-label="Privacy policy section">
+        <article class="section-card">
+          <h2 class="section-title">Privacy policy</h2>
+          <p class="section-copy">
+            We store your local interactions and preferences on your device to improve app experience.
+            Account sessions and profile data use secure auth and are designed for future backend hardening.
+          </p>
+          <p class="section-copy">
+            Social links are private and only visible in Settings. No premium or monetization UI is shown while
+            monetization flags remain disabled.
+          </p>
+        </article>
+      </section>
+
+      <section class="app-view" data-view="/help" hidden aria-label="Help center section">
+        <article class="section-card">
+          <h2 class="section-title">Help center</h2>
+          <p class="section-copy">
+            Need assistance? Try these steps first:
+          </p>
+          <ul class="section-list">
+            <li>Refresh the app if the feed appears stale.</li>
+            <li>Check Settings for notifications and privacy preferences.</li>
+            <li>Use Profile to verify account and personal details.</li>
+            <li>Report issues through Contact support.</li>
+          </ul>
+        </article>
+      </section>
+
+      <section class="app-view" data-view="/contact" hidden aria-label="Contact support section">
+        <article class="section-card">
+          <h2 class="section-title">Contact support</h2>
+          <p class="section-copy">
+            For feedback or support requests, reach out through:
+          </p>
+          <ul class="section-list">
+            <li>Email: support@voicejokeclub.app</li>
+            <li>Community feedback: feedback@voicejokeclub.app</li>
+            <li>General contact: hello@voicejokeclub.app</li>
+          </ul>
         </article>
       </section>
 
@@ -365,8 +424,7 @@
         <article class="section-card">
           <h2 class="section-title">Premium is under development</h2>
           <p class="section-copy">
-            We are building premium capabilities carefully behind the scenes to ensure quality and
-            reliability.
+            We are building premium capabilities carefully behind the scenes to ensure quality and reliability.
           </p>
           <p class="section-copy">
             Free jokes remain fully available while this work continues. Thanks for enjoying the app.

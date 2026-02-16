@@ -7,8 +7,8 @@ import {
 import { exportJokeAsImage } from "../services/imageExport.js";
 
 const VISIBLE_BATCH_SIZE = 5;
-const SEARCH_RENDER_LIMIT = 36;
-const SEARCH_DEBOUNCE_MS = 140;
+const SEARCH_BATCH_SIZE = 6;
+const SEARCH_DEBOUNCE_MS = 160;
 
 function createElement(tag, className = "") {
   const element = document.createElement(tag);
@@ -24,12 +24,20 @@ function setButtonSavedState(button, isSaved) {
   button.setAttribute("aria-pressed", isSaved ? "true" : "false");
 }
 
-function formatCount(value) {
-  const count = Math.max(0, Number(value) || 0);
-  if (count >= 1000) {
-    return `${(count / 1000).toFixed(1)}k`;
+async function copyToClipboard(text) {
+  if (navigator.clipboard && typeof navigator.clipboard.writeText === "function") {
+    await navigator.clipboard.writeText(text);
+    return;
   }
-  return String(count);
+  const textarea = document.createElement("textarea");
+  textarea.value = text;
+  textarea.style.position = "fixed";
+  textarea.style.left = "-9999px";
+  document.body.appendChild(textarea);
+  textarea.focus();
+  textarea.select();
+  document.execCommand("copy");
+  textarea.remove();
 }
 
 function getSourceLabel(sourceType = "") {
@@ -49,20 +57,16 @@ function getSourceLabel(sourceType = "") {
   return "Random";
 }
 
-async function copyToClipboard(text) {
-  if (navigator.clipboard && typeof navigator.clipboard.writeText === "function") {
-    await navigator.clipboard.writeText(text);
-    return;
+function formatCount(value) {
+  const count = Math.max(0, Number(value) || 0);
+  if (count >= 1000) {
+    return `${(count / 1000).toFixed(1)}k`;
   }
-  const textarea = document.createElement("textarea");
-  textarea.value = text;
-  textarea.style.position = "fixed";
-  textarea.style.left = "-9999px";
-  document.body.appendChild(textarea);
-  textarea.focus();
-  textarea.select();
-  document.execCommand("copy");
-  textarea.remove();
+  return String(count);
+}
+
+function sumReactionCounts(counts = {}) {
+  return Object.values(counts).reduce((sum, value) => sum + (Number(value) || 0), 0);
 }
 
 export function createFeedView(options = {}) {
@@ -80,9 +84,8 @@ export function createFeedView(options = {}) {
   const getCurrentUser =
     typeof options.getCurrentUser === "function" ? options.getCurrentUser : () => null;
 
-  const searchInput = root?.querySelector("[data-feed-search-input]");
-  const searchCategory = root?.querySelector("[data-feed-search-category]");
-  const searchClear = root?.querySelector("[data-feed-search-clear]");
+  const searchInput = document.querySelector("[data-global-search-input]");
+  const searchClear = document.querySelector("[data-global-search-clear]");
   const searchMeta = root?.querySelector("[data-feed-search-meta]");
   const feedList = root?.querySelector("[data-feed-list]");
   const skeletonHost = root?.querySelector("[data-feed-skeleton]");
@@ -92,7 +95,7 @@ export function createFeedView(options = {}) {
 
   const duplicateTracker = createDuplicateTracker({
     sessionKey: "vjc.feed.seen-joke-ids.v1",
-    // This adapter is intentionally left as a no-op placeholder for future persistent filtering.
+    // Placeholder for future persistent duplicate filtering backend.
     persistenceAdapter: {
       async load() {
         return [];
@@ -109,6 +112,11 @@ export function createFeedView(options = {}) {
   let observer = null;
   let searchTimer = 0;
   let searchMode = false;
+  let searchQuery = "";
+  let searchResults = [];
+  let searchOffset = 0;
+  let activeReactionPicker = null;
+
   const mainFeedJokes = [];
   const knownById = new Map();
 
@@ -165,9 +173,8 @@ export function createFeedView(options = {}) {
         displayName: currentUser.displayName || "User",
       };
     }
-    const viewerId = getViewerId();
     return {
-      id: viewerId,
+      id: getViewerId(),
       displayName: "Guest",
     };
   }
@@ -186,6 +193,15 @@ export function createFeedView(options = {}) {
     feedComposer?.addToCatalog?.(jokes);
   }
 
+  function ensureMainFeedJoke(joke) {
+    if (!joke?.id) {
+      return;
+    }
+    if (!mainFeedJokes.some((entry) => entry.id === joke.id)) {
+      mainFeedJokes.push(joke);
+    }
+  }
+
   function updateCommentButtonText(button, jokeId) {
     if (!button) {
       return;
@@ -194,52 +210,76 @@ export function createFeedView(options = {}) {
     button.textContent = `Comments ${formatCount(count)}`;
   }
 
-  function buildReactionBar(joke) {
-    const bar = createElement("div", "reaction-bar");
-    const owner = getActiveOwnerIdentity();
-    const reactionCounts = reactionStore.getCounts(joke);
-    const userReaction = reactionStore.getUserReaction(joke.id, owner.id);
-    const reactionButtons = [];
+  function closeActiveReactionPicker() {
+    if (activeReactionPicker) {
+      activeReactionPicker.hidden = true;
+      activeReactionPicker = null;
+    }
+  }
 
-    const updateReactionButtons = (counts, selectedReaction) => {
-      for (let i = 0; i < reactionButtons.length; i += 1) {
-        const config = reactionButtons[i];
-        const nextCount = Math.max(0, Number(counts?.[config.reaction]) || 0);
-        config.button.classList.toggle("is-active", selectedReaction === config.reaction);
-        config.button.innerHTML =
-          `<span class="emoji">${config.reaction}</span><span class="emoji-count">${formatCount(nextCount)}</span>`;
-      }
+  function buildReactionControl(joke) {
+    const wrapper = createElement("div", "reaction-control");
+    const toggleButton = createElement("button", "compact-button");
+    toggleButton.type = "button";
+    const picker = createElement("div", "reaction-picker");
+    picker.hidden = true;
+
+    const owner = getActiveOwnerIdentity();
+
+    const refreshReactionState = (counts, selectedReaction) => {
+      const total = sumReactionCounts(counts);
+      const emoji = selectedReaction || "🙂";
+      toggleButton.textContent = `React ${emoji} · ${formatCount(total)}`;
+      toggleButton.classList.toggle("is-active", Boolean(selectedReaction));
+    };
+
+    const initializeFromStore = () => {
+      const counts = reactionStore.getCounts(joke);
+      const selectedReaction = reactionStore.getUserReaction(joke.id, owner.id);
+      refreshReactionState(counts, selectedReaction);
     };
 
     reactionStore.reactionTypes.forEach((reaction) => {
-      const button = createElement("button", "reaction-button");
-      button.type = "button";
-      button.dataset.reaction = reaction;
-      button.addEventListener("click", async () => {
+      const optionButton = createElement("button", "reaction-option");
+      optionButton.type = "button";
+      optionButton.textContent = reaction;
+      optionButton.addEventListener("click", async () => {
         const result = reactionStore.react(joke, owner.id, reaction);
-        updateReactionButtons(result.counts, result.userReaction);
-        profileView?.refreshCollections();
-        if (result.userReaction) {
+        const selectedReaction = result.userReaction;
+        refreshReactionState(result.counts, selectedReaction);
+        picker.querySelectorAll(".reaction-option").forEach((node) => {
+          node.classList.toggle("is-selected", node.textContent === selectedReaction);
+        });
+        if (selectedReaction) {
           notificationStore?.add({
             type: "user-activity",
             title: "Reaction saved",
-            message: `You reacted ${result.userReaction} to a joke.`,
+            message: `You reacted ${selectedReaction} to a joke.`,
           });
           const currentUser = getCurrentUser();
           if (currentUser?.id) {
             await syncLikeToProfile(joke.id);
           }
         }
+        profileView?.refreshCollections();
+        closeActiveReactionPicker();
       });
-      reactionButtons.push({
-        reaction,
-        button,
-      });
-      bar.appendChild(button);
+      picker.appendChild(optionButton);
     });
 
-    updateReactionButtons(reactionCounts, userReaction);
-    return bar;
+    toggleButton.addEventListener("click", (event) => {
+      event.stopPropagation();
+      const willOpen = picker.hidden;
+      closeActiveReactionPicker();
+      picker.hidden = !willOpen;
+      if (willOpen) {
+        activeReactionPicker = picker;
+      }
+    });
+
+    initializeFromStore();
+    wrapper.append(toggleButton, picker);
+    return wrapper;
   }
 
   function buildCommentSection(joke, commentButton) {
@@ -281,6 +321,7 @@ export function createFeedView(options = {}) {
         list.appendChild(fragment);
       }
       updateCommentButtonText(commentButton, joke.id);
+      profileView?.refreshCollections();
     };
 
     form.addEventListener("submit", (event) => {
@@ -297,14 +338,12 @@ export function createFeedView(options = {}) {
       }
       input.value = "";
       renderComments();
-      const nextType = text.includes("@") ? "comment-reply" : "user-activity";
       notificationStore?.add({
-        type: nextType,
-        title: nextType === "comment-reply" ? "Reply activity" : "Comment posted",
-        message:
-          nextType === "comment-reply"
-            ? "A reply style comment was added."
-            : "Your comment was posted.",
+        type: text.includes("@") ? "comment-reply" : "user-activity",
+        title: text.includes("@") ? "Reply activity" : "Comment posted",
+        message: text.includes("@")
+          ? "A reply style comment was added."
+          : "Your comment was posted.",
       });
     });
 
@@ -327,9 +366,25 @@ export function createFeedView(options = {}) {
     const content = createElement("p", "joke-text");
     content.textContent = joke.text;
 
-    const actionRow = createElement("div", "joke-action-row");
-    const reactionBar = buildReactionBar(joke);
-    const actions = createElement("div", "joke-actions compact");
+    const footer = createElement("div", "joke-footer");
+    const footerMain = createElement("div", "joke-footer-main");
+    const leftActions = createElement("div", "joke-left-actions");
+    const tools = createElement("div", "joke-tools");
+
+    const reactionControl = buildReactionControl(joke);
+
+    const commentButton = createElement("button", "compact-button");
+    commentButton.type = "button";
+    updateCommentButtonText(commentButton, joke.id);
+    const commentSection = buildCommentSection(joke, commentButton);
+    commentButton.addEventListener("click", () => {
+      const nextOpen = commentSection.dataset.open !== "true";
+      commentSection.dataset.open = nextOpen ? "true" : "false";
+      commentSection.hidden = !nextOpen;
+      if (nextOpen && typeof commentSection.renderComments === "function") {
+        commentSection.renderComments();
+      }
+    });
 
     const copyButton = createElement("button", "action-button");
     copyButton.type = "button";
@@ -376,8 +431,7 @@ export function createFeedView(options = {}) {
 
     const favoriteButton = createElement("button", "action-button");
     favoriteButton.type = "button";
-    const alreadySaved = favoritesStore.has(joke.id);
-    setButtonSavedState(favoriteButton, alreadySaved);
+    setButtonSavedState(favoriteButton, favoritesStore.has(joke.id));
     favoriteButton.addEventListener("click", () => {
       const result = favoritesStore.toggle({
         id: joke.id,
@@ -397,22 +451,12 @@ export function createFeedView(options = {}) {
       toast?.show(result.saved ? "Saved locally." : "Removed from saved.");
     });
 
-    const commentButton = createElement("button", "action-button");
-    commentButton.type = "button";
-    updateCommentButtonText(commentButton, joke.id);
-    const commentSection = buildCommentSection(joke, commentButton);
-    commentButton.addEventListener("click", () => {
-      const nextOpen = commentSection.dataset.open !== "true";
-      commentSection.dataset.open = nextOpen ? "true" : "false";
-      commentSection.hidden = !nextOpen;
-      if (nextOpen && typeof commentSection.renderComments === "function") {
-        commentSection.renderComments();
-      }
-    });
+    leftActions.append(reactionControl, commentButton);
+    tools.append(copyButton, shareButton, imageButton, favoriteButton);
+    footerMain.append(leftActions, tools);
+    footer.append(footerMain, commentSection);
 
-    actions.append(copyButton, shareButton, imageButton, favoriteButton, commentButton);
-    actionRow.append(reactionBar, actions);
-    card.append(header, content, actionRow, commentSection);
+    card.append(header, content, footer);
     return card;
   }
 
@@ -438,6 +482,19 @@ export function createFeedView(options = {}) {
     feedList.appendChild(fragment);
   }
 
+  function renderSearchMetadata() {
+    if (!searchMeta) {
+      return;
+    }
+    if (!searchMode || !searchQuery) {
+      searchMeta.textContent = "Mixing AI, user, trending, recent, and random jokes.";
+      return;
+    }
+    searchMeta.textContent = `${formatCount(searchResults.length)} result${
+      searchResults.length === 1 ? "" : "s"
+    } for "${searchQuery}"`;
+  }
+
   function filterUniqueMainFeed(rawJokes = []) {
     const unique = [];
     for (let i = 0; i < rawJokes.length; i += 1) {
@@ -454,40 +511,71 @@ export function createFeedView(options = {}) {
     return unique;
   }
 
-  function renderSearchMetadata(query, count) {
-    if (!searchMeta) {
-      return;
+  async function expandSearchPool() {
+    try {
+      const extra = await feedComposer.nextBatch(
+        SEARCH_BATCH_SIZE,
+        (id) => knownById.has(id) || duplicateTracker.has(id)
+      );
+      const fresh = extra.filter((joke) => joke?.id && !knownById.has(joke.id));
+      if (!fresh.length) {
+        return false;
+      }
+      rememberJokes(fresh);
+      return true;
+    } catch (error) {
+      return false;
     }
-    if (!query) {
-      searchMeta.textContent = "Mixing AI, user, trending, recent, and random jokes.";
-      return;
-    }
-    searchMeta.textContent = `${formatCount(count)} result${count === 1 ? "" : "s"} for "${query}"`;
   }
 
-  async function runSearchNow() {
-    const query = searchInput?.value?.trim() || "";
-    const category = searchCategory?.value || "all";
-    if (!query) {
+  async function loadMoreSearch() {
+    if (!searchMode || !searchQuery) {
+      return;
+    }
+    if (searchOffset >= searchResults.length) {
+      const expanded = await expandSearchPool();
+      if (expanded) {
+        searchResults = await searchService.search(searchQuery, { useServer: false });
+        renderSearchMetadata();
+      }
+    }
+    const nextChunk = searchResults.slice(searchOffset, searchOffset + SEARCH_BATCH_SIZE);
+    if (!nextChunk.length) {
+      if (!feedList || feedList.children.length === 0) {
+        setEmptyVisible(true);
+      }
+      return;
+    }
+    appendJokesToFeed(nextChunk, { append: true, trackViews: false });
+    searchOffset += nextChunk.length;
+    setEmptyVisible(false);
+  }
+
+  async function applySearch(queryText = "") {
+    searchQuery = String(queryText || "").trim();
+    if (!searchQuery) {
       searchMode = false;
-      renderSearchMetadata("", 0);
+      searchResults = [];
+      searchOffset = 0;
       appendJokesToFeed(mainFeedJokes, { append: false, trackViews: false });
       setEmptyVisible(mainFeedJokes.length === 0);
-      startObserver();
+      renderSearchMetadata();
       return;
     }
     searchMode = true;
-    stopObserver();
     setFooterLoading(false);
     setSkeletonVisible(false);
-    const results = await searchService.search(query, {
-      category,
-      useServer: false,
-    });
-    const sliced = results.slice(0, SEARCH_RENDER_LIMIT);
-    appendJokesToFeed(sliced, { append: false, trackViews: false });
-    setEmptyVisible(sliced.length === 0);
-    renderSearchMetadata(query, results.length);
+    searchResults = await searchService.search(searchQuery, { useServer: false });
+    searchOffset = 0;
+    appendJokesToFeed([], { append: false });
+    if (!searchResults.length) {
+      const expanded = await expandSearchPool();
+      if (expanded) {
+        searchResults = await searchService.search(searchQuery, { useServer: false });
+      }
+    }
+    renderSearchMetadata();
+    await loadMoreSearch();
   }
 
   function scheduleSearch() {
@@ -495,20 +583,11 @@ export function createFeedView(options = {}) {
       window.clearTimeout(searchTimer);
     }
     searchTimer = window.setTimeout(() => {
-      runSearchNow();
+      applySearch(searchInput?.value || "");
     }, SEARCH_DEBOUNCE_MS);
   }
 
-  async function loadMore() {
-    if (searchMode) {
-      return;
-    }
-    if (loading) {
-      return;
-    }
-    loading = true;
-    setEmptyVisible(false);
-
+  async function loadMoreFeed() {
     const initialLoad = !feedList || feedList.children.length === 0;
     if (initialLoad) {
       renderSkeletonCards(3);
@@ -528,18 +607,18 @@ export function createFeedView(options = {}) {
       collected = [];
     }
 
-    const toRender = collected.slice(0, VISIBLE_BATCH_SIZE);
-    if (toRender.length) {
-      mainFeedJokes.push(...toRender);
-      rememberJokes(toRender);
-      appendJokesToFeed(toRender, { append: true, trackViews: true });
+    if (collected.length) {
+      mainFeedJokes.push(...collected);
+      rememberJokes(collected);
+      appendJokesToFeed(collected, { append: true, trackViews: true });
       setEmptyVisible(false);
+
       const prefs = preferencesStore?.get?.() || { notifications: { newJokes: false } };
       if (prefs.notifications?.newJokes) {
         notificationStore?.add({
           type: "new-jokes",
           title: "New jokes loaded",
-          message: `${toRender.length} fresh jokes were added to your feed.`,
+          message: `${collected.length} fresh jokes were added to your feed.`,
         });
       }
     } else if (!feedList || feedList.children.length === 0) {
@@ -548,6 +627,20 @@ export function createFeedView(options = {}) {
 
     setSkeletonVisible(false);
     setFooterLoading(false);
+  }
+
+  async function loadMore() {
+    if (loading) {
+      return;
+    }
+    loading = true;
+    setEmptyVisible(false);
+    if (searchMode) {
+      await loadMoreSearch();
+      loading = false;
+      return;
+    }
+    await loadMoreFeed();
     loading = false;
   }
 
@@ -560,15 +653,12 @@ export function createFeedView(options = {}) {
   }
 
   function startObserver() {
-    if (!sentinel) {
-      return;
-    }
-    if (observer) {
+    if (!sentinel || observer) {
       return;
     }
     observer = new IntersectionObserver(onIntersect, {
       root: null,
-      rootMargin: "1100px 0px 1100px 0px",
+      rootMargin: "900px 0px 900px 0px",
       threshold: 0.01,
     });
     observer.observe(sentinel);
@@ -582,18 +672,34 @@ export function createFeedView(options = {}) {
     observer = null;
   }
 
+  function bindGlobalHandlers() {
+    searchInput?.addEventListener("input", () => {
+      scheduleSearch();
+    });
+    searchClear?.addEventListener("click", () => {
+      if (searchInput) {
+        searchInput.value = "";
+      }
+      applySearch("");
+    });
+    document.addEventListener("click", () => {
+      closeActiveReactionPicker();
+    });
+  }
+
   async function activate() {
     if (!started) {
       started = true;
       await duplicateTracker.hydrateFromFutureStorage();
+      bindGlobalHandlers();
       if (!primed) {
         primed = true;
         await feedComposer.prime();
         rememberJokes(feedComposer.getCatalogSnapshot());
       }
       startObserver();
+      renderSearchMetadata();
       await loadMore();
-      renderSearchMetadata("", 0);
       return;
     }
     if (!primed) {
@@ -602,7 +708,7 @@ export function createFeedView(options = {}) {
       rememberJokes(feedComposer.getCatalogSnapshot());
     }
     startObserver();
-    if (feedList && feedList.children.length < 3) {
+    if (feedList && feedList.children.length < 3 && !searchMode) {
       loadMore();
     }
   }
@@ -610,26 +716,6 @@ export function createFeedView(options = {}) {
   function deactivate() {
     stopObserver();
   }
-
-  function init() {
-    searchInput?.addEventListener("input", () => {
-      scheduleSearch();
-    });
-    searchCategory?.addEventListener("change", () => {
-      scheduleSearch();
-    });
-    searchClear?.addEventListener("click", () => {
-      if (searchInput) {
-        searchInput.value = "";
-      }
-      if (searchCategory) {
-        searchCategory.value = "all";
-      }
-      scheduleSearch();
-    });
-  }
-
-  init();
 
   return {
     activate,
@@ -644,6 +730,13 @@ export function createFeedView(options = {}) {
       }
       feedComposer.injectUserJoke(joke);
       rememberJokes([joke]);
+      ensureMainFeedJoke(joke);
+    },
+    setSearchValue(value = "") {
+      if (searchInput) {
+        searchInput.value = String(value);
+      }
+      applySearch(value);
     },
   };
 }

@@ -11,13 +11,14 @@ import { createSearchService } from "./services/searchService.js";
 import { getOrCreatePersistentId } from "./services/storage.js";
 import { createSubmissionStore } from "./services/submissionStore.js";
 import { createToast } from "./services/toast.js";
+import { createVerificationService } from "./services/verificationService.js";
 import { createFeedView } from "./views/feedView.js";
 import { createNotificationsView } from "./views/notificationsView.js";
 import { createProfileView } from "./views/profileView.js";
 import { createSettingsView } from "./views/settingsView.js";
 import { createSubmitView } from "./views/submitView.js";
 
-const monetization = createMonetizationInfrastructure();
+createMonetizationInfrastructure();
 
 const routes = Object.freeze({
   FEED: "/feed",
@@ -26,19 +27,26 @@ const routes = Object.freeze({
   SETTINGS: "/settings",
   NOTIFICATIONS: "/notifications",
   ABOUT: "/about",
+  PRIVACY: "/privacy",
+  HELP: "/help",
+  CONTACT: "/contact",
   FUTURE_PREMIUM: "/future-premium",
 });
 
 const sections = Array.from(document.querySelectorAll("[data-view]"));
 const tabButtons = Array.from(document.querySelectorAll("[data-tab-route]"));
-const notificationBell = document.querySelector("[data-notifications-bell]");
-const notificationBadge = document.querySelector("[data-notifications-badge]");
-const notificationPanel = document.querySelector("[data-notification-panel]");
+const menuRouteButtons = Array.from(document.querySelectorAll("[data-menu-route]"));
+
+const menuToggle = document.querySelector("[data-overflow-menu-toggle]");
+const menuClose = document.querySelector("[data-overflow-menu-close]");
+const menuPanel = document.querySelector("[data-overflow-menu]");
+const menuAlertBadge = document.querySelector("[data-menu-alert-badge]");
 
 const toast = createToast(document.querySelector("[data-toast]"));
 
 const viewerId = getOrCreatePersistentId("vjc.viewer-id.v1");
 const authService = createAuthService();
+const verificationService = createVerificationService();
 const preferencesStore = createPreferencesStore();
 const notificationStore = createNotificationStore();
 const favoritesStore = createFavoritesStore({
@@ -63,6 +71,7 @@ let profileView = null;
 profileView = createProfileView({
   root: document.querySelector("[data-view='/profile']"),
   authService,
+  verificationService,
   favoritesStore,
   submissionStore,
   reactionStore,
@@ -77,7 +86,6 @@ profileView = createProfileView({
 const feedView = createFeedView({
   root: document.querySelector("[data-view='/feed']"),
   toast,
-  monetization,
   feedComposer,
   searchService,
   favoritesStore,
@@ -102,7 +110,7 @@ const submitView = createSubmitView({
         ...joke,
         sourceType: "user",
       });
-      profileView.refreshCollections();
+      profileView?.refreshCollections();
     }
   },
 });
@@ -110,6 +118,7 @@ const submitView = createSubmitView({
 const settingsView = createSettingsView({
   root: document.querySelector("[data-view='/settings']"),
   preferencesStore,
+  authService,
   toast,
   notificationStore,
 });
@@ -117,10 +126,41 @@ const settingsView = createSettingsView({
 const notificationsView = createNotificationsView({
   root: document.querySelector("[data-view='/notifications']"),
   store: notificationStore,
-  bellButton: notificationBell,
-  badge: notificationBadge,
-  panel: notificationPanel,
+  onUnreadChange: (count) => {
+    if (!menuAlertBadge) {
+      return;
+    }
+    menuAlertBadge.textContent = String(count);
+    menuAlertBadge.hidden = count <= 0;
+  },
 });
+
+function closeMenu() {
+  if (!menuPanel || !menuToggle) {
+    return;
+  }
+  menuPanel.hidden = true;
+  menuToggle.setAttribute("aria-expanded", "false");
+}
+
+function openMenu() {
+  if (!menuPanel || !menuToggle) {
+    return;
+  }
+  menuPanel.hidden = false;
+  menuToggle.setAttribute("aria-expanded", "true");
+}
+
+function toggleMenu() {
+  if (!menuPanel) {
+    return;
+  }
+  if (menuPanel.hidden) {
+    openMenu();
+    return;
+  }
+  closeMenu();
+}
 
 function setActiveSection(route) {
   sections.forEach((section) => {
@@ -129,7 +169,8 @@ function setActiveSection(route) {
     section.classList.toggle("is-active", isActive);
   });
   tabButtons.forEach((button) => {
-    const isActive = button.getAttribute("data-tab-route") === route;
+    const buttonRoute = button.getAttribute("data-tab-route");
+    const isActive = buttonRoute === route;
     button.classList.toggle("is-active", isActive);
     button.setAttribute("aria-current", isActive ? "page" : "false");
   });
@@ -139,7 +180,6 @@ function setActiveSection(route) {
   } else {
     feedView.deactivate();
   }
-
   if (route === routes.SUBMIT) {
     submitView.focus();
   }
@@ -161,7 +201,10 @@ function normalizeAppRoute(route) {
     route === routes.PROFILE ||
     route === routes.SETTINGS ||
     route === routes.NOTIFICATIONS ||
-    route === routes.ABOUT
+    route === routes.ABOUT ||
+    route === routes.PRIVACY ||
+    route === routes.HELP ||
+    route === routes.CONTACT
   ) {
     return route;
   }
@@ -178,6 +221,7 @@ const router = createRouter({
 const sharedHandler = (incomingRoute) => {
   const route = normalizeAppRoute(incomingRoute);
   setActiveSection(route);
+  closeMenu();
 };
 
 router.register(routes.FEED, sharedHandler);
@@ -186,6 +230,9 @@ router.register(routes.PROFILE, sharedHandler);
 router.register(routes.SETTINGS, sharedHandler);
 router.register(routes.NOTIFICATIONS, sharedHandler);
 router.register(routes.ABOUT, sharedHandler);
+router.register(routes.PRIVACY, sharedHandler);
+router.register(routes.HELP, sharedHandler);
+router.register(routes.CONTACT, sharedHandler);
 router.register(routes.FUTURE_PREMIUM, sharedHandler);
 router.register("*", () => {
   router.navigate(routes.FEED);
@@ -199,6 +246,37 @@ tabButtons.forEach((button) => {
     }
     router.navigate(route);
   });
+});
+
+menuRouteButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    const route = button.getAttribute("data-menu-route");
+    if (!route) {
+      return;
+    }
+    router.navigate(route);
+  });
+});
+
+menuToggle?.addEventListener("click", (event) => {
+  event.stopPropagation();
+  toggleMenu();
+});
+menuClose?.addEventListener("click", () => {
+  closeMenu();
+});
+document.addEventListener("click", (event) => {
+  if (!menuPanel || menuPanel.hidden) {
+    return;
+  }
+  const target = event.target;
+  if (!(target instanceof Node)) {
+    return;
+  }
+  if (menuPanel.contains(target) || menuToggle?.contains(target)) {
+    return;
+  }
+  closeMenu();
 });
 
 authService.refreshSession();
