@@ -1728,7 +1728,7 @@
       transform: translateX(-50%);
       width: min(560px, calc(100% - 1rem));
       display: none;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: 0.4rem;
       padding: 0.45rem;
       border-radius: 18px;
@@ -1944,10 +1944,6 @@
     .joke-feed-card.is-featured {
       border-color: rgba(37, 99, 235, 0.44);
       box-shadow: 0 16px 34px rgba(37, 99, 235, 0.13);
-    }
-    .joke-feed-card.is-premium-preview {
-      border-color: rgba(245, 158, 11, 0.45);
-      box-shadow: 0 12px 26px rgba(245, 158, 11, 0.12);
     }
     .joke-feed-card__header {
       display: flex;
@@ -2499,6 +2495,7 @@
       <nav id="primary-nav" class="nav tabs nav-primary" aria-label="Primary Navigation">
         <a href="#/jokes" data-route="jokes" data-i18n="nav.home">Home</a>
         <a href="#/submit" data-route="submit" data-i18n="nav.submit">Submit a Joke</a>
+        <a href="#/fresh-feed" data-route="fresh-feed">Fresh Feed</a>
         <a href="#/about" data-route="about" data-i18n="nav.about">About</a>
       </nav>
       <div class="top-actions">
@@ -3048,22 +3045,6 @@
         </div>
       </div>
       <div id="category-suggestions" class="muted" hidden></div>
-      <div id="home-feed-shell" class="card home-feed-shell" aria-live="polite">
-        <div class="home-feed-shell__header">
-          <h3>Fresh Joke Feed</h3>
-          <span id="home-feed-status" class="muted">Preparing fresh jokes...</span>
-        </div>
-        <div id="home-feed-list" class="list joke-feed-grid"></div>
-        <div id="home-feed-loading" class="skeleton feed-skeleton" hidden aria-hidden="true">
-          <div class="skeleton-line medium"></div>
-          <div class="skeleton-line"></div>
-          <div class="skeleton-line short"></div>
-        </div>
-        <div id="home-feed-sentinel" class="feed-sentinel" aria-hidden="true"></div>
-        <div id="home-upgrade-hint" class="muted home-upgrade-hint" hidden>
-          Premium packs are coming soon. Upgrade options will appear here later.
-        </div>
-      </div>
 
       <div id="joke-card" class="joke-card card">
         <div class="joke-card-header">
@@ -3247,6 +3228,25 @@
           </form>
         </div>
         <div id="feedback" class="feedback" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <section id="fresh-feed" class="section view-section" data-view="fresh-feed" data-emoji="✨" hidden>
+      <h2>Fresh Joke Feed</h2>
+      <p>Discover continuously refreshed free jokes from multiple sources.</p>
+      <div id="home-feed-shell" class="card home-feed-shell" aria-live="polite">
+        <div class="home-feed-shell__header">
+          <h3>Fresh Joke Feed</h3>
+          <span id="home-feed-status" class="muted">Preparing fresh jokes...</span>
+        </div>
+        <div id="home-feed-list" class="list joke-feed-grid"></div>
+        <div id="home-feed-loading" class="skeleton feed-skeleton" hidden aria-hidden="true">
+          <div class="skeleton-line medium"></div>
+          <div class="skeleton-line"></div>
+          <div class="skeleton-line short"></div>
+        </div>
+        <div id="home-feed-sentinel" class="feed-sentinel" aria-hidden="true"></div>
+        <div id="home-upgrade-hint" class="muted home-upgrade-hint" hidden></div>
       </div>
     </section>
 
@@ -3604,6 +3604,10 @@
         <span class="mobile-bottom-nav__icon" aria-hidden="true">✍️</span>
         <span data-i18n="nav.submit">Submit</span>
       </a>
+      <a href="#/fresh-feed" data-route="fresh-feed">
+        <span class="mobile-bottom-nav__icon" aria-hidden="true">✨</span>
+        <span>Fresh Feed</span>
+      </a>
       <a href="#/about" data-route="about">
         <span class="mobile-bottom-nav__icon" aria-hidden="true">ℹ️</span>
         <span data-i18n="nav.about">About</span>
@@ -3910,8 +3914,6 @@
     const HOME_FEED_MAX_SEEN_HASHES = 4000;
     const HOME_FEED_CACHE_TTL_MS = 8 * 60 * 1000;
     const HOME_FEED_REMOTE_COOLDOWN_MS = 20 * 1000;
-    const PREMIUM_TAG_PACKS = ['creator-picks', 'dark-after-hours', 'story-pro', 'meme-insider'];
-    const PREMIUM_HINT_CATEGORIES = new Set(['dark', 'story', 'roast', 'tiktok-genz']);
     const MONETIZATION_PREP_DEFAULTS = {
       premiumUnlocked: false,
       freeViews: 0,
@@ -10551,6 +10553,7 @@
 
     const ROUTES = [
       'jokes',
+      'fresh-feed',
       'saved',
       'submit',
       'community',
@@ -10649,7 +10652,7 @@
           void refreshViralContent({ silent: state.viralContentItems.length > 0 });
         }
       }
-      if (route === 'jokes') {
+      if (route === 'fresh-feed') {
         void refreshHomeFeed({
           hardReset: state.homeFeedScopeKey !== getHomeFeedScopeKey()
         });
@@ -11038,8 +11041,6 @@
       const createdAt = input.createdAt && !Number.isNaN(Date.parse(input.createdAt))
         ? new Date(input.createdAt).toISOString()
         : new Date().toISOString();
-      const premiumPack = sanitizeText(input.premiumPack || '', 50).toLowerCase();
-      const tier = sanitizeText(input.tier || '', 20).toLowerCase() === 'premium' ? 'premium' : 'free';
       return {
         id,
         text,
@@ -11048,9 +11049,9 @@
         source,
         hash,
         createdAt,
-        tier,
-        premiumPack,
-        premiumPreview: Boolean(input.premiumPreview) || tier === 'premium'
+        tier: 'free',
+        premiumPack: '',
+        premiumPreview: false
       };
     }
 
@@ -11059,37 +11060,12 @@
       if (!safeEntry) {
         return null;
       }
-      const numeric = hashString(String(safeEntry.hash || safeEntry.id || safeEntry.text || '0'));
-      const categoryBias = PREMIUM_HINT_CATEGORIES.has(safeEntry.category) && numeric % 4 === 0;
-      const premiumPreview = Boolean(safeEntry.premiumPreview) || categoryBias || numeric % 9 === 0;
-      const premiumPack = premiumPreview
-        ? safeEntry.premiumPack || PREMIUM_TAG_PACKS[numeric % PREMIUM_TAG_PACKS.length]
-        : '';
       return {
         ...safeEntry,
-        tier: premiumPreview ? 'premium' : 'free',
-        premiumPreview,
-        premiumPack
+        tier: 'free',
+        premiumPreview: false,
+        premiumPack: ''
       };
-    }
-
-    function isPremiumFeedPreviewLocked(entry) {
-      if (!entry || entry.tier !== 'premium') {
-        return false;
-      }
-      return !(state.monetizationPrep && state.monetizationPrep.premiumUnlocked);
-    }
-
-    function buildPremiumPreviewText(text) {
-      const safe = ensureSetupPunchline(text, state.currentLang);
-      if (!safe) {
-        return 'Premium joke preview.';
-      }
-      const maxLength = 130;
-      if (safe.length <= maxLength) {
-        return `${safe} ...`;
-      }
-      return `${safe.slice(0, maxLength).trimEnd()} ...`;
     }
 
     function setHomeFeedStatus(message) {
@@ -11109,12 +11085,8 @@
       if (!dom.homeUpgradeHint) {
         return;
       }
-      const prep = state.monetizationPrep || MONETIZATION_PREP_DEFAULTS;
-      const shouldShow = !prep.premiumUnlocked && prep.freeViews >= prep.freeSoftLimit;
-      dom.homeUpgradeHint.hidden = !shouldShow;
-      if (shouldShow) {
-        dom.homeUpgradeHint.textContent = `Free feed usage: ${prep.freeViews}/${prep.freeSoftLimit}. Premium packs coming soon.`;
-      }
+      dom.homeUpgradeHint.hidden = true;
+      dom.homeUpgradeHint.textContent = '';
     }
 
     function trackFeedFreeView(entry) {
@@ -11376,61 +11348,36 @@
     }
 
     function createHomeFeedCard(entry, index) {
-      const lockedPremium = isPremiumFeedPreviewLocked(entry);
       const sourceLabel = getHomeFeedSourceLabel(entry.source);
-      const tierLabel = lockedPremium
-        ? `Premium · ${entry.premiumPack || 'pack'}`
-        : entry.tier === 'premium'
-          ? `Premium · ${entry.premiumPack || 'pack'}`
-          : 'Free';
       const card = createJokeFeedCard({
         title: `${getCategoryLabel(entry.category)} · ${sourceLabel}`,
-        joke: lockedPremium ? buildPremiumPreviewText(entry.text) : entry.text,
+        joke: entry.text,
         emoji: getCategoryEmoji(entry.category),
-        featured: index < 2 && !lockedPremium,
-        score: lockedPremium ? 'Premium' : '',
-        metaItems: [tierLabel, sourceLabel],
-        actions: lockedPremium
-          ? [
-              {
-                label: 'Upgrade (Soon)',
-                ghost: true,
-                onClick: () => {
-                  state.monetizationPrep.upgradeHintsShown = Math.max(
-                    0,
-                    Number(state.monetizationPrep.upgradeHintsShown || 0) + 1
-                  );
-                  saveMonetizationPrep();
-                  showToast('Premium packs are being prepared.');
-                  updateHomeUpgradeHintVisibility();
-                }
-              }
-            ]
-          : [
-              {
-                label: t('saved.show'),
-                onClick: () => openHomeFeedItem(entry)
-              },
-              {
-                label: t('buttons.copyJoke'),
-                ghost: true,
-                onClick: () => {
-                  void copyToClipboard(entry.text, { feedbackKey: 'feedback.copy' });
-                  trackFeedFreeView(entry);
-                }
-              },
-              {
-                label: t('actions.share'),
-                ghost: true,
-                onClick: () => {
-                  void shareHomeFeedItem(entry);
-                }
-              }
-            ]
+        featured: index < 2,
+        score: '',
+        metaItems: ['Free', sourceLabel],
+        actions: [
+          {
+            label: t('saved.show'),
+            onClick: () => openHomeFeedItem(entry)
+          },
+          {
+            label: t('buttons.copyJoke'),
+            ghost: true,
+            onClick: () => {
+              void copyToClipboard(entry.text, { feedbackKey: 'feedback.copy' });
+              trackFeedFreeView(entry);
+            }
+          },
+          {
+            label: t('actions.share'),
+            ghost: true,
+            onClick: () => {
+              void shareHomeFeedItem(entry);
+            }
+          }
+        ]
       });
-      if (lockedPremium) {
-        card.classList.add('is-premium-preview');
-      }
       return card;
     }
 
@@ -11557,7 +11504,7 @@
       }
       const resolvedOptions = options && typeof options === 'object' ? options : {};
       const route = getRouteFromHash();
-      if (route !== 'jokes') {
+      if (route !== 'fresh-feed') {
         disconnectHomeFeedObserver();
         return;
       }
@@ -12223,7 +12170,7 @@
         setLoading(false);
         if (!state.searchQuery.trim()) {
           void refreshHomeFeed({ hardReset: true });
-        } else if (getRouteFromHash() === 'jokes') {
+        } else if (getRouteFromHash() === 'fresh-feed') {
           if (dom.homeFeedList) {
             dom.homeFeedList.innerHTML = '';
             dom.homeFeedList.appendChild(createEmptyStateCard('Feed is paused while search is active.'));

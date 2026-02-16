@@ -11,13 +11,6 @@ const FEED_DEFAULT_OFFSET = 0;
 const FEED_REMOTE_TIMEOUT_MS = 7000;
 const FEED_MAX_EXTERNAL_BATCH = 8;
 const FEED_MAX_AI_BATCH = 5;
-const FEED_PREMIUM_PACKS = [
-  "creator-picks",
-  "late-night-dark",
-  "story-pro",
-  "meme-insider",
-];
-const FEED_PREMIUM_HINT_CATEGORIES = new Set(["dark", "story", "roast"]);
 const FEED_BLOCKED_PATTERN =
   /\b(hate|kill|murder|rape|terror|nazi|racist|genocide|porn|nsfw|sex|explicit)\b/i;
 
@@ -194,27 +187,12 @@ function dedupeFeedCandidates(list = []) {
   return deduped;
 }
 
-function toNumericSeedFromHash(hash = "") {
-  const segment = String(hash).slice(0, 8);
-  const parsed = Number.parseInt(segment, 16);
-  if (!Number.isFinite(parsed)) {
-    return 0;
-  }
-  return parsed;
-}
-
 function applyMonetizationTags(candidate) {
-  const seed = toNumericSeedFromHash(candidate.hash);
-  const categoryPremiumBias = FEED_PREMIUM_HINT_CATEGORIES.has(candidate.category) && seed % 4 === 0;
-  const premiumPreview = categoryPremiumBias || seed % 9 === 0;
-  const premiumPack = premiumPreview
-    ? FEED_PREMIUM_PACKS[seed % FEED_PREMIUM_PACKS.length]
-    : "";
   return {
     ...candidate,
-    tier: premiumPreview ? "premium" : "free",
-    premiumPack,
-    premiumPreview,
+    tier: "free",
+    premiumPack: "",
+    premiumPreview: false,
     monetizationReady: true,
   };
 }
