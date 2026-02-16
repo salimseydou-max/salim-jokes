@@ -2166,10 +2166,17 @@
             </div>
             <div class="settings-controls">
               <label class="inline-label" for="profile-display-name-input">Display name</label>
-              <input id="profile-display-name-input" type="text" maxlength="80" autocomplete="name" />
+              <input id="profile-display-name-input" type="text" maxlength="80" autocomplete="name" readonly />
               <label class="inline-label" for="profile-phone-input">Phone number (optional)</label>
-              <input id="profile-phone-input" type="tel" maxlength="24" autocomplete="tel" placeholder="+1234567890" />
-              <button type="button" id="profile-save-account" class="ghost">Save account details</button>
+              <input
+                id="profile-phone-input"
+                type="tel"
+                maxlength="24"
+                autocomplete="tel"
+                placeholder="+1234567890"
+                readonly
+              />
+              <p class="auth-footnote">Account details are saved automatically when you sign up or log in.</p>
             </div>
             <div class="form-actions">
               <button type="button" id="profile-refresh" class="ghost" data-i18n="auth.refresh">
@@ -2178,20 +2185,6 @@
             </div>
             <div class="profile-avatar-panel">
               <img id="profile-avatar-image" class="profile-avatar" alt="Profile avatar" />
-              <div class="form-actions">
-                <label for="profile-avatar-input" class="auth-link ghost-link" data-i18n="auth.uploadAvatar">
-                  Upload Photo
-                </label>
-                <button type="button" id="profile-avatar-reset" class="ghost" data-i18n="auth.resetAvatar">
-                  Use Default
-                </button>
-              </div>
-              <input
-                id="profile-avatar-input"
-                type="file"
-                accept="image/png,image/jpeg,image/jpg,image/webp"
-                hidden
-              />
             </div>
           </div>
           <div class="card">
@@ -3139,7 +3132,6 @@
       profileCreatedAt: document.getElementById('profile-created-at'),
       profileDisplayNameInput: document.getElementById('profile-display-name-input'),
       profilePhoneInput: document.getElementById('profile-phone-input'),
-      profileSaveAccount: document.getElementById('profile-save-account'),
       profileFavoritesCount: document.getElementById('profile-favorites-count'),
       profileLikedCount: document.getElementById('profile-liked-count'),
       profileSavedCount: document.getElementById('profile-saved-count'),
@@ -3147,8 +3139,6 @@
       profileLikedList: document.getElementById('profile-liked-list'),
       profileFeedback: document.getElementById('profile-feedback'),
       profileAvatarImage: document.getElementById('profile-avatar-image'),
-      profileAvatarInput: document.getElementById('profile-avatar-input'),
-      profileAvatarReset: document.getElementById('profile-avatar-reset'),
       settingsFeedback: document.getElementById('settings-feedback'),
       settingsPrivacyPolicy: document.getElementById('settings-privacy-policy'),
       settingsDataControls: document.getElementById('settings-data-controls'),
@@ -3254,7 +3244,7 @@
     const DUPLICATE_CHECK_CANDIDATE_LIMIT = 12;
     const DUPLICATE_WARNING_THRESHOLD = 75;
     const DUPLICATE_BLOCK_THRESHOLD = 90;
-    const SERVICE_WORKER_SCRIPT_URL = '/sw.js?v=profile-avatar-save-fix-20260216';
+    const SERVICE_WORKER_SCRIPT_URL = '/sw.js?v=profile-controls-removed-20260216';
     const AUTH_ENDPOINTS = {
       signup: '/api/auth/signup',
       login: '/api/auth/login',
@@ -14615,101 +14605,6 @@
         setProfileFeedbackMessage(t('auth.refreshing'));
         await refreshAuthSession();
         setProfileFeedbackMessage(t('auth.profileRefreshed'), 2200);
-      };
-    }
-    if (dom.profileSaveAccount) {
-      dom.profileSaveAccount.onclick = async () => {
-        if (!state.currentUserId) {
-          setProfileFeedbackMessage(t('auth.loginRequired'));
-          return;
-        }
-        const displayName = (dom.profileDisplayNameInput?.value || '').trim();
-        const rawPhone = (dom.profilePhoneInput?.value || '').trim();
-        const phoneNumber = normalizePhoneNumberInput(rawPhone);
-        if (rawPhone && !phoneNumber) {
-          setProfileFeedbackMessage('Please enter a valid phone number or leave it empty.');
-          return;
-        }
-        const focused = document.activeElement;
-        if (focused && typeof focused.blur === 'function') {
-          focused.blur();
-        }
-        dom.profileSaveAccount.disabled = true;
-        setProfileFeedbackMessage(t('auth.refreshing'));
-        try {
-          await window.jokeAuth.updateProfile({
-            displayName,
-            phoneNumber
-          });
-          setProfileFeedbackMessage(t('auth.profileRefreshed'), 2400);
-        } catch (error) {
-          setProfileFeedbackMessage(getAuthErrorMessage(error));
-        } finally {
-          dom.profileSaveAccount.disabled = false;
-        }
-      };
-    }
-    if (dom.profileAvatarInput) {
-      dom.profileAvatarInput.onchange = async (event) => {
-        const file = event.target?.files?.[0];
-        if (!file) {
-          return;
-        }
-        if (!isAllowedAvatarFile(file)) {
-          setProfileFeedbackMessage(t('auth.avatarInvalidType'));
-          dom.profileAvatarInput.value = '';
-          return;
-        }
-        if (file.size > AVATAR_SOURCE_MAX_BYTES) {
-          setProfileFeedbackMessage(t('auth.avatarTooLarge'));
-          dom.profileAvatarInput.value = '';
-          return;
-        }
-        const previousAvatarUrl = getUserAvatarUrl(state.currentUserProfile);
-        dom.profileAvatarInput.disabled = true;
-        if (dom.profileAvatarReset) {
-          dom.profileAvatarReset.disabled = true;
-        }
-        setProfileFeedbackMessage(t('auth.avatarUploading'));
-        try {
-          const avatarUrl = await readFileAsDataUrl(file);
-          if (dom.profileAvatarImage) {
-            dom.profileAvatarImage.src = avatarUrl;
-          }
-          if (dom.navProfileAvatar && state.currentUserId) {
-            dom.navProfileAvatar.src = avatarUrl;
-          }
-          await window.jokeAuth.updateProfile({ avatarUrl });
-          setProfileFeedbackMessage(t('auth.avatarUpdated'), 2600);
-        } catch (error) {
-          if (dom.profileAvatarImage && previousAvatarUrl) {
-            dom.profileAvatarImage.src = previousAvatarUrl;
-          }
-          if (dom.navProfileAvatar && state.currentUserId && previousAvatarUrl) {
-            dom.navProfileAvatar.src = previousAvatarUrl;
-          }
-          setProfileFeedbackMessage(getAuthErrorMessage(error));
-        } finally {
-          dom.profileAvatarInput.value = '';
-          dom.profileAvatarInput.disabled = false;
-          if (dom.profileAvatarReset) {
-            dom.profileAvatarReset.disabled = false;
-          }
-        }
-      };
-    }
-    if (dom.profileAvatarReset) {
-      dom.profileAvatarReset.onclick = async () => {
-        dom.profileAvatarReset.disabled = true;
-        setProfileFeedbackMessage(t('auth.avatarUploading'));
-        try {
-          await window.jokeAuth.updateProfile({ avatarUrl: '' });
-          setProfileFeedbackMessage(t('auth.avatarReset'), 2400);
-        } catch (error) {
-          setProfileFeedbackMessage(getAuthErrorMessage(error));
-        } finally {
-          dom.profileAvatarReset.disabled = false;
-        }
       };
     }
     const outsidePressHandler = (event) => {
