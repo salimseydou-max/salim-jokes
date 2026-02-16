@@ -66,17 +66,29 @@ function readFormValues(form) {
 export function createSettingsView(options = {}) {
   const root = options.root;
   const preferencesStore = options.preferencesStore;
+  const authService = options.authService;
   const toast = options.toast;
   const notificationStore = options.notificationStore;
 
   const form = root?.querySelector("[data-settings-form]");
   const resetButton = root?.querySelector("[data-settings-reset]");
   const saveButton = root?.querySelector("[data-settings-save]");
+  const accountInfo = root?.querySelector("[data-settings-account-info]");
 
   function applyFromStore() {
     const preferences = preferencesStore.get();
     setFormValues(root, preferences);
     applyThemeToDocument(preferences.appearance.theme);
+    const user = authService?.getUser?.();
+    if (accountInfo) {
+      if (user) {
+        accountInfo.textContent = `Signed in as ${user.displayName || "User"} (${user.email || "no email"})${
+          user.phoneNumber ? ` • ${user.phoneNumber}` : ""
+        }`;
+      } else {
+        accountInfo.textContent = "Sign in to manage your account information.";
+      }
+    }
   }
 
   function onSubmit(event) {
@@ -114,6 +126,9 @@ export function createSettingsView(options = {}) {
     });
     preferencesStore.subscribe((nextPrefs) => {
       applyThemeToDocument(nextPrefs.appearance.theme);
+    });
+    authService?.subscribe?.(() => {
+      applyFromStore();
     });
     applyFromStore();
   }

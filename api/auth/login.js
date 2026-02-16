@@ -25,6 +25,8 @@ export default async function handler(req, res) {
     const body = await parseRequestBody(req);
     const result = await loginUser({
       email: body.email,
+      phoneNumber: body.phoneNumber,
+      identifier: body.identifier,
       password: body.password,
       userAgent: req?.headers?.["user-agent"] || "",
       ipAddress: getClientIp(req),

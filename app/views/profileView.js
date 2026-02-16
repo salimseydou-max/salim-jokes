@@ -15,6 +15,19 @@ function formatDate(value) {
   return new Date(time).toLocaleDateString();
 }
 
+function sanitizePhone(value) {
+  const raw = String(value || "").trim();
+  if (!raw) {
+    return "";
+  }
+  const plus = raw.startsWith("+");
+  const digits = raw.replace(/\D/g, "");
+  if (digits.length < 7 || digits.length > 15) {
+    return "";
+  }
+  return `${plus ? "+" : ""}${digits}`;
+}
+
 async function fileToDataUrl(file) {
   if (!file) {
     return "";
@@ -59,9 +72,11 @@ function renderList(target, items, emptyText, itemRenderer) {
 export function createProfileView(options = {}) {
   const root = options.root;
   const authService = options.authService;
+  const verificationService = options.verificationService;
   const favoritesStore = options.favoritesStore;
   const submissionStore = options.submissionStore;
   const reactionStore = options.reactionStore;
+  const commentStore = options.commentStore;
   const toast = options.toast;
   const getViewerId = typeof options.getViewerId === "function" ? options.getViewerId : () => "guest";
   const onUserChanged =
@@ -70,21 +85,70 @@ export function createProfileView(options = {}) {
   const authCard = root?.querySelector("[data-profile-auth-card]");
   const accountCard = root?.querySelector("[data-profile-account-card]");
   const loginForm = root?.querySelector("[data-profile-login-form]");
+  const googleLoginButton = root?.querySelector("[data-profile-google-login]");
   const signupForm = root?.querySelector("[data-profile-signup-form]");
   const editForm = root?.querySelector("[data-profile-edit-form]");
   const logoutButton = root?.querySelector("[data-profile-logout]");
 
+  const sendEmailCodeButton = root?.querySelector("[data-signup-send-email-code]");
+  const sendPhoneCodeButton = root?.querySelector("[data-signup-send-phone-code]");
+  const verifyCodeButton = root?.querySelector("[data-signup-verify-code]");
+  const verificationCodeInput = root?.querySelector("[data-signup-verification-code]");
+  const verificationTargetSelect = root?.querySelector("[data-signup-verification-target]");
+  const verificationStatus = root?.querySelector("[data-signup-verification-status]");
+
   const profileName = root?.querySelector("[data-profile-name]");
   const profileEmail = root?.querySelector("[data-profile-email]");
+  const profilePhone = root?.querySelector("[data-profile-phone]");
   const profileAvatar = root?.querySelector("[data-profile-avatar]");
   const profileStats = root?.querySelector("[data-profile-stats]");
+
+  const summarySaved = root?.querySelector("[data-profile-summary-saved]");
+  const summarySubmitted = root?.querySelector("[data-profile-summary-submitted]");
+  const summaryReactions = root?.querySelector("[data-profile-summary-reactions]");
+  const summaryComments = root?.querySelector("[data-profile-summary-comments]");
 
   const savedList = root?.querySelector("[data-profile-saved-list]");
   const submittedList = root?.querySelector("[data-profile-submitted-list]");
   const reactionsList = root?.querySelector("[data-profile-reactions-list]");
+  const commentsList = root?.querySelector("[data-profile-comments-list]");
+
+  let verificationState = {
+    emailVerified: false,
+    phoneVerified: false,
+  };
 
   function getOwnerId() {
     return authService.getUser()?.id || getViewerId();
+  }
+
+  function setVerificationStatus(message, type = "") {
+    if (!verificationStatus) {
+      return;
+    }
+    verificationStatus.textContent = message;
+    verificationStatus.classList.remove("is-success", "is-error");
+    if (type === "success") {
+      verificationStatus.classList.add("is-success");
+    }
+    if (type === "error") {
+      verificationStatus.classList.add("is-error");
+    }
+  }
+
+  function refreshVerificationState() {
+    const email = signupForm?.querySelector("[name='email']")?.value || "";
+    const phone = sanitizePhone(signupForm?.querySelector("[name='phoneNumber']")?.value || "");
+    verificationState = {
+      emailVerified: verificationService.isVerified("email", email),
+      phoneVerified: phone ? verificationService.isVerified("phone", phone) : false,
+    };
+    if (verificationState.emailVerified || verificationState.phoneVerified) {
+      const channel = verificationState.emailVerified ? "email" : "phone";
+      setVerificationStatus(`Verified via ${channel}.`, "success");
+    } else {
+      setVerificationStatus("Verify at least email or phone before creating the account.");
+    }
   }
 
   function setAuthVisibility(authenticated) {
@@ -98,62 +162,82 @@ export function createProfileView(options = {}) {
 
   function renderSavedList() {
     const savedItems = favoritesStore.list().slice(0, 30);
-    renderList(
-      savedList,
-      savedItems,
-      "Saved jokes will appear here.",
-      (entry) => {
-        const article = document.createElement("article");
-        article.className = "mini-list-item";
-        article.innerHTML = `
-          <p>${escapeHtml(entry.text)}</p>
-          <span class="mini-list-meta">${escapeHtml(entry.category || "random")} • ${formatDate(
-          entry.savedAt
-        )}</span>
-        `;
-        return article;
-      }
-    );
+    renderList(savedList, savedItems, "Saved jokes will appear here.", (entry) => {
+      const article = document.createElement("article");
+      article.className = "mini-list-item";
+      article.innerHTML = `
+        <p>${escapeHtml(entry.text)}</p>
+        <span class="mini-list-meta">${escapeHtml(entry.category || "random")} • ${formatDate(
+        entry.savedAt
+      )}</span>
+      `;
+      return article;
+    });
+    if (summarySaved) {
+      summarySaved.textContent = String(savedItems.length);
+    }
   }
 
   function renderSubmittedList() {
     const entries = submissionStore.listByOwner(getOwnerId()).slice(0, 30);
-    renderList(
-      submittedList,
-      entries,
-      "Your submitted jokes will appear here.",
-      (entry) => {
-        const article = document.createElement("article");
-        article.className = "mini-list-item";
-        article.innerHTML = `
-          <p>${escapeHtml(entry.text)}</p>
-          <span class="mini-list-meta">${escapeHtml(entry.category || "random")} • ${formatDate(
-          entry.createdAt
-        )}</span>
-        `;
-        return article;
-      }
-    );
+    renderList(submittedList, entries, "Your submitted jokes will appear here.", (entry) => {
+      const article = document.createElement("article");
+      article.className = "mini-list-item";
+      article.innerHTML = `
+        <p>${escapeHtml(entry.text)}</p>
+        <span class="mini-list-meta">${escapeHtml(entry.category || "random")} • ${formatDate(
+        entry.createdAt
+      )}</span>
+      `;
+      return article;
+    });
+    if (summarySubmitted) {
+      summarySubmitted.textContent = String(entries.length);
+    }
   }
 
   function renderReactionHistory() {
     const history = reactionStore.listUserHistory(getOwnerId()).slice(0, 30);
-    renderList(
-      reactionsList,
-      history,
-      "Your reaction history will appear here.",
-      (entry) => {
-        const article = document.createElement("article");
-        article.className = "mini-list-item";
-        article.innerHTML = `
-          <p><strong>${escapeHtml(entry.reaction)}</strong> ${escapeHtml(entry.joke?.text || "")}</p>
-          <span class="mini-list-meta">${escapeHtml(entry.joke?.category || "joke")} • ${formatDate(
-          entry.joke?.createdAt
-        )}</span>
-        `;
-        return article;
-      }
-    );
+    renderList(reactionsList, history, "Your reaction history will appear here.", (entry) => {
+      const article = document.createElement("article");
+      article.className = "mini-list-item";
+      article.innerHTML = `
+        <p><strong>${escapeHtml(entry.reaction)}</strong> ${escapeHtml(entry.joke?.text || "")}</p>
+        <span class="mini-list-meta">${escapeHtml(entry.joke?.category || "joke")} • ${formatDate(
+        entry.joke?.createdAt
+      )}</span>
+      `;
+      return article;
+    });
+    if (summaryReactions) {
+      summaryReactions.textContent = String(history.length);
+    }
+  }
+
+  function renderCommentHistory() {
+    const history = commentStore?.listUserComments?.(getOwnerId()) || [];
+    const limited = history.slice(0, 30);
+    renderList(commentsList, limited, "Your comment history will appear here.", (entry) => {
+      const article = document.createElement("article");
+      article.className = "mini-list-item";
+      article.innerHTML = `
+        <p>${escapeHtml(entry.text)}</p>
+        <span class="mini-list-meta">${formatDate(entry.createdAt)} • ${escapeHtml(
+        entry.joke?.id || "joke"
+      )}</span>
+      `;
+      return article;
+    });
+    if (summaryComments) {
+      summaryComments.textContent = String(limited.length);
+    }
+  }
+
+  function renderCollections() {
+    renderSavedList();
+    renderSubmittedList();
+    renderReactionHistory();
+    renderCommentHistory();
   }
 
   function renderAccount(user) {
@@ -166,6 +250,9 @@ export function createProfileView(options = {}) {
     }
     if (profileEmail) {
       profileEmail.textContent = user.email || "";
+    }
+    if (profilePhone) {
+      profilePhone.textContent = user.phoneNumber ? `Phone: ${user.phoneNumber}` : "Phone: not set";
     }
     if (profileAvatar) {
       profileAvatar.src = user.avatarUrl || "";
@@ -184,17 +271,45 @@ export function createProfileView(options = {}) {
     if (phoneInput) {
       phoneInput.value = user.phoneNumber || "";
     }
-    renderSavedList();
-    renderSubmittedList();
-    renderReactionHistory();
+    renderCollections();
+  }
+
+  async function sendVerificationCode(type) {
+    const email = signupForm?.querySelector("[name='email']")?.value || "";
+    const phone = sanitizePhone(signupForm?.querySelector("[name='phoneNumber']")?.value || "");
+    const target = type === "phone" ? phone : email;
+    try {
+      const result = await verificationService.requestCode(type, target);
+      setVerificationStatus(
+        `Verification code sent to ${type}. Code for now: ${result.code}`,
+        "success"
+      );
+    } catch (error) {
+      setVerificationStatus(error.message || "Failed to send code.", "error");
+    }
+  }
+
+  function confirmVerificationCode() {
+    const email = signupForm?.querySelector("[name='email']")?.value || "";
+    const phone = sanitizePhone(signupForm?.querySelector("[name='phoneNumber']")?.value || "");
+    const targetType = verificationTargetSelect?.value === "phone" ? "phone" : "email";
+    const target = targetType === "phone" ? phone : email;
+    const code = verificationCodeInput?.value || "";
+    const ok = verificationService.verifyCode(targetType, target, code);
+    if (!ok) {
+      setVerificationStatus("Invalid or expired verification code.", "error");
+      return;
+    }
+    refreshVerificationState();
+    toast?.show(`${targetType} verified.`);
   }
 
   async function submitLogin(event) {
     event.preventDefault();
-    const email = loginForm?.querySelector("[name='email']")?.value || "";
+    const identifier = loginForm?.querySelector("[name='identifier']")?.value || "";
     const password = loginForm?.querySelector("[name='password']")?.value || "";
     try {
-      const user = await authService.login({ email, password });
+      const user = await authService.login({ identifier, password });
       toast?.show("Logged in.");
       renderAccount(user);
       onUserChanged(user);
@@ -205,19 +320,52 @@ export function createProfileView(options = {}) {
 
   async function submitSignup(event) {
     event.preventDefault();
+    refreshVerificationState();
+    if (!verificationState.emailVerified && !verificationState.phoneVerified) {
+      toast?.show("Verify email or phone before signup.", "error");
+      return;
+    }
+
     const username = signupForm?.querySelector("[name='username']")?.value || "";
     const email = signupForm?.querySelector("[name='email']")?.value || "";
+    const phoneNumber = sanitizePhone(signupForm?.querySelector("[name='phoneNumber']")?.value || "");
     const password = signupForm?.querySelector("[name='password']")?.value || "";
     const avatarFile = signupForm?.querySelector("[name='avatar']")?.files?.[0];
+    if (!phoneNumber) {
+      toast?.show("Enter a valid phone number.", "error");
+      return;
+    }
+
     try {
       const avatarUrl = avatarFile ? await fileToDataUrl(avatarFile) : "";
-      const user = await authService.signup({ username, email, password, avatarUrl });
+      const user = await authService.signup({
+        username,
+        email,
+        phoneNumber,
+        password,
+        avatarUrl,
+      });
       toast?.show("Account created.");
       signupForm?.reset();
+      if (verificationCodeInput) {
+        verificationCodeInput.value = "";
+      }
+      setVerificationStatus("Account created and verified.", "success");
       renderAccount(user);
       onUserChanged(user);
     } catch (error) {
       toast?.show(error.message || "Signup failed.", "error");
+    }
+  }
+
+  async function handleGoogleLogin() {
+    try {
+      const user = await authService.loginWithGoogle();
+      toast?.show("Signed in with Google.");
+      renderAccount(user);
+      onUserChanged(user);
+    } catch (error) {
+      toast?.show(error.message || "Google login canceled.", "error");
     }
   }
 
@@ -243,17 +391,27 @@ export function createProfileView(options = {}) {
     setAuthVisibility(false);
     toast?.show("Logged out.");
     onUserChanged(null);
+    renderCollections();
   }
 
   function init() {
     loginForm?.addEventListener("submit", submitLogin);
+    googleLoginButton?.addEventListener("click", handleGoogleLogin);
     signupForm?.addEventListener("submit", submitSignup);
     editForm?.addEventListener("submit", submitProfileUpdate);
     logoutButton?.addEventListener("click", handleLogout);
+
+    sendEmailCodeButton?.addEventListener("click", () => sendVerificationCode("email"));
+    sendPhoneCodeButton?.addEventListener("click", () => sendVerificationCode("phone"));
+    verifyCodeButton?.addEventListener("click", confirmVerificationCode);
+    signupForm?.querySelector("[name='email']")?.addEventListener("input", refreshVerificationState);
+    signupForm?.querySelector("[name='phoneNumber']")?.addEventListener("input", refreshVerificationState);
+
     authService.subscribe((user) => {
       renderAccount(user);
       onUserChanged(user);
     });
+    refreshVerificationState();
   }
 
   async function activate() {
@@ -261,9 +419,7 @@ export function createProfileView(options = {}) {
     renderAccount(user);
     setAuthVisibility(Boolean(user));
     if (!user) {
-      renderSavedList();
-      renderSubmittedList();
-      renderReactionHistory();
+      renderCollections();
     }
   }
 
@@ -271,11 +427,7 @@ export function createProfileView(options = {}) {
 
   return {
     activate,
-    refreshCollections() {
-      renderSavedList();
-      renderSubmittedList();
-      renderReactionHistory();
-    },
+    refreshCollections: renderCollections,
     getOwnerId,
   };
 }
