@@ -1900,6 +1900,38 @@
       display: grid;
       gap: 0.9rem;
     }
+    .home-feed-shell {
+      margin: 0.95rem 0 1.1rem;
+      padding: 0.95rem;
+      display: grid;
+      gap: 0.7rem;
+    }
+    .home-feed-shell__header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.6rem;
+      flex-wrap: wrap;
+    }
+    .home-feed-shell__header h3 {
+      margin: 0;
+      font-size: 1rem;
+      letter-spacing: 0.01em;
+    }
+    .joke-feed-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.75rem;
+    }
+    .feed-sentinel {
+      width: 100%;
+      height: 1px;
+    }
+    .home-upgrade-hint {
+      border-top: 1px dashed var(--border);
+      padding-top: 0.55rem;
+      font-size: 0.84rem;
+    }
     .joke-feed-card {
       background: var(--card);
       border: 1px solid var(--border);
@@ -1912,6 +1944,10 @@
     .joke-feed-card.is-featured {
       border-color: rgba(37, 99, 235, 0.44);
       box-shadow: 0 16px 34px rgba(37, 99, 235, 0.13);
+    }
+    .joke-feed-card.is-premium-preview {
+      border-color: rgba(245, 158, 11, 0.45);
+      box-shadow: 0 12px 26px rgba(245, 158, 11, 0.12);
     }
     .joke-feed-card__header {
       display: flex;
@@ -2010,6 +2046,9 @@
       }
       .joke-feed-card__actions {
         gap: 0.45rem;
+      }
+      .joke-feed-grid {
+        grid-template-columns: 1fr;
       }
       body {
         padding-bottom: calc(82px + env(safe-area-inset-bottom));
@@ -3009,6 +3048,22 @@
         </div>
       </div>
       <div id="category-suggestions" class="muted" hidden></div>
+      <div id="home-feed-shell" class="card home-feed-shell" aria-live="polite">
+        <div class="home-feed-shell__header">
+          <h3>Fresh Joke Feed</h3>
+          <span id="home-feed-status" class="muted">Preparing fresh jokes...</span>
+        </div>
+        <div id="home-feed-list" class="list joke-feed-grid"></div>
+        <div id="home-feed-loading" class="skeleton feed-skeleton" hidden aria-hidden="true">
+          <div class="skeleton-line medium"></div>
+          <div class="skeleton-line"></div>
+          <div class="skeleton-line short"></div>
+        </div>
+        <div id="home-feed-sentinel" class="feed-sentinel" aria-hidden="true"></div>
+        <div id="home-upgrade-hint" class="muted home-upgrade-hint" hidden>
+          Premium packs are coming soon. Upgrade options will appear here later.
+        </div>
+      </div>
 
       <div id="joke-card" class="joke-card card">
         <div class="joke-card-header">
@@ -3636,6 +3691,12 @@
       moreActionsDropdown: document.getElementById('more-actions-dropdown'),
       moreShareUrl: document.getElementById('more-share-url'),
       categorySuggestions: document.getElementById('category-suggestions'),
+      homeFeedShell: document.getElementById('home-feed-shell'),
+      homeFeedList: document.getElementById('home-feed-list'),
+      homeFeedStatus: document.getElementById('home-feed-status'),
+      homeFeedLoading: document.getElementById('home-feed-loading'),
+      homeFeedSentinel: document.getElementById('home-feed-sentinel'),
+      homeUpgradeHint: document.getElementById('home-upgrade-hint'),
       searchInput: document.getElementById('search-input'),
       heroStart: document.getElementById('hero-start'),
       heroScroll: document.getElementById('hero-scroll'),
@@ -3792,7 +3853,10 @@
       userPreferences: 'userPreferenceStoreV1',
       progress: 'jokeProgressV1',
       sessionSeen: 'jokeSessionSeenV1',
-      viralContent: 'viralContentCacheV1'
+      viralContent: 'viralContentCacheV1',
+      homeFeedSeen: 'homeFeedSeenV1',
+      homeFeedCache: 'homeFeedCacheV1',
+      monetizationPrep: 'monetizationPrepV1'
     };
 
     const languageMeta = {
@@ -3839,6 +3903,22 @@
     const SESSION_JOKE_LIMIT = 30;
     const SHOW_SESSION_PROGRESS = false;
     const MAX_JOKES_PER_BATCH = SESSION_JOKE_LIMIT;
+    const HOME_FEED_PAGE_SIZE = 8;
+    const HOME_FEED_BUFFER_TARGET = 20;
+    const HOME_FEED_MIN_BUFFER = 6;
+    const HOME_FEED_MAX_ITEMS = 180;
+    const HOME_FEED_MAX_SEEN_HASHES = 4000;
+    const HOME_FEED_CACHE_TTL_MS = 8 * 60 * 1000;
+    const HOME_FEED_REMOTE_COOLDOWN_MS = 20 * 1000;
+    const PREMIUM_TAG_PACKS = ['creator-picks', 'dark-after-hours', 'story-pro', 'meme-insider'];
+    const PREMIUM_HINT_CATEGORIES = new Set(['dark', 'story', 'roast', 'tiktok-genz']);
+    const MONETIZATION_PREP_DEFAULTS = {
+      premiumUnlocked: false,
+      freeViews: 0,
+      freeSoftLimit: 120,
+      upgradeHintsShown: 0,
+      updatedAt: 0
+    };
     const DUPLICATE_CHECK_ENDPOINT = '/api/check-duplicate-joke';
     const DUPLICATE_CHECK_CANDIDATE_LIMIT = 12;
     const DUPLICATE_WARNING_THRESHOLD = 75;
@@ -7414,7 +7494,21 @@
       viralContentRefreshTimer: null,
       viralContentLastError: '',
       canGenerateMoreJokes: true,
-      navButtonsAnimationTimer: null
+      navButtonsAnimationTimer: null,
+      homeFeedItems: [],
+      homeFeedBuffer: [],
+      homeFeedLoading: false,
+      homeFeedHasMore: true,
+      homeFeedCursor: 0,
+      homeFeedQueueTask: null,
+      homeFeedLastRemoteAt: 0,
+      homeFeedObserver: null,
+      homeFeedScopeKey: '',
+      homeFeedSeenHashes: new Set(),
+      homeFeedSessionHashes: new Set(),
+      homeFeedQueuedHashes: new Set(),
+      homeFeedRecentTexts: [],
+      monetizationPrep: { ...MONETIZATION_PREP_DEFAULTS }
     };
 
     const settings = loadSettings();
@@ -7451,6 +7545,11 @@
       state.viralContentUpdatedAt = Number(cachedViralContent.updatedAt) || 0;
       state.viralContentSource = state.viralContentItems.length ? 'cache' : 'none';
     }
+    const homeFeedSeenStore = loadHomeFeedSeenStore();
+    state.homeFeedSeenHashes = new Set(
+      Array.isArray(homeFeedSeenStore?.hashes) ? homeFeedSeenStore.hashes : []
+    );
+    state.monetizationPrep = loadMonetizationPrep();
 
     if (cachedAuthSession && cachedAuthSession.user) {
       state.currentUserId = cachedAuthSession.user.id;
@@ -10550,6 +10649,13 @@
           void refreshViralContent({ silent: state.viralContentItems.length > 0 });
         }
       }
+      if (route === 'jokes') {
+        void refreshHomeFeed({
+          hardReset: state.homeFeedScopeKey !== getHomeFeedScopeKey()
+        });
+      } else {
+        disconnectHomeFeedObserver();
+      }
     }
 
     function showPageTransition() {
@@ -10875,6 +10981,621 @@
       }
 
       return card;
+    }
+
+    function getHomeFeedScopeKey() {
+      return `${state.currentLang || 'en'}|${state.currentCategory || 'random'}`;
+    }
+
+    function normalizeHomeFeedSource(value) {
+      const normalized = sanitizeText(value || 'local', 32).toLowerCase();
+      if (
+        normalized === 'user' ||
+        normalized === 'local' ||
+        normalized === 'api' ||
+        normalized === 'external_api' ||
+        normalized === 'external' ||
+        normalized === 'ai'
+      ) {
+        return normalized === 'external' ? 'external_api' : normalized;
+      }
+      return 'local';
+    }
+
+    function getHomeFeedSourceLabel(source) {
+      const normalized = normalizeHomeFeedSource(source);
+      if (normalized === 'user') {
+        return 'User';
+      }
+      if (normalized === 'external_api' || normalized === 'api') {
+        return 'API';
+      }
+      if (normalized === 'ai') {
+        return 'AI';
+      }
+      return 'Local';
+    }
+
+    function buildHomeFeedHash(text, lang = state.currentLang) {
+      const normalized = normalizeJokeForComparison(ensureSetupPunchline(text, lang));
+      return `feed-${lang}-${hashString(`${lang}|${normalized}`)}`;
+    }
+
+    function normalizeHomeFeedEntry(entry, defaults = {}) {
+      const input = entry && typeof entry === 'object' ? entry : {};
+      const text = ensureSetupPunchline(input.text || input.joke || '', input.language || defaults.language || state.currentLang);
+      if (!text || text.length > MAX_JOKE_LENGTH || containsBlockedContent(text) || isLikelyBoringJoke(text)) {
+        return null;
+      }
+      const language = sanitizeText(input.language || input.lang || defaults.language || state.currentLang, 20).toLowerCase() || state.currentLang;
+      const category = sanitizeText(input.category || defaults.category || state.currentCategory || 'random', 40).toLowerCase() || 'random';
+      if (!isWellStructuredJoke(text, category, text.includes('\n') ? 'story' : 'quick')) {
+        return null;
+      }
+      const hash = sanitizeText(input.hash || '', 90) || buildHomeFeedHash(text, language);
+      const source = normalizeHomeFeedSource(input.source || defaults.source || 'local');
+      const id = sanitizeText(input.id || `${source}-${hash.slice(-10)}`, 120) || `${source}-${hash.slice(-10)}`;
+      const createdAt = input.createdAt && !Number.isNaN(Date.parse(input.createdAt))
+        ? new Date(input.createdAt).toISOString()
+        : new Date().toISOString();
+      const premiumPack = sanitizeText(input.premiumPack || '', 50).toLowerCase();
+      const tier = sanitizeText(input.tier || '', 20).toLowerCase() === 'premium' ? 'premium' : 'free';
+      return {
+        id,
+        text,
+        language,
+        category,
+        source,
+        hash,
+        createdAt,
+        tier,
+        premiumPack,
+        premiumPreview: Boolean(input.premiumPreview) || tier === 'premium'
+      };
+    }
+
+    function applyMonetizationTagsToFeedEntry(entry) {
+      const safeEntry = entry && typeof entry === 'object' ? entry : null;
+      if (!safeEntry) {
+        return null;
+      }
+      const numeric = hashString(String(safeEntry.hash || safeEntry.id || safeEntry.text || '0'));
+      const categoryBias = PREMIUM_HINT_CATEGORIES.has(safeEntry.category) && numeric % 4 === 0;
+      const premiumPreview = Boolean(safeEntry.premiumPreview) || categoryBias || numeric % 9 === 0;
+      const premiumPack = premiumPreview
+        ? safeEntry.premiumPack || PREMIUM_TAG_PACKS[numeric % PREMIUM_TAG_PACKS.length]
+        : '';
+      return {
+        ...safeEntry,
+        tier: premiumPreview ? 'premium' : 'free',
+        premiumPreview,
+        premiumPack
+      };
+    }
+
+    function isPremiumFeedPreviewLocked(entry) {
+      if (!entry || entry.tier !== 'premium') {
+        return false;
+      }
+      return !(state.monetizationPrep && state.monetizationPrep.premiumUnlocked);
+    }
+
+    function buildPremiumPreviewText(text) {
+      const safe = ensureSetupPunchline(text, state.currentLang);
+      if (!safe) {
+        return 'Premium joke preview.';
+      }
+      const maxLength = 130;
+      if (safe.length <= maxLength) {
+        return `${safe} ...`;
+      }
+      return `${safe.slice(0, maxLength).trimEnd()} ...`;
+    }
+
+    function setHomeFeedStatus(message) {
+      if (!dom.homeFeedStatus) {
+        return;
+      }
+      dom.homeFeedStatus.textContent = String(message || '').trim();
+    }
+
+    function setHomeFeedLoading(isLoading) {
+      if (dom.homeFeedLoading) {
+        dom.homeFeedLoading.hidden = !isLoading;
+      }
+    }
+
+    function updateHomeUpgradeHintVisibility() {
+      if (!dom.homeUpgradeHint) {
+        return;
+      }
+      const prep = state.monetizationPrep || MONETIZATION_PREP_DEFAULTS;
+      const shouldShow = !prep.premiumUnlocked && prep.freeViews >= prep.freeSoftLimit;
+      dom.homeUpgradeHint.hidden = !shouldShow;
+      if (shouldShow) {
+        dom.homeUpgradeHint.textContent = `Free feed usage: ${prep.freeViews}/${prep.freeSoftLimit}. Premium packs coming soon.`;
+      }
+    }
+
+    function trackFeedFreeView(entry) {
+      if (!entry || entry.tier !== 'free') {
+        return;
+      }
+      state.monetizationPrep.freeViews = Math.max(
+        0,
+        Number(state.monetizationPrep.freeViews || 0) + 1
+      );
+      saveMonetizationPrep();
+      updateHomeUpgradeHintVisibility();
+    }
+
+    function markHomeFeedSeen(entry) {
+      if (!entry || !entry.hash) {
+        return;
+      }
+      state.homeFeedSessionHashes.add(entry.hash);
+      state.homeFeedSeenHashes.add(entry.hash);
+      if (state.homeFeedSeenHashes.size > HOME_FEED_MAX_SEEN_HASHES) {
+        const trimmed = Array.from(state.homeFeedSeenHashes).slice(-HOME_FEED_MAX_SEEN_HASHES);
+        state.homeFeedSeenHashes = new Set(trimmed);
+      }
+    }
+
+    function collectUserSubmittedFeedCandidates(limit = HOME_FEED_BUFFER_TARGET) {
+      const output = [];
+      const push = (item, source = 'user') => {
+        const normalized = normalizeHomeFeedEntry(
+          {
+            joke: item.joke || item.text || '',
+            language: item.lang || item.language || state.currentLang,
+            category: item.category || state.currentCategory || 'random',
+            createdAt: item.createdAt,
+            source
+          },
+          {
+            language: state.currentLang,
+            category: state.currentCategory || 'random',
+            source
+          }
+        );
+        if (normalized) {
+          output.push(applyMonetizationTagsToFeedEntry(normalized));
+        }
+      };
+      for (let index = submissions.length - 1; index >= 0 && output.length < limit; index -= 1) {
+        const item = submissions[index];
+        if (!item || item.status === 'rejected' || item.lang !== state.currentLang) {
+          continue;
+        }
+        push(item, item.source || 'user');
+      }
+      for (let index = approvedJokes.length - 1; index >= 0 && output.length < limit; index -= 1) {
+        const item = approvedJokes[index];
+        if (!item || item.lang !== state.currentLang) {
+          continue;
+        }
+        push(item, item.source || 'user');
+      }
+      return output.filter(Boolean);
+    }
+
+    function collectLocalFeedCandidates(limit = HOME_FEED_BUFFER_TARGET) {
+      const source = Array.isArray(state.jokeList) && state.jokeList.length
+        ? state.jokeList.slice()
+        : buildOrderedList(state.currentLang, state.currentCategory || 'random');
+      const shuffled = shuffleArray(source).slice(0, Math.max(limit * 2, 20));
+      return shuffled
+        .map((text) =>
+          applyMonetizationTagsToFeedEntry(
+            normalizeHomeFeedEntry(
+              {
+                joke: text,
+                language: state.currentLang,
+                category: state.currentCategory || 'random',
+                source: 'local'
+              },
+              {
+                language: state.currentLang,
+                category: state.currentCategory || 'random',
+                source: 'local'
+              }
+            )
+          )
+        )
+        .filter(Boolean);
+    }
+
+    async function fetchRemoteHomeFeedCandidates(limit = HOME_FEED_PAGE_SIZE) {
+      const params = new URLSearchParams();
+      params.set('source', 'feed');
+      params.set('lang', state.currentLang || 'en');
+      params.set('category', state.currentCategory || 'random');
+      params.set('limit', String(Math.max(3, Math.min(20, Number(limit) || HOME_FEED_PAGE_SIZE))));
+      params.set('offset', '0');
+      try {
+        const response = await fetch(`/api/jokes?${params.toString()}`);
+        if (!response.ok) {
+          return [];
+        }
+        const payload = await response.json().catch(() => null);
+        const jokes = payload && Array.isArray(payload.jokes) ? payload.jokes : [];
+        return jokes
+          .map((item) =>
+            applyMonetizationTagsToFeedEntry(
+              normalizeHomeFeedEntry(item, {
+                language: state.currentLang,
+                category: state.currentCategory || 'random',
+                source: item?.source || 'local'
+              })
+            )
+          )
+          .filter(Boolean);
+      } catch (error) {
+        return [];
+      }
+    }
+
+    function tryEnqueueHomeFeedCandidate(entry, queue = state.homeFeedBuffer) {
+      if (!entry || !entry.text || !entry.hash) {
+        return false;
+      }
+      if (
+        state.homeFeedSeenHashes.has(entry.hash) ||
+        state.homeFeedSessionHashes.has(entry.hash) ||
+        state.homeFeedQueuedHashes.has(entry.hash)
+      ) {
+        return false;
+      }
+      if (
+        isOverlySimilarToAnyJoke(
+          entry.text,
+          state.homeFeedRecentTexts,
+          JOKE_SIMILARITY_THRESHOLD + 0.06
+        )
+      ) {
+        return false;
+      }
+      queue.push(entry);
+      state.homeFeedQueuedHashes.add(entry.hash);
+      state.homeFeedRecentTexts.unshift(entry.text);
+      if (state.homeFeedRecentTexts.length > 140) {
+        state.homeFeedRecentTexts.splice(140);
+      }
+      return true;
+    }
+
+    async function fillHomeFeedBuffer(minCount = HOME_FEED_BUFFER_TARGET) {
+      if (state.homeFeedQueueTask) {
+        return state.homeFeedQueueTask;
+      }
+      const job = (async () => {
+        const needed = Math.max(0, minCount - state.homeFeedBuffer.length);
+        if (needed <= 0) {
+          return 0;
+        }
+        let added = 0;
+        const combinedLocal = shuffleArray([
+          ...collectUserSubmittedFeedCandidates(Math.max(needed, HOME_FEED_PAGE_SIZE)),
+          ...collectLocalFeedCandidates(Math.max(needed * 2, HOME_FEED_BUFFER_TARGET))
+        ]);
+        for (let index = 0; index < combinedLocal.length; index += 1) {
+          if (tryEnqueueHomeFeedCandidate(combinedLocal[index])) {
+            added += 1;
+          }
+          if (state.homeFeedBuffer.length >= minCount) {
+            break;
+          }
+        }
+        const shouldFetchRemote =
+          Date.now() - state.homeFeedLastRemoteAt > HOME_FEED_REMOTE_COOLDOWN_MS ||
+          state.homeFeedItems.length < HOME_FEED_PAGE_SIZE;
+        if (state.homeFeedBuffer.length < minCount && shouldFetchRemote) {
+          const remote = await fetchRemoteHomeFeedCandidates(Math.max(HOME_FEED_PAGE_SIZE, needed));
+          state.homeFeedLastRemoteAt = Date.now();
+          for (let index = 0; index < remote.length; index += 1) {
+            if (tryEnqueueHomeFeedCandidate(remote[index])) {
+              added += 1;
+            }
+          }
+        }
+        if (!added && state.homeFeedBuffer.length === 0) {
+          state.homeFeedHasMore = false;
+        }
+        return added;
+      })().finally(() => {
+        state.homeFeedQueueTask = null;
+      });
+      state.homeFeedQueueTask = job;
+      return job;
+    }
+
+    function takeHomeFeedPage(pageSize = HOME_FEED_PAGE_SIZE) {
+      const output = [];
+      while (output.length < pageSize && state.homeFeedBuffer.length) {
+        const item = state.homeFeedBuffer.shift();
+        if (!item || !item.hash) {
+          continue;
+        }
+        state.homeFeedQueuedHashes.delete(item.hash);
+        output.push(item);
+      }
+      return output;
+    }
+
+    function openHomeFeedItem(entry) {
+      if (!entry || !entry.text) {
+        return;
+      }
+      const language = entry.language || state.currentLang;
+      if (language && language !== state.currentLang && languageMeta[language]) {
+        applyLanguage(language, { skipFetch: true });
+      }
+      if (entry.category && dom.category && dom.category.querySelector(`option[value="${entry.category}"]`)) {
+        dom.category.value = entry.category;
+        state.currentCategory = entry.category;
+      }
+      const jokeId = buildJokeId(entry.text, state.currentLang, state.currentCategory || 'random');
+      state.jokeIndex[jokeId] = entry.text;
+      if (!state.allJokeIds.includes(jokeId)) {
+        state.allJokeIds.unshift(jokeId);
+      }
+      showJoke(entry.text);
+      markJokeSeen(jokeId);
+      updateNavButtons();
+      setFeedback('feedback.loaded');
+      trackFeedFreeView(entry);
+      if (dom.jokeCard && typeof dom.jokeCard.scrollIntoView === 'function') {
+        dom.jokeCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+
+    async function shareHomeFeedItem(entry) {
+      if (!entry || !entry.text) {
+        return;
+      }
+      const siteUrl = `${window.location.origin}${window.location.pathname}#/jokes`;
+      const shareText = `${entry.text}\n\n${t('brand.name')} · ${siteUrl}`;
+      if (navigator.share && shouldPreferNativeMobileShare()) {
+        try {
+          await navigator.share({
+            title: t('brand.name'),
+            text: entry.text,
+            url: siteUrl
+          });
+          trackFeedFreeView(entry);
+          return;
+        } catch (error) {
+          // Fall back to clipboard below.
+        }
+      }
+      const copied = await copyToClipboard(shareText, { feedbackKey: 'feedback.linkCopied' });
+      if (copied) {
+        showToast(t('feedback.linkCopied'));
+      }
+      trackFeedFreeView(entry);
+    }
+
+    function createHomeFeedCard(entry, index) {
+      const lockedPremium = isPremiumFeedPreviewLocked(entry);
+      const sourceLabel = getHomeFeedSourceLabel(entry.source);
+      const tierLabel = lockedPremium
+        ? `Premium · ${entry.premiumPack || 'pack'}`
+        : entry.tier === 'premium'
+          ? `Premium · ${entry.premiumPack || 'pack'}`
+          : 'Free';
+      const card = createJokeFeedCard({
+        title: `${getCategoryLabel(entry.category)} · ${sourceLabel}`,
+        joke: lockedPremium ? buildPremiumPreviewText(entry.text) : entry.text,
+        emoji: getCategoryEmoji(entry.category),
+        featured: index < 2 && !lockedPremium,
+        score: lockedPremium ? 'Premium' : '',
+        metaItems: [tierLabel, sourceLabel],
+        actions: lockedPremium
+          ? [
+              {
+                label: 'Upgrade (Soon)',
+                ghost: true,
+                onClick: () => {
+                  state.monetizationPrep.upgradeHintsShown = Math.max(
+                    0,
+                    Number(state.monetizationPrep.upgradeHintsShown || 0) + 1
+                  );
+                  saveMonetizationPrep();
+                  showToast('Premium packs are being prepared.');
+                  updateHomeUpgradeHintVisibility();
+                }
+              }
+            ]
+          : [
+              {
+                label: t('saved.show'),
+                onClick: () => openHomeFeedItem(entry)
+              },
+              {
+                label: t('buttons.copyJoke'),
+                ghost: true,
+                onClick: () => {
+                  void copyToClipboard(entry.text, { feedbackKey: 'feedback.copy' });
+                  trackFeedFreeView(entry);
+                }
+              },
+              {
+                label: t('actions.share'),
+                ghost: true,
+                onClick: () => {
+                  void shareHomeFeedItem(entry);
+                }
+              }
+            ]
+      });
+      if (lockedPremium) {
+        card.classList.add('is-premium-preview');
+      }
+      return card;
+    }
+
+    function renderHomeFeedCards(entries = [], options = {}) {
+      if (!dom.homeFeedList) {
+        return;
+      }
+      const append = options && options.append !== false;
+      if (!append) {
+        dom.homeFeedList.innerHTML = '';
+      }
+      if (!entries.length) {
+        if (!append) {
+          dom.homeFeedList.appendChild(createEmptyStateCard('No jokes ready yet. Pull to refresh soon.'));
+        }
+        return;
+      }
+      const fragment = document.createDocumentFragment();
+      entries.forEach((entry, index) => {
+        fragment.appendChild(createHomeFeedCard(entry, index));
+      });
+      dom.homeFeedList.appendChild(fragment);
+    }
+
+    function disconnectHomeFeedObserver() {
+      if (state.homeFeedObserver) {
+        state.homeFeedObserver.disconnect();
+        state.homeFeedObserver = null;
+      }
+    }
+
+    function ensureHomeFeedObserver() {
+      if (!dom.homeFeedSentinel || state.homeFeedObserver || !('IntersectionObserver' in window)) {
+        return;
+      }
+      state.homeFeedObserver = new IntersectionObserver(
+        (entries) => {
+          const visible = entries.some((entry) => entry.isIntersecting || entry.intersectionRatio > 0);
+          if (!visible) {
+            return;
+          }
+          void loadMoreHomeFeed();
+        },
+        { rootMargin: '280px 0px' }
+      );
+      state.homeFeedObserver.observe(dom.homeFeedSentinel);
+    }
+
+    async function loadMoreHomeFeed(options = {}) {
+      if (!dom.homeFeedList || state.homeFeedLoading) {
+        return;
+      }
+      if (!state.homeFeedHasMore && !options.force) {
+        return;
+      }
+      state.homeFeedLoading = true;
+      setHomeFeedLoading(true);
+      try {
+        await fillHomeFeedBuffer(Math.max(HOME_FEED_BUFFER_TARGET, HOME_FEED_PAGE_SIZE + HOME_FEED_MIN_BUFFER));
+        const page = takeHomeFeedPage(HOME_FEED_PAGE_SIZE);
+        if (!page.length) {
+          state.homeFeedHasMore = false;
+          if (!state.homeFeedItems.length) {
+            renderHomeFeedCards([], { append: false });
+            setHomeFeedStatus('No fresh jokes available right now.');
+          } else {
+            setHomeFeedStatus('You are all caught up.');
+          }
+          return;
+        }
+        page.forEach((entry) => markHomeFeedSeen(entry));
+        saveHomeFeedSeenStore();
+        state.homeFeedItems = options && options.replace
+          ? page.slice(0, HOME_FEED_MAX_ITEMS)
+          : state.homeFeedItems.concat(page).slice(-HOME_FEED_MAX_ITEMS);
+        renderHomeFeedCards(page, { append: !(options && options.replace) });
+        saveHomeFeedCache();
+        setHomeFeedStatus(`Fresh feed: ${state.homeFeedItems.length} jokes ready.`);
+        if (state.homeFeedBuffer.length < HOME_FEED_MIN_BUFFER) {
+          void fillHomeFeedBuffer(HOME_FEED_BUFFER_TARGET);
+        }
+      } finally {
+        state.homeFeedLoading = false;
+        setHomeFeedLoading(false);
+      }
+    }
+
+    function restoreHomeFeedFromCache() {
+      if (!dom.homeFeedList) {
+        return 0;
+      }
+      const cached = loadHomeFeedCache();
+      if (!cached || cached.scopeKey !== state.homeFeedScopeKey || !Array.isArray(cached.items)) {
+        return 0;
+      }
+      const restored = [];
+      for (let index = 0; index < cached.items.length; index += 1) {
+        const normalized = applyMonetizationTagsToFeedEntry(
+          normalizeHomeFeedEntry(cached.items[index], {
+            language: state.currentLang,
+            category: state.currentCategory || 'random',
+            source: 'local'
+          })
+        );
+        if (!normalized || state.homeFeedSessionHashes.has(normalized.hash)) {
+          continue;
+        }
+        restored.push(normalized);
+      }
+      if (!restored.length) {
+        return 0;
+      }
+      state.homeFeedItems = restored.slice(0, Math.min(HOME_FEED_MAX_ITEMS, HOME_FEED_PAGE_SIZE * 3));
+      state.homeFeedItems.forEach((entry) => markHomeFeedSeen(entry));
+      renderHomeFeedCards(state.homeFeedItems, { append: false });
+      saveHomeFeedSeenStore();
+      setHomeFeedStatus('Showing cached feed while loading new jokes...');
+      return state.homeFeedItems.length;
+    }
+
+    async function refreshHomeFeed(options = {}) {
+      if (!dom.homeFeedShell || !dom.homeFeedList) {
+        return;
+      }
+      const resolvedOptions = options && typeof options === 'object' ? options : {};
+      const route = getRouteFromHash();
+      if (route !== 'jokes') {
+        disconnectHomeFeedObserver();
+        return;
+      }
+      dom.homeFeedShell.hidden = false;
+      if (state.searchQuery.trim()) {
+        disconnectHomeFeedObserver();
+        dom.homeFeedList.innerHTML = '';
+        dom.homeFeedList.appendChild(createEmptyStateCard('Feed is paused while search is active.'));
+        setHomeFeedStatus('Feed is paused while search is active.');
+        return;
+      }
+      const scopeKey = getHomeFeedScopeKey();
+      const shouldReset = Boolean(resolvedOptions.hardReset) || scopeKey !== state.homeFeedScopeKey;
+      if (shouldReset) {
+        state.homeFeedScopeKey = scopeKey;
+        state.homeFeedItems = [];
+        state.homeFeedBuffer = [];
+        state.homeFeedHasMore = true;
+        state.homeFeedCursor = 0;
+        state.homeFeedQueuedHashes = new Set();
+        state.homeFeedSessionHashes = new Set();
+        state.homeFeedRecentTexts = [];
+        state.homeFeedQueueTask = null;
+        dom.homeFeedList.innerHTML = '';
+        if (!resolvedOptions.skipCache) {
+          restoreHomeFeedFromCache();
+        }
+      }
+      ensureHomeFeedObserver();
+      if (!state.homeFeedItems.length || resolvedOptions.forceLoadMore) {
+        await loadMoreHomeFeed({
+          replace: !state.homeFeedItems.length,
+          force: true
+        });
+      } else if (state.homeFeedBuffer.length < HOME_FEED_MIN_BUFFER) {
+        void fillHomeFeedBuffer(HOME_FEED_BUFFER_TARGET);
+      }
+      updateHomeUpgradeHintVisibility();
     }
 
     function renderSavedSection() {
@@ -11500,6 +12221,15 @@
         showJokeMessage(t('feedback.jokeLoadError'));
       } finally {
         setLoading(false);
+        if (!state.searchQuery.trim()) {
+          void refreshHomeFeed({ hardReset: true });
+        } else if (getRouteFromHash() === 'jokes') {
+          if (dom.homeFeedList) {
+            dom.homeFeedList.innerHTML = '';
+            dom.homeFeedList.appendChild(createEmptyStateCard('Feed is paused while search is active.'));
+          }
+          setHomeFeedStatus('Feed is paused while search is active.');
+        }
       }
     }
 
@@ -12885,6 +13615,106 @@
       } catch (error) {
         // Ignore localStorage failures (quota limits, private mode, etc.).
       }
+    }
+
+    function normalizeHomeFeedHashes(value) {
+      if (!Array.isArray(value)) {
+        return [];
+      }
+      const seen = new Set();
+      const output = [];
+      for (let index = 0; index < value.length; index += 1) {
+        const hash = sanitizeText(value[index], 90);
+        if (!hash || seen.has(hash)) {
+          continue;
+        }
+        seen.add(hash);
+        output.push(hash);
+      }
+      if (output.length > HOME_FEED_MAX_SEEN_HASHES) {
+        return output.slice(output.length - HOME_FEED_MAX_SEEN_HASHES);
+      }
+      return output;
+    }
+
+    function loadHomeFeedSeenStore() {
+      const stored = loadFromStorage(STORAGE_KEYS.homeFeedSeen, {});
+      return {
+        hashes: normalizeHomeFeedHashes(stored && stored.hashes),
+        updatedAt: Number(stored && stored.updatedAt) || 0
+      };
+    }
+
+    function saveHomeFeedSeenStore() {
+      const hashes = normalizeHomeFeedHashes(Array.from(state.homeFeedSeenHashes || []));
+      saveToStorage(STORAGE_KEYS.homeFeedSeen, {
+        hashes,
+        updatedAt: Date.now()
+      });
+    }
+
+    function loadMonetizationPrep() {
+      const stored = loadFromStorage(STORAGE_KEYS.monetizationPrep, {});
+      return {
+        premiumUnlocked: Boolean(stored && stored.premiumUnlocked),
+        freeViews: Math.max(0, Number(stored && stored.freeViews) || 0),
+        freeSoftLimit: Math.max(
+          30,
+          Number(stored && stored.freeSoftLimit) || MONETIZATION_PREP_DEFAULTS.freeSoftLimit
+        ),
+        upgradeHintsShown: Math.max(0, Number(stored && stored.upgradeHintsShown) || 0),
+        updatedAt: Number(stored && stored.updatedAt) || 0
+      };
+    }
+
+    function saveMonetizationPrep() {
+      const next = {
+        premiumUnlocked: Boolean(state.monetizationPrep && state.monetizationPrep.premiumUnlocked),
+        freeViews: Math.max(0, Number(state.monetizationPrep && state.monetizationPrep.freeViews) || 0),
+        freeSoftLimit: Math.max(
+          30,
+          Number(state.monetizationPrep && state.monetizationPrep.freeSoftLimit) ||
+            MONETIZATION_PREP_DEFAULTS.freeSoftLimit
+        ),
+        upgradeHintsShown: Math.max(
+          0,
+          Number(state.monetizationPrep && state.monetizationPrep.upgradeHintsShown) || 0
+        ),
+        updatedAt: Date.now()
+      };
+      state.monetizationPrep = next;
+      saveToStorage(STORAGE_KEYS.monetizationPrep, next);
+    }
+
+    function loadHomeFeedCache() {
+      const stored = loadFromStorage(STORAGE_KEYS.homeFeedCache, {});
+      if (!stored || typeof stored !== 'object') {
+        return null;
+      }
+      const updatedAt = Number(stored.updatedAt) || 0;
+      if (!updatedAt || Date.now() - updatedAt > HOME_FEED_CACHE_TTL_MS) {
+        return null;
+      }
+      if (!Array.isArray(stored.items)) {
+        return null;
+      }
+      return {
+        scopeKey: sanitizeText(stored.scopeKey || '', 80),
+        updatedAt,
+        items: stored.items
+      };
+    }
+
+    function saveHomeFeedCache() {
+      if (!state.homeFeedScopeKey || !Array.isArray(state.homeFeedItems)) {
+        return;
+      }
+      const maxCacheItems = Math.min(HOME_FEED_MAX_ITEMS, 60);
+      saveToStorage(STORAGE_KEYS.homeFeedCache, {
+        scopeKey: state.homeFeedScopeKey,
+        updatedAt: Date.now(),
+        items: state.homeFeedItems.slice(0, maxCacheItems)
+      });
     }
 
     function loadMediaStore() {
