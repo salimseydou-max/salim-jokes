@@ -88,7 +88,7 @@
       --text-muted: #5f6b7a;
       --bg-gradient: linear-gradient(180deg, rgba(37, 99, 235, 0.06) 0%, rgba(37, 99, 235, 0) 260px);
       --bg-watermark: none;
-      --bg-pattern: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Ctext x='18' y='62' font-size='26' opacity='0.05'%3E%F0%9F%98%82%3C/text%3E%3Ctext x='150' y='102' font-size='24' opacity='0.05'%3E%F0%9F%A4%A3%3C/text%3E%3Ctext x='84' y='178' font-size='22' opacity='0.045'%3E%F0%9F%98%86%3C/text%3E%3C/svg%3E");
+      --bg-pattern: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Ctext x='18' y='62' font-size='26' opacity='0.088' fill='%23526584'%3E%F0%9F%98%82%3C/text%3E%3Ctext x='150' y='102' font-size='24' opacity='0.082' fill='%23526584'%3E%F0%9F%A4%A3%3C/text%3E%3Ctext x='84' y='178' font-size='22' opacity='0.078' fill='%23526584'%3E%F0%9F%98%86%3C/text%3E%3C/svg%3E");
       --media-overlay: rgba(255, 255, 255, 0.88);
     }
     [data-theme="dark"] {
@@ -107,7 +107,7 @@
       --bg-gradient: linear-gradient(180deg, rgba(96, 165, 250, 0.1) 0%, rgba(96, 165, 250, 0) 300px);
       --bg-watermark: none;
       --media-overlay: rgba(11, 18, 32, 0.82);
-      --bg-pattern: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Ctext x='18' y='62' font-size='26' opacity='0.09' fill='white'%3E%F0%9F%98%82%3C/text%3E%3Ctext x='150' y='102' font-size='24' opacity='0.09' fill='white'%3E%F0%9F%A4%A3%3C/text%3E%3Ctext x='84' y='178' font-size='22' opacity='0.08' fill='white'%3E%F0%9F%98%86%3C/text%3E%3C/svg%3E");
+      --bg-pattern: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Ctext x='18' y='62' font-size='26' opacity='0.1' fill='white'%3E%F0%9F%98%82%3C/text%3E%3Ctext x='150' y='102' font-size='24' opacity='0.1' fill='white'%3E%F0%9F%A4%A3%3C/text%3E%3Ctext x='84' y='178' font-size='22' opacity='0.09' fill='white'%3E%F0%9F%98%86%3C/text%3E%3C/svg%3E");
     }
     * {
       box-sizing: border-box;
@@ -124,7 +124,7 @@
       background-color: var(--bg);
       background-image: var(--bg-gradient), var(--bg-pattern);
       background-repeat: no-repeat, repeat;
-      background-size: 100% 420px, 220px 220px;
+      background-size: 100% 420px, 200px 200px;
       background-attachment: fixed, fixed;
     }
     a {
@@ -3262,7 +3262,7 @@
     const DUPLICATE_CHECK_CANDIDATE_LIMIT = 12;
     const DUPLICATE_WARNING_THRESHOLD = 75;
     const DUPLICATE_BLOCK_THRESHOLD = 90;
-    const SERVICE_WORKER_SCRIPT_URL = '/sw.js?v=session-progress-emoji-bg-20260216';
+    const SERVICE_WORKER_SCRIPT_URL = '/sw.js?v=session-progress-emoji-balance-20260216';
     const AUTH_ENDPOINTS = {
       signup: '/api/auth/signup',
       login: '/api/auth/login',
@@ -11265,7 +11265,7 @@
         for (let x = 84; x < width - 80; x += stepX) {
           const offsetX = ((index % 3) - 1) * 12;
           const offsetY = index % 2 === 0 ? -10 : 10;
-          ctx.globalAlpha = 0.05 + (index % 4) * 0.012;
+          ctx.globalAlpha = 0.075 + (index % 4) * 0.013;
           ctx.fillText(emojis[index % emojis.length], x + offsetX, y + offsetY);
           index += 1;
         }
@@ -11294,7 +11294,7 @@
 
       ctx.fillStyle = palette.page;
       ctx.fillRect(0, 0, width, height);
-      drawEmojiPattern(ctx, width, height, textColor);
+      drawEmojiPattern(ctx, width, height, palette.muted);
 
       ctx.save();
       ctx.shadowColor = 'rgba(15, 24, 55, 0.18)';

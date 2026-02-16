@@ -3,7 +3,7 @@ const DEFAULT_URL = "/#/jokes";
 const DEFAULT_ICON = "/icons/icon-192.png";
 const DEFAULT_BADGE = "/icons/favicon-32.png";
 
-const CACHE_VERSION = "session-progress-emoji-bg-v8";
+const CACHE_VERSION = "session-progress-emoji-balance-v9";
 const CORE_CACHE = `vjc-core-cache-${CACHE_VERSION}`;
 const RUNTIME_CACHE = `vjc-runtime-cache-${CACHE_VERSION}`;
 const API_CACHE = `vjc-api-cache-${CACHE_VERSION}`;
