@@ -5,7 +5,7 @@
   "description": "Listen, react, and share jokes in multiple languages with offline access and push updates.",
   "lang": "en",
   "dir": "ltr",
-  "start_url": "/#/jokes",
+  "start_url": "/#/feed",
   "scope": "/",
   "display": "standalone",
   "display_override": ["standalone", "minimal-ui", "browser"],
@@ -34,9 +34,9 @@
   ],
   "shortcuts": [
     {
-      "name": "Open Jokes",
-      "short_name": "Jokes",
-      "url": "/#/jokes",
+      "name": "Open Feed",
+      "short_name": "Feed",
+      "url": "/#/feed",
       "icons": [
         {
           "src": "/icons/icon-192.png",
