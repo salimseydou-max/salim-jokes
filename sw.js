@@ -1,9 +1,9 @@
 const DEFAULT_TITLE = "Voice Joke Club";
-const DEFAULT_URL = "/#/jokes";
+const DEFAULT_URL = "/#/feed";
 const DEFAULT_ICON = "/icons/icon-192.png";
 const DEFAULT_BADGE = "/icons/favicon-32.png";
 
-const CACHE_VERSION = "session-progress-emoji-balance-v9";
+const CACHE_VERSION = "mobile-feed-monetization-ready-v10";
 const CORE_CACHE = `vjc-core-cache-${CACHE_VERSION}`;
 const RUNTIME_CACHE = `vjc-runtime-cache-${CACHE_VERSION}`;
 const API_CACHE = `vjc-api-cache-${CACHE_VERSION}`;
@@ -17,9 +17,12 @@ const FONT_STYLESHEET_URL =
 const CORE_ASSETS = [
   "/",
   APP_SHELL_URL,
-  "/#/jokes",
+  "/#/feed",
+  "/future-premium/",
   OFFLINE_FALLBACK_URL,
   "/manifest.json",
+  "/app/main.js",
+  "/app/styles/app.css",
   DEFAULT_ICON,
   "/icons/icon-512.png",
   "/icons/icon-maskable-512.png",

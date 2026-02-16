@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import { getOpenRouterConfig } from "../../config/ai.js";
+import { featureFlags } from "../../config/featureFlags.js";
 import { getJokes, toSafeRouteError } from "../../lib/database.js";
 
 const JOKE_API_BASE_URL = "https://v2.jokeapi.dev/joke";
@@ -193,7 +194,7 @@ function applyMonetizationTags(candidate) {
     tier: "free",
     premiumPack: "",
     premiumPreview: false,
-    monetizationReady: true,
+    monetizationReady: featureFlags.monetizationEnabled,
   };
 }
 
@@ -371,7 +372,8 @@ async function handleFeedRequest(query, res) {
   const category = sanitizeFeedCategory(Array.isArray(query.category) ? query.category[0] : query.category);
   const limit = sanitizeFeedLimit(Array.isArray(query.limit) ? query.limit[0] : query.limit);
   const offset = sanitizeFeedOffset(Array.isArray(query.offset) ? query.offset[0] : query.offset);
-  const includePremium = String(query.includePremium || "true").toLowerCase() !== "false";
+  const includePremiumRequested = String(query.includePremium || "false").toLowerCase() === "true";
+  const includePremium = featureFlags.monetizationEnabled && includePremiumRequested;
 
   const externalCount = Math.max(2, Math.ceil(limit / 2));
   const aiCount = Math.max(1, Math.ceil(limit / 3));
@@ -421,7 +423,7 @@ async function handleFeedRequest(query, res) {
       externalApi: externalList.length,
       ai: aiList.length,
     },
-    monetizationReady: true,
+    monetizationReady: featureFlags.monetizationEnabled,
     cached: false,
   });
 }
