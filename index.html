@@ -2178,11 +2178,6 @@
               />
               <p class="auth-footnote">Account details are saved automatically when you sign up or log in.</p>
             </div>
-            <div class="form-actions">
-              <button type="button" id="profile-refresh" class="ghost" data-i18n="auth.refresh">
-                Refresh
-              </button>
-            </div>
             <div class="profile-avatar-panel">
               <img id="profile-avatar-image" class="profile-avatar" alt="Profile avatar" />
             </div>
@@ -3125,7 +3120,6 @@
       signupPhone: document.getElementById('signup-phone'),
       signupPassword: document.getElementById('signup-password'),
       signupFeedback: document.getElementById('signup-feedback'),
-      profileRefresh: document.getElementById('profile-refresh'),
       profileDisplayName: document.getElementById('profile-display-name'),
       profileEmail: document.getElementById('profile-email'),
       profilePhone: document.getElementById('profile-phone'),
@@ -14598,13 +14592,6 @@
             submitButton.disabled = false;
           }
         }
-      };
-    }
-    if (dom.profileRefresh) {
-      dom.profileRefresh.onclick = async () => {
-        setProfileFeedbackMessage(t('auth.refreshing'));
-        await refreshAuthSession();
-        setProfileFeedbackMessage(t('auth.profileRefreshed'), 2200);
       };
     }
     const outsidePressHandler = (event) => {
