@@ -88,7 +88,7 @@
       --text-muted: #5f6b7a;
       --bg-gradient: linear-gradient(180deg, rgba(37, 99, 235, 0.06) 0%, rgba(37, 99, 235, 0) 260px);
       --bg-watermark: none;
-      --bg-pattern: none;
+      --bg-pattern: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Ctext x='18' y='62' font-size='26' opacity='0.05'%3E%F0%9F%98%82%3C/text%3E%3Ctext x='150' y='102' font-size='24' opacity='0.05'%3E%F0%9F%A4%A3%3C/text%3E%3Ctext x='84' y='178' font-size='22' opacity='0.045'%3E%F0%9F%98%86%3C/text%3E%3C/svg%3E");
       --media-overlay: rgba(255, 255, 255, 0.88);
     }
     [data-theme="dark"] {
@@ -107,7 +107,7 @@
       --bg-gradient: linear-gradient(180deg, rgba(96, 165, 250, 0.1) 0%, rgba(96, 165, 250, 0) 300px);
       --bg-watermark: none;
       --media-overlay: rgba(11, 18, 32, 0.82);
-      --bg-pattern: none;
+      --bg-pattern: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Ctext x='18' y='62' font-size='26' opacity='0.09' fill='white'%3E%F0%9F%98%82%3C/text%3E%3Ctext x='150' y='102' font-size='24' opacity='0.09' fill='white'%3E%F0%9F%A4%A3%3C/text%3E%3Ctext x='84' y='178' font-size='22' opacity='0.08' fill='white'%3E%F0%9F%98%86%3C/text%3E%3C/svg%3E");
     }
     * {
       box-sizing: border-box;
@@ -122,10 +122,10 @@
     body {
       padding-top: calc(136px + env(safe-area-inset-top));
       background-color: var(--bg);
-      background-image: var(--bg-gradient);
-      background-repeat: no-repeat;
-      background-size: 100% 420px;
-      background-attachment: fixed;
+      background-image: var(--bg-gradient), var(--bg-pattern);
+      background-repeat: no-repeat, repeat;
+      background-size: 100% 420px, 220px 220px;
+      background-attachment: fixed, fixed;
     }
     a {
       color: inherit;
@@ -3262,7 +3262,7 @@
     const DUPLICATE_CHECK_CANDIDATE_LIMIT = 12;
     const DUPLICATE_WARNING_THRESHOLD = 75;
     const DUPLICATE_BLOCK_THRESHOLD = 90;
-    const SERVICE_WORKER_SCRIPT_URL = '/sw.js?v=clean-ui-refresh-20260216';
+    const SERVICE_WORKER_SCRIPT_URL = '/sw.js?v=session-progress-emoji-bg-20260216';
     const AUTH_ENDPOINTS = {
       signup: '/api/auth/signup',
       login: '/api/auth/login',
@@ -6989,13 +6989,23 @@
       return t(`categories.${key}`);
     }
 
-    function getSessionProgressKey() {
-      return `${state.currentLang}|${state.currentCategory || 'none'}`;
+    function getSessionProgressKey(lang = state.currentLang, category = state.currentCategory) {
+      return `${lang || 'en'}|${category || 'none'}`;
+    }
+
+    function getSessionSeenKey(lang = state.currentLang, category = state.currentCategory) {
+      return getSessionProgressKey(lang, category);
     }
 
     function getSessionCount() {
       const key = getSessionProgressKey();
-      return sessionProgress.countsByKey[key] || 0;
+      const sessionSet = getSessionSeenSet(state.currentLang, state.currentCategory);
+      const count = Math.min(sessionSet.size, SESSION_JOKE_LIMIT);
+      if ((sessionProgress.countsByKey[key] || 0) !== count) {
+        sessionProgress.countsByKey[key] = count;
+        saveSessionProgress();
+      }
+      return count;
     }
 
     function setSessionCount(count) {
@@ -7006,7 +7016,7 @@
 
     function isSessionResetReady() {
       const key = getSessionProgressKey();
-      return Boolean(sessionProgress.resetByKey[key]);
+      return getSessionCount() >= SESSION_JOKE_LIMIT || Boolean(sessionProgress.resetByKey[key]);
     }
 
     function setSessionResetReady(value) {
@@ -10462,32 +10472,35 @@
       return state.languageSessionIds[lang];
     }
 
-    function getSessionSeenSet(lang) {
-      if (!sessionSeen.seenByLang) {
-        sessionSeen.seenByLang = {};
+    function getSessionSeenSet(lang, category = state.currentCategory) {
+      if (!sessionSeen.seenByKey || typeof sessionSeen.seenByKey !== 'object') {
+        sessionSeen.seenByKey = {};
       }
-      const list = sessionSeen.seenByLang[lang] || [];
-      const allIds = getLanguageSessionIds(lang);
-      const validIds = new Set(allIds);
-      const filtered = list.filter((id) => validIds.has(id));
-      let set = new Set(filtered);
-      if (allIds.length && set.size >= allIds.length) {
-        set = new Set();
+      const key = getSessionSeenKey(lang, category);
+      const list = Array.isArray(sessionSeen.seenByKey[key]) ? sessionSeen.seenByKey[key] : [];
+      const filtered = list.filter((id) => typeof id === 'string' && id.trim());
+      const set = new Set(filtered);
+      const next = Array.from(set);
+      const previous = Array.isArray(sessionSeen.seenByKey[key]) ? sessionSeen.seenByKey[key] : [];
+      const changed =
+        previous.length !== next.length || next.some((id, index) => id !== previous[index]);
+      if (changed) {
+        sessionSeen.seenByKey[key] = next;
+        saveSessionSeen();
       }
-      sessionSeen.seenByLang[lang] = Array.from(set);
-      saveSessionSeen();
       return set;
     }
 
-    function updateSessionSeen(lang, set) {
-      if (!sessionSeen.seenByLang) {
-        sessionSeen.seenByLang = {};
+    function updateSessionSeen(lang, category = state.currentCategory, set = new Set()) {
+      if (!sessionSeen.seenByKey || typeof sessionSeen.seenByKey !== 'object') {
+        sessionSeen.seenByKey = {};
       }
-      sessionSeen.seenByLang[lang] = Array.from(set);
+      const key = getSessionSeenKey(lang, category);
+      sessionSeen.seenByKey[key] = Array.from(set);
       saveSessionSeen();
     }
 
-    function buildNextDeck(ids, seenIds, sessionSeenSet, avoidId = '', languageTotal = 0) {
+    function buildNextDeck(ids, seenIds, sessionSeenSet, avoidId = '', categoryTotal = 0) {
       const seenSet = new Set(seenIds);
       const viewedSet = getViewedSet(state.currentLang, state.currentCategory, ids);
       let remaining = ids.filter((id) => {
@@ -10510,7 +10523,7 @@
       });
       let nextSeen = Array.from(new Set(seenIds));
       if (!remaining.length) {
-        if (languageTotal && sessionSeenSet && sessionSeenSet.size < languageTotal) {
+        if (categoryTotal && sessionSeenSet && sessionSeenSet.size < categoryTotal) {
           return { deck: [], seenIds: nextSeen };
         }
         // Reset viewed history when all jokes are exhausted.
@@ -10553,22 +10566,22 @@
       const viewedSet = getViewedSet(state.currentLang, state.currentCategory, state.allJokeIds);
       viewedSet.add(id);
       setViewedSet(state.currentLang, state.currentCategory, viewedSet);
-      const sessionSet = getSessionSeenSet(state.currentLang);
+      const sessionSet = getSessionSeenSet(state.currentLang, state.currentCategory);
       const sessionId = buildSessionJokeId(state.jokeIndex[id], state.currentLang);
-      const languageIds = getLanguageSessionIds(state.currentLang);
+      const categoryTotal = state.allJokeIds.length;
       const wasSeen = sessionSet.has(sessionId);
       if (!wasSeen) {
         sessionSet.add(sessionId);
-        const count = getSessionCount() + 1;
+        const count = Math.min(sessionSet.size, SESSION_JOKE_LIMIT);
         setSessionCount(count);
         if (count >= SESSION_JOKE_LIMIT) {
           setSessionResetReady(true);
         }
       }
-      if (languageIds.length && sessionSet.size >= languageIds.length) {
+      if (categoryTotal && sessionSet.size >= categoryTotal) {
         resetSessionCycle();
       } else {
-        updateSessionSeen(state.currentLang, sessionSet);
+        updateSessionSeen(state.currentLang, state.currentCategory, sessionSet);
         updateSessionProgressUI();
       }
       progress.deck = state.jokeOrder;
@@ -10582,9 +10595,9 @@
       }
       const key = getProgressKey();
       const progress = normalizeProgressState(key, state.allJokeIds);
-      const sessionSeenSet = getSessionSeenSet(state.currentLang);
-      const languageTotal = getLanguageSessionIds(state.currentLang).length;
-      const next = buildNextDeck(state.allJokeIds, progress.seenIds, sessionSeenSet, state.lastJokeId, languageTotal);
+      const sessionSeenSet = getSessionSeenSet(state.currentLang, state.currentCategory);
+      const categoryTotal = state.allJokeIds.length;
+      const next = buildNextDeck(state.allJokeIds, progress.seenIds, sessionSeenSet, state.lastJokeId, categoryTotal);
       if (!next.deck.length) {
         setFeedback('feedback.noNext');
         updateNavButtons();
@@ -10597,9 +10610,9 @@
     }
 
     function resetSessionCycle() {
-      const sessionSet = getSessionSeenSet(state.currentLang);
+      const sessionSet = getSessionSeenSet(state.currentLang, state.currentCategory);
       sessionSet.clear();
-      updateSessionSeen(state.currentLang, sessionSet);
+      updateSessionSeen(state.currentLang, state.currentCategory, sessionSet);
       setSessionCount(0);
       setSessionResetReady(false);
       updateSessionProgressUI();
@@ -10646,10 +10659,10 @@
 
         const progress = normalizeProgressState(key, ids);
         let { deck, index, seenIds } = progress;
-        const sessionSeenSet = getSessionSeenSet(state.currentLang);
-        const languageTotal = getLanguageSessionIds(state.currentLang).length;
+        const sessionSeenSet = getSessionSeenSet(state.currentLang, state.currentCategory);
+        const categoryTotal = ids.length;
         if (!deck.length || index >= deck.length) {
-          const next = buildNextDeck(ids, seenIds, sessionSeenSet, state.lastJokeId, languageTotal);
+          const next = buildNextDeck(ids, seenIds, sessionSeenSet, state.lastJokeId, categoryTotal);
           deck = next.deck;
           seenIds = next.seenIds;
           index = 0;
@@ -11239,23 +11252,25 @@
     }
 
     function drawEmojiPattern(ctx, width, height, color) {
-      const emojis = ['😂', '😆', '🤣'];
-      const size = 34;
-      const positions = [
-        { x: 70, y: 90 },
-        { x: width - 110, y: 120 },
-        { x: 90, y: height - 220 },
-        { x: width - 130, y: height - 260 },
-        { x: 120, y: height / 2 - 180 },
-        { x: width - 150, y: height / 2 + 160 }
-      ];
-      ctx.globalAlpha = 0.12;
-      ctx.font = `600 ${size}px 'Inter', 'Segoe UI', sans-serif`;
+      const emojis = ['😂', '🤣', '😆', '😹', '🤭'];
+      const stepX = 210;
+      const stepY = 165;
+      let index = 0;
+      ctx.save();
+      ctx.font = "600 34px 'Inter', 'Segoe UI Emoji', 'Apple Color Emoji', sans-serif";
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
       ctx.fillStyle = color;
-      positions.forEach((pos, index) => {
-        ctx.fillText(emojis[index % emojis.length], pos.x, pos.y);
-      });
-      ctx.globalAlpha = 1;
+      for (let y = 86; y < height - 120; y += stepY) {
+        for (let x = 84; x < width - 80; x += stepX) {
+          const offsetX = ((index % 3) - 1) * 12;
+          const offsetY = index % 2 === 0 ? -10 : 10;
+          ctx.globalAlpha = 0.05 + (index % 4) * 0.012;
+          ctx.fillText(emojis[index % emojis.length], x + offsetX, y + offsetY);
+          index += 1;
+        }
+      }
+      ctx.restore();
     }
 
     async function renderJokeImageCard(includeQr) {
@@ -13654,27 +13669,38 @@
     function loadSessionSeen() {
       const stored = JSON.parse(localStorage.getItem(STORAGE_KEYS.sessionSeen) || '{}');
       const sessionId = getSessionId();
+      const normalizeSeenList = (value) => {
+        if (!Array.isArray(value)) {
+          return [];
+        }
+        return Array.from(new Set(value.filter((entry) => typeof entry === 'string' && entry.trim())));
+      };
+      const normalizeSeenKey = (value) => {
+        const parts = String(value || '').split('|');
+        const lang = (parts[0] || '').replace(/[^a-z]/gi, '').toLowerCase() || 'en';
+        const category = (parts[1] || 'random').replace(/[^a-z-]/gi, '').toLowerCase() || 'random';
+        return `${lang}|${category}`;
+      };
       if (!stored || stored.sessionId !== sessionId) {
-        return { sessionId, seenByLang: {} };
-      }
-      if (stored.seenByLang && typeof stored.seenByLang === 'object') {
-        return stored;
+        return { sessionId, seenByKey: {} };
       }
       if (stored.seenByKey && typeof stored.seenByKey === 'object') {
-        const seenByLang = {};
+        const seenByKey = {};
         Object.keys(stored.seenByKey).forEach((key) => {
-          const lang = key.split('|')[0];
-          if (!seenByLang[lang]) {
-            seenByLang[lang] = [];
-          }
-          seenByLang[lang] = seenByLang[lang].concat(stored.seenByKey[key]);
+          const safeKey = normalizeSeenKey(key);
+          seenByKey[safeKey] = normalizeSeenList(stored.seenByKey[key]);
         });
-        Object.keys(seenByLang).forEach((lang) => {
-          seenByLang[lang] = Array.from(new Set(seenByLang[lang]));
-        });
-        return { sessionId, seenByLang };
+        return { sessionId, seenByKey };
       }
-      return { sessionId, seenByLang: {} };
+      if (stored.seenByLang && typeof stored.seenByLang === 'object') {
+        const seenByKey = {};
+        Object.keys(stored.seenByLang).forEach((lang) => {
+          const safeKey = normalizeSeenKey(`${lang}|random`);
+          seenByKey[safeKey] = normalizeSeenList(stored.seenByLang[lang]);
+        });
+        return { sessionId, seenByKey };
+      }
+      return { sessionId, seenByKey: {} };
     }
 
     function saveSessionSeen() {
