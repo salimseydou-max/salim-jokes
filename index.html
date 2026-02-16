@@ -3256,7 +3256,7 @@
       'roast'
     ];
     const MAX_JOKE_LENGTH = 280;
-    const SESSION_JOKE_LIMIT = 50;
+    const SESSION_JOKE_LIMIT = 30;
     const MAX_JOKES_PER_BATCH = SESSION_JOKE_LIMIT;
     const DUPLICATE_CHECK_ENDPOINT = '/api/check-duplicate-joke';
     const DUPLICATE_CHECK_CANDIDATE_LIMIT = 12;
@@ -6831,7 +6831,8 @@
       viralContentSource: 'none',
       isViralContentLoading: false,
       viralContentRefreshTimer: null,
-      viralContentLastError: ''
+      viralContentLastError: '',
+      canGenerateMoreJokes: true
     };
 
     const settings = loadSettings();
@@ -6998,10 +6999,6 @@
     }
 
     function getSessionJokeLimit() {
-      const total = Number(state.allJokeIds.length) || 0;
-      if (total > 0) {
-        return total;
-      }
       return SESSION_JOKE_LIMIT;
     }
 
@@ -9129,8 +9126,12 @@
       };
     }
 
+    function canSyncProfileStateRemotely() {
+      return Boolean(state.currentUserId && state.authSessionSource === 'server-session');
+    }
+
     function scheduleProfileStateSync() {
-      if (!state.currentUserId || isApplyingRemoteProfileState) {
+      if (!canSyncProfileStateRemotely() || isApplyingRemoteProfileState) {
         return;
       }
       profileSyncQueued = true;
@@ -9144,7 +9145,7 @@
     }
 
     async function flushProfileStateSync() {
-      if (!state.currentUserId || isApplyingRemoteProfileState || profileSyncInFlight) {
+      if (!canSyncProfileStateRemotely() || isApplyingRemoteProfileState || profileSyncInFlight) {
         return;
       }
       if (!profileSyncQueued) {
@@ -9165,6 +9166,12 @@
           applyAuthenticatedUser(payload.user, { preserveCache: true });
         }
       } catch (error) {
+        const status = Number(error?.status);
+        if (status === 401 || status === 403) {
+          // Session cookie expired or missing: keep local profile, skip noisy error logs.
+          state.authSessionSource = 'cached-session';
+          return;
+        }
         console.error('Account sync failed:', error);
       } finally {
         profileSyncInFlight = false;
@@ -10241,7 +10248,10 @@
         sessionSeenSet,
         state.lastJokeId
       );
-      return next.deck.length > 0;
+      if (next.deck.length > 0) {
+        return true;
+      }
+      return Boolean(state.canGenerateMoreJokes);
     }
 
     function hasNextJoke() {
@@ -10364,6 +10374,10 @@
       const languageLabel = t(`languages.${lang}`).toLowerCase();
       const unique = [];
       const seen = new Set();
+      const targetPoolSize = query ? 0 : Math.max(SESSION_JOKE_LIMIT * 2, 60);
+      const topicRepeatLimit = targetPoolSize
+        ? Math.max(JOKE_TOPIC_REPEAT_LIMIT, Math.ceil(targetPoolSize / 20))
+        : JOKE_TOPIC_REPEAT_LIMIT;
       const topicCounts = {};
       list.forEach((joke) => {
         const formatted = ensureSetupPunchline(coerceJokeText(joke), lang);
@@ -10378,7 +10392,7 @@
         }
         const topicKey = extractJokeTopicKey(formatted);
         const topicCount = topicCounts[topicKey] || 0;
-        if (topicKey !== 'misc' && topicCount >= JOKE_TOPIC_REPEAT_LIMIT) {
+        if (topicKey !== 'misc' && topicCount >= topicRepeatLimit) {
           return;
         }
         if (isOverlySimilarToAnyJoke(formatted, unique, JOKE_SIMILARITY_THRESHOLD)) {
@@ -10398,14 +10412,18 @@
         unique.push(formatted);
       });
       if (!query) {
-        const minRequired = Math.min(24, Math.max(8, Math.floor((list.length || 0) * 0.4)));
+        const minRequired = targetPoolSize;
         if (unique.length < minRequired) {
           const factory = languageFactories[lang] || languageFactories.en;
+          const sessionSeed =
+            sessionSeen && typeof sessionSeen.sessionId === 'string' && sessionSeen.sessionId
+              ? sessionSeen.sessionId
+              : 'session';
           const refill = generateUniqueSafeFallbackJokes(
             factory,
             category,
             minRequired - unique.length,
-            hashString(`${lang}-${category}-${list.length}`),
+            hashString(`${lang}-${category}-${list.length}-${sessionSeed}`),
             unique
           );
           refill.forEach((joke) => {
@@ -10414,7 +10432,7 @@
             }
             const topicKey = extractJokeTopicKey(joke);
             const topicCount = topicCounts[topicKey] || 0;
-            if (topicKey !== 'misc' && topicCount >= JOKE_TOPIC_REPEAT_LIMIT) {
+            if (topicKey !== 'misc' && topicCount >= topicRepeatLimit) {
               return;
             }
             if (isOverlySimilarToAnyJoke(joke, unique, JOKE_SIMILARITY_THRESHOLD)) {
@@ -10594,6 +10612,50 @@
       persistProgressState(key, progress);
     }
 
+    function extendJokePool(minAdditional = SESSION_JOKE_LIMIT) {
+      if (state.searchQuery.trim()) {
+        return 0;
+      }
+      const needed = Math.max(1, Math.floor(Number(minAdditional) || SESSION_JOKE_LIMIT));
+      const factory = languageFactories[state.currentLang] || languageFactories.en;
+      if (!factory) {
+        state.canGenerateMoreJokes = false;
+        return 0;
+      }
+      const existingJokes = state.jokeList.slice();
+      const seedBase = hashString(
+        `${state.currentLang}|${state.currentCategory}|${state.allJokeIds.length}|${Date.now()}`
+      );
+      const generated = generateUniqueSafeFallbackJokes(
+        factory,
+        state.currentCategory,
+        needed,
+        seedBase,
+        existingJokes
+      );
+      if (!generated.length) {
+        state.canGenerateMoreJokes = false;
+        return 0;
+      }
+      let added = 0;
+      generated.forEach((candidate) => {
+        const joke = ensureSetupPunchline(candidate, state.currentLang);
+        if (!joke) {
+          return;
+        }
+        const id = buildJokeId(joke, state.currentLang, state.currentCategory);
+        if (state.jokeIndex[id]) {
+          return;
+        }
+        state.jokeList.push(joke);
+        state.jokeIndex[id] = joke;
+        state.allJokeIds.push(id);
+        added += 1;
+      });
+      state.canGenerateMoreJokes = added > 0;
+      return added;
+    }
+
     function rotateDeck() {
       if (!state.allJokeIds.length) {
         return;
@@ -10601,12 +10663,20 @@
       const key = getProgressKey();
       const progress = normalizeProgressState(key, state.allJokeIds);
       const sessionSeenSet = getSessionSeenSet(state.currentLang, state.currentCategory);
-      const next = buildNextDeck(state.allJokeIds, progress.seenIds, sessionSeenSet, state.lastJokeId);
+      let next = buildNextDeck(state.allJokeIds, progress.seenIds, sessionSeenSet, state.lastJokeId);
+      if (!next.deck.length) {
+        const added = extendJokePool(SESSION_JOKE_LIMIT);
+        if (added > 0) {
+          next = buildNextDeck(state.allJokeIds, progress.seenIds, sessionSeenSet, state.lastJokeId);
+        }
+      }
       if (!next.deck.length) {
         setFeedback('feedback.noNext');
+        state.canGenerateMoreJokes = false;
         updateNavButtons();
         return;
       }
+      state.canGenerateMoreJokes = true;
       state.jokeOrder = next.deck;
       state.currentIndex = 0;
       persistProgressState(key, { deck: state.jokeOrder, index: 0, seenIds: next.seenIds });
@@ -10644,6 +10714,7 @@
         if (!ids.length) {
           state.currentIndex = -1;
           state.jokeOrder = [];
+          state.canGenerateMoreJokes = false;
           showJokeMessage(
             state.searchQuery.trim() ? t('feedback.noResults') : t('feedback.noJokesAvailable')
           );
@@ -10654,6 +10725,7 @@
 
         const key = getProgressKey();
         if (state.searchQuery.trim()) {
+          state.canGenerateMoreJokes = false;
           state.jokeOrder = ids;
           state.currentIndex = 0;
           showJokeAt(0);
@@ -10661,6 +10733,7 @@
           return;
         }
 
+        state.canGenerateMoreJokes = true;
         const progress = normalizeProgressState(key, ids);
         let { deck, index, seenIds } = progress;
         const sessionSeenSet = getSessionSeenSet(state.currentLang, state.currentCategory);
@@ -10669,6 +10742,16 @@
           deck = next.deck;
           seenIds = next.seenIds;
           index = 0;
+        }
+
+        if (!deck.length) {
+          const added = extendJokePool(SESSION_JOKE_LIMIT);
+          if (added > 0) {
+            const next = buildNextDeck(state.allJokeIds, seenIds, sessionSeenSet, state.lastJokeId);
+            deck = next.deck;
+            seenIds = next.seenIds;
+            index = 0;
+          }
         }
 
         if (!deck.length) {
@@ -10710,6 +10793,9 @@
         return;
       }
       if (direction === 'next') {
+        if (!state.searchQuery.trim() && isSessionResetReady()) {
+          resetSessionCycle();
+        }
         if (state.currentIndex < state.jokeOrder.length - 1) {
           showJokeAt(state.currentIndex + 1);
         } else if (!state.searchQuery.trim()) {
