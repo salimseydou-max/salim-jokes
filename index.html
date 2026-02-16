@@ -3254,7 +3254,7 @@
     const DUPLICATE_CHECK_CANDIDATE_LIMIT = 12;
     const DUPLICATE_WARNING_THRESHOLD = 75;
     const DUPLICATE_BLOCK_THRESHOLD = 90;
-    const SERVICE_WORKER_SCRIPT_URL = '/sw.js?v=auth-ui-fix-20260215';
+    const SERVICE_WORKER_SCRIPT_URL = '/sw.js?v=profile-avatar-save-fix-20260216';
     const AUTH_ENDPOINTS = {
       signup: '/api/auth/signup',
       login: '/api/auth/login',
@@ -7194,6 +7194,27 @@
       dom.settingsFeedback.textContent = message;
     }
 
+    let profileFeedbackTimer = 0;
+
+    function setProfileFeedbackMessage(message = '', autoClearMs = 0) {
+      if (!dom.profileFeedback) {
+        return;
+      }
+      dom.profileFeedback.textContent = message;
+      if (profileFeedbackTimer) {
+        clearTimeout(profileFeedbackTimer);
+        profileFeedbackTimer = 0;
+      }
+      if (message && Number(autoClearMs) > 0) {
+        profileFeedbackTimer = setTimeout(() => {
+          if (dom.profileFeedback && dom.profileFeedback.textContent === message) {
+            dom.profileFeedback.textContent = '';
+          }
+          profileFeedbackTimer = 0;
+        }, Math.floor(autoClearMs));
+      }
+    }
+
     function normalizeRouteValue(route) {
       const safe = String(route || '')
         .toLowerCase()
@@ -8716,7 +8737,15 @@
       if (!file || typeof file !== 'object') {
         return false;
       }
-      return /^image\/(png|jpeg|jpg|webp)$/i.test(file.type || '');
+      const type = String(file.type || '').trim().toLowerCase();
+      if (type) {
+        if (type === 'image/svg+xml') {
+          return false;
+        }
+        return type.startsWith('image/');
+      }
+      const name = String(file.name || '').toLowerCase();
+      return /\.(png|jpe?g|webp|heic|heif|avif|gif)$/.test(name);
     }
 
     function getResizedDimensions(width, height, maxDimension = AVATAR_MAX_DIMENSION) {
@@ -14583,48 +14612,38 @@
     }
     if (dom.profileRefresh) {
       dom.profileRefresh.onclick = async () => {
-        if (dom.profileFeedback) {
-          dom.profileFeedback.textContent = t('auth.refreshing');
-        }
+        setProfileFeedbackMessage(t('auth.refreshing'));
         await refreshAuthSession();
-        if (dom.profileFeedback) {
-          dom.profileFeedback.textContent = t('auth.profileRefreshed');
-        }
+        setProfileFeedbackMessage(t('auth.profileRefreshed'), 2200);
       };
     }
     if (dom.profileSaveAccount) {
       dom.profileSaveAccount.onclick = async () => {
         if (!state.currentUserId) {
-          if (dom.profileFeedback) {
-            dom.profileFeedback.textContent = t('auth.loginRequired');
-          }
+          setProfileFeedbackMessage(t('auth.loginRequired'));
           return;
         }
         const displayName = (dom.profileDisplayNameInput?.value || '').trim();
         const rawPhone = (dom.profilePhoneInput?.value || '').trim();
         const phoneNumber = normalizePhoneNumberInput(rawPhone);
         if (rawPhone && !phoneNumber) {
-          if (dom.profileFeedback) {
-            dom.profileFeedback.textContent = 'Please enter a valid phone number or leave it empty.';
-          }
+          setProfileFeedbackMessage('Please enter a valid phone number or leave it empty.');
           return;
         }
-        dom.profileSaveAccount.disabled = true;
-        if (dom.profileFeedback) {
-          dom.profileFeedback.textContent = t('auth.refreshing');
+        const focused = document.activeElement;
+        if (focused && typeof focused.blur === 'function') {
+          focused.blur();
         }
+        dom.profileSaveAccount.disabled = true;
+        setProfileFeedbackMessage(t('auth.refreshing'));
         try {
           await window.jokeAuth.updateProfile({
             displayName,
             phoneNumber
           });
-          if (dom.profileFeedback) {
-            dom.profileFeedback.textContent = t('auth.profileRefreshed');
-          }
+          setProfileFeedbackMessage(t('auth.profileRefreshed'), 2400);
         } catch (error) {
-          if (dom.profileFeedback) {
-            dom.profileFeedback.textContent = getAuthErrorMessage(error);
-          }
+          setProfileFeedbackMessage(getAuthErrorMessage(error));
         } finally {
           dom.profileSaveAccount.disabled = false;
         }
@@ -14637,36 +14656,39 @@
           return;
         }
         if (!isAllowedAvatarFile(file)) {
-          if (dom.profileFeedback) {
-            dom.profileFeedback.textContent = t('auth.avatarInvalidType');
-          }
+          setProfileFeedbackMessage(t('auth.avatarInvalidType'));
           dom.profileAvatarInput.value = '';
           return;
         }
         if (file.size > AVATAR_SOURCE_MAX_BYTES) {
-          if (dom.profileFeedback) {
-            dom.profileFeedback.textContent = t('auth.avatarTooLarge');
-          }
+          setProfileFeedbackMessage(t('auth.avatarTooLarge'));
           dom.profileAvatarInput.value = '';
           return;
         }
+        const previousAvatarUrl = getUserAvatarUrl(state.currentUserProfile);
         dom.profileAvatarInput.disabled = true;
         if (dom.profileAvatarReset) {
           dom.profileAvatarReset.disabled = true;
         }
-        if (dom.profileFeedback) {
-          dom.profileFeedback.textContent = t('auth.avatarUploading');
-        }
+        setProfileFeedbackMessage(t('auth.avatarUploading'));
         try {
           const avatarUrl = await readFileAsDataUrl(file);
+          if (dom.profileAvatarImage) {
+            dom.profileAvatarImage.src = avatarUrl;
+          }
+          if (dom.navProfileAvatar && state.currentUserId) {
+            dom.navProfileAvatar.src = avatarUrl;
+          }
           await window.jokeAuth.updateProfile({ avatarUrl });
-          if (dom.profileFeedback) {
-            dom.profileFeedback.textContent = t('auth.avatarUpdated');
-          }
+          setProfileFeedbackMessage(t('auth.avatarUpdated'), 2600);
         } catch (error) {
-          if (dom.profileFeedback) {
-            dom.profileFeedback.textContent = getAuthErrorMessage(error);
+          if (dom.profileAvatarImage && previousAvatarUrl) {
+            dom.profileAvatarImage.src = previousAvatarUrl;
           }
+          if (dom.navProfileAvatar && state.currentUserId && previousAvatarUrl) {
+            dom.navProfileAvatar.src = previousAvatarUrl;
+          }
+          setProfileFeedbackMessage(getAuthErrorMessage(error));
         } finally {
           dom.profileAvatarInput.value = '';
           dom.profileAvatarInput.disabled = false;
@@ -14679,18 +14701,12 @@
     if (dom.profileAvatarReset) {
       dom.profileAvatarReset.onclick = async () => {
         dom.profileAvatarReset.disabled = true;
-        if (dom.profileFeedback) {
-          dom.profileFeedback.textContent = t('auth.avatarUploading');
-        }
+        setProfileFeedbackMessage(t('auth.avatarUploading'));
         try {
           await window.jokeAuth.updateProfile({ avatarUrl: '' });
-          if (dom.profileFeedback) {
-            dom.profileFeedback.textContent = t('auth.avatarReset');
-          }
+          setProfileFeedbackMessage(t('auth.avatarReset'), 2400);
         } catch (error) {
-          if (dom.profileFeedback) {
-            dom.profileFeedback.textContent = getAuthErrorMessage(error);
-          }
+          setProfileFeedbackMessage(getAuthErrorMessage(error));
         } finally {
           dom.profileAvatarReset.disabled = false;
         }
