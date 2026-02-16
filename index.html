@@ -2322,12 +2322,31 @@
       gap: 0.55rem;
       margin-top: 0.65rem;
     }
+    .joke-card .buttons.joke-nav-buttons {
+      display: flex;
+      flex-wrap: nowrap;
+      align-items: center;
+      justify-content: flex-start;
+      width: auto;
+      gap: 0.45rem;
+    }
     .joke-card .buttons button {
       min-height: 38px;
       padding: 0.48rem 0.82rem;
       font-size: 0.88rem;
       border-radius: 10px;
       line-height: 1.2;
+    }
+    .joke-card .buttons.joke-nav-buttons .nav-arrow-btn {
+      width: 38px;
+      min-width: 38px;
+      height: 38px;
+      min-height: 38px;
+      padding: 0;
+      border-radius: 999px;
+      font-size: 1rem;
+      line-height: 1;
+      font-weight: 700;
     }
     .joke-card .joke-actions {
       margin-top: 0.55rem;
@@ -2366,10 +2385,14 @@
       margin-top: 0.2rem;
     }
     @media (max-width: 680px) {
-      .joke-card .buttons {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        width: 100%;
+      .joke-card .buttons.joke-nav-buttons {
+        width: auto;
+      }
+      .joke-card .buttons.joke-nav-buttons .nav-arrow-btn {
+        width: 40px;
+        min-width: 40px;
+        height: 40px;
+        min-height: 40px;
       }
       .joke-card .joke-action-primary {
         display: grid;
@@ -2387,9 +2410,6 @@
       }
     }
     @media (max-width: 430px) {
-      .joke-card .buttons {
-        grid-template-columns: 1fr;
-      }
       .joke-card .joke-action-primary {
         grid-template-columns: repeat(2, minmax(0, 1fr));
       }
@@ -2986,11 +3006,11 @@
           <span id="joke-category" class="badge"></span>
           <span id="joke-language" class="badge"></span>
         </div>
-        <div id="session-progress" class="muted session-progress" aria-live="polite"></div>
+        <div id="session-progress" class="muted session-progress" aria-live="polite" hidden></div>
         <div id="joke-media" class="joke-media" hidden></div>
-        <div class="buttons">
-          <button id="previous" data-i18n="buttons.previous">Previous Joke</button>
-          <button id="next" data-i18n="buttons.next">Next Joke</button>
+        <div class="buttons joke-nav-buttons">
+          <button id="previous" class="nav-arrow-btn" type="button" aria-label="Previous joke" title="Previous joke">&lt;</button>
+          <button id="next" class="nav-arrow-btn" type="button" aria-label="Next joke" title="Next joke">&gt;</button>
         </div>
         <div id="joke-actions" class="joke-actions">
           <span class="section-label" data-i18n="actions.title">Quick Actions</span>
@@ -3791,6 +3811,7 @@
     ];
     const MAX_JOKE_LENGTH = 280;
     const SESSION_JOKE_LIMIT = 30;
+    const SHOW_SESSION_PROGRESS = false;
     const MAX_JOKES_PER_BATCH = SESSION_JOKE_LIMIT;
     const DUPLICATE_CHECK_ENDPOINT = '/api/check-duplicate-joke';
     const DUPLICATE_CHECK_CANDIDATE_LIMIT = 12;
@@ -7461,6 +7482,16 @@
       document.querySelectorAll('[data-i18n-placeholder]').forEach((el) => {
         el.placeholder = t(el.dataset.i18nPlaceholder);
       });
+      if (dom.previous) {
+        const previousLabel = t('buttons.previous');
+        dom.previous.setAttribute('aria-label', previousLabel);
+        dom.previous.setAttribute('title', previousLabel);
+      }
+      if (dom.next) {
+        const nextLabel = t('buttons.next');
+        dom.next.setAttribute('aria-label', nextLabel);
+        dom.next.setAttribute('title', nextLabel);
+      }
       if (dom.navProfileToggle) {
         dom.navProfileToggle.setAttribute('aria-label', t('auth.accountMenu'));
       }
@@ -7605,6 +7636,12 @@
       if (!dom.sessionProgress) {
         return;
       }
+      if (!SHOW_SESSION_PROGRESS) {
+        dom.sessionProgress.hidden = true;
+        dom.sessionProgress.textContent = '';
+        return;
+      }
+      dom.sessionProgress.hidden = false;
       if (!state.currentCategory) {
         dom.sessionProgress.textContent = '';
         return;
@@ -11438,9 +11475,6 @@
         return;
       }
       if (direction === 'next') {
-        if (!state.searchQuery.trim() && isSessionResetReady()) {
-          resetSessionCycle();
-        }
         if (state.currentIndex < state.jokeOrder.length - 1) {
           showJokeAt(state.currentIndex + 1);
         } else if (!state.searchQuery.trim()) {
