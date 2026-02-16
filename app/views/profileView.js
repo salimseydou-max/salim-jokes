@@ -62,6 +62,7 @@ export function createProfileView(options = {}) {
   const favoritesStore = options.favoritesStore;
   const submissionStore = options.submissionStore;
   const reactionStore = options.reactionStore;
+  const commentStore = options.commentStore;
   const toast = options.toast;
   const getViewerId = typeof options.getViewerId === "function" ? options.getViewerId : () => "guest";
   const onUserChanged =
@@ -82,6 +83,10 @@ export function createProfileView(options = {}) {
   const savedList = root?.querySelector("[data-profile-saved-list]");
   const submittedList = root?.querySelector("[data-profile-submitted-list]");
   const reactionsList = root?.querySelector("[data-profile-reactions-list]");
+  const summarySaved = root?.querySelector("[data-profile-summary-saved]");
+  const summarySubmitted = root?.querySelector("[data-profile-summary-submitted]");
+  const summaryReactions = root?.querySelector("[data-profile-summary-reactions]");
+  const summaryComments = root?.querySelector("[data-profile-summary-comments]");
 
   function getOwnerId() {
     return authService.getUser()?.id || getViewerId();
@@ -114,6 +119,9 @@ export function createProfileView(options = {}) {
         return article;
       }
     );
+    if (summarySaved) {
+      summarySaved.textContent = String(savedItems.length);
+    }
   }
 
   function renderSubmittedList() {
@@ -134,6 +142,9 @@ export function createProfileView(options = {}) {
         return article;
       }
     );
+    if (summarySubmitted) {
+      summarySubmitted.textContent = String(entries.length);
+    }
   }
 
   function renderReactionHistory() {
@@ -154,6 +165,13 @@ export function createProfileView(options = {}) {
         return article;
       }
     );
+    if (summaryReactions) {
+      summaryReactions.textContent = String(history.length);
+    }
+    if (summaryComments) {
+      const comments = commentStore?.listUserComments?.(getOwnerId()) || [];
+      summaryComments.textContent = String(comments.length);
+    }
   }
 
   function renderAccount(user) {

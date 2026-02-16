@@ -65,7 +65,7 @@ body {
   width: 100%;
   max-width: 860px;
   min-height: 100vh;
-  padding-bottom: calc(98px + var(--safe-bottom));
+  padding-bottom: calc(24px + var(--safe-bottom));
 }
 
 .app-header {
@@ -170,6 +170,10 @@ html[data-theme="light"] .notification-panel {
   gap: 0.4rem;
   max-height: 52vh;
   overflow-y: auto;
+}
+
+.top-nav {
+  margin-top: 0.72rem;
 }
 
 .app-main {
@@ -644,6 +648,44 @@ html[data-theme="light"] .section-card {
   margin-top: 0.92rem;
 }
 
+.profile-overview-grid,
+.settings-overview-grid,
+.notification-info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem;
+  margin-top: 0.7rem;
+}
+
+.about-grid {
+  display: grid;
+  gap: 0.72rem;
+  margin-top: 0.82rem;
+}
+
+.summary-chip {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 0.6rem 0.62rem;
+  background: rgba(11, 19, 35, 0.72);
+  display: grid;
+  gap: 0.18rem;
+}
+
+html[data-theme="light"] .summary-chip {
+  background: #f8fafc;
+}
+
+.summary-label {
+  color: var(--muted);
+  font-size: 0.76rem;
+}
+
+.summary-chip strong {
+  font-size: 0.9rem;
+  line-height: 1.2;
+}
+
 .mini-list-card {
   border: 1px solid var(--border);
   border-radius: 14px;
@@ -755,40 +797,21 @@ html[data-theme="light"] .notification-item {
 }
 
 .tab-bar {
-  position: fixed;
-  left: 50%;
-  bottom: 0;
-  transform: translateX(-50%);
-  width: min(860px, 100%);
-  display: flex;
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.44rem;
-  overflow-x: auto;
-  scrollbar-width: none;
-  padding: 0.55rem 0.78rem calc(0.58rem + var(--safe-bottom));
-  border-top: 1px solid rgba(195, 207, 223, 0.2);
-  background: rgba(7, 13, 25, 0.96);
-  backdrop-filter: blur(12px);
-  z-index: 32;
-}
-
-.tab-bar::-webkit-scrollbar {
-  display: none;
-}
-
-html[data-theme="light"] .tab-bar {
-  background: rgba(248, 250, 252, 0.97);
+  padding: 0;
 }
 
 .tab-button {
-  flex: 1;
-  min-width: 92px;
+  width: 100%;
   min-height: 44px;
   border: 1px solid transparent;
   border-radius: 11px;
   background: rgba(21, 41, 72, 0.72);
   color: var(--muted);
   font-weight: 600;
-  white-space: nowrap;
 }
 
 html[data-theme="light"] .tab-button {
@@ -808,7 +831,7 @@ html[data-theme="light"] .tab-button.is-active {
 .toast {
   position: fixed;
   left: 50%;
-  bottom: calc(82px + var(--safe-bottom));
+  bottom: calc(18px + var(--safe-bottom));
   transform: translate(-50%, 16px);
   border-radius: 11px;
   border: 1px solid transparent;
@@ -871,5 +894,16 @@ html[data-theme="light"] .tab-button.is-active {
     flex: 1;
     max-width: 420px;
     grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+
+  .tab-bar {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+
+  .about-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.72rem;
+    margin-top: 0.8rem;
   }
 }

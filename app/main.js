@@ -66,6 +66,7 @@ profileView = createProfileView({
   favoritesStore,
   submissionStore,
   reactionStore,
+  commentStore,
   toast,
   getViewerId: () => viewerId,
   onUserChanged: () => {

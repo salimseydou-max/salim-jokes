@@ -157,11 +157,35 @@ export function createNotificationStore(options = {}) {
     if (runtime.list.length > 0) {
       return;
     }
-    add({
-      type: "feature-update",
-      title: "Welcome",
-      message: "Feed upgrades are active with smoother scrolling and richer interactions.",
-    });
+    const now = Date.now();
+    const seedItems = [
+      {
+        type: "feature-update",
+        title: "Welcome",
+        message: "Feed upgrades are active with smoother scrolling and richer interactions.",
+      },
+      {
+        type: "new-jokes",
+        title: "New jokes available",
+        message: "Fresh jokes were loaded from mixed feed sources.",
+      },
+      {
+        type: "comment-reply",
+        title: "Comment activity",
+        message: "Replies and new comments will appear here.",
+      },
+      {
+        type: "user-activity",
+        title: "Profile activity",
+        message: "Saved jokes, reactions, and submissions are tracked locally.",
+      },
+    ];
+    for (let i = 0; i < seedItems.length; i += 1) {
+      add({
+        ...seedItems[i],
+        createdAt: new Date(now - i * 240000).toISOString(),
+      });
+    }
   }
 
   return {

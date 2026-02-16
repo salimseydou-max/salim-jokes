@@ -40,6 +40,15 @@
         </button>
       </div>
 
+      <nav class="tab-bar top-nav" aria-label="Main app sections">
+        <button class="tab-button is-active" data-tab-route="/feed" type="button">Feed</button>
+        <button class="tab-button" data-tab-route="/submit" type="button">Submit</button>
+        <button class="tab-button" data-tab-route="/profile" type="button">Profile</button>
+        <button class="tab-button" data-tab-route="/settings" type="button">Settings</button>
+        <button class="tab-button" data-tab-route="/notifications" type="button">Alerts</button>
+        <button class="tab-button" data-tab-route="/about" type="button">About</button>
+      </nav>
+
       <section class="notification-panel" data-notification-panel hidden>
         <div class="notification-panel-header">
           <strong>Notifications</strong>
@@ -119,6 +128,32 @@
       </section>
 
       <section class="app-view" data-view="/profile" hidden aria-label="Profile section">
+        <article class="section-card">
+          <h2 class="section-title">Profile overview</h2>
+          <p class="section-copy">
+            Your profile keeps all account tools in one place: saved jokes, submitted jokes, reaction history,
+            and editable account details.
+          </p>
+          <div class="profile-overview-grid">
+            <div class="summary-chip">
+              <span class="summary-label">Saved jokes</span>
+              <strong data-profile-summary-saved>0</strong>
+            </div>
+            <div class="summary-chip">
+              <span class="summary-label">Submitted</span>
+              <strong data-profile-summary-submitted>0</strong>
+            </div>
+            <div class="summary-chip">
+              <span class="summary-label">Reactions</span>
+              <strong data-profile-summary-reactions>0</strong>
+            </div>
+            <div class="summary-chip">
+              <span class="summary-label">Comments</span>
+              <strong data-profile-summary-comments>0</strong>
+            </div>
+          </div>
+        </article>
+
         <article class="section-card" data-profile-auth-card>
           <h2 class="section-title">Sign in or create an account</h2>
           <p class="section-copy">
@@ -191,6 +226,24 @@
           <p class="section-copy">
             Personal preferences, privacy controls, and social links are managed here only.
           </p>
+          <div class="settings-overview-grid">
+            <div class="summary-chip">
+              <span class="summary-label">Notifications</span>
+              <strong>Local + scalable</strong>
+            </div>
+            <div class="summary-chip">
+              <span class="summary-label">Appearance</span>
+              <strong>Theme controls</strong>
+            </div>
+            <div class="summary-chip">
+              <span class="summary-label">Privacy</span>
+              <strong>User controlled</strong>
+            </div>
+            <div class="summary-chip">
+              <span class="summary-label">Social links</span>
+              <strong>Settings only</strong>
+            </div>
+          </div>
           <form class="settings-form" data-settings-form>
             <div class="settings-group">
               <h3>Appearance</h3>
@@ -254,6 +307,16 @@
             <h2 class="section-title">Notifications</h2>
             <button type="button" class="text-button" data-notifications-mark-all>Mark all read</button>
           </div>
+          <p class="section-copy">
+            You will receive local alerts for new jokes, replies, feature updates, and account activity.
+            This system is ready for future backend push integrations.
+          </p>
+          <div class="notification-info-grid">
+            <div class="summary-chip"><span class="summary-label">New jokes</span><strong>Enabled</strong></div>
+            <div class="summary-chip"><span class="summary-label">Replies</span><strong>Enabled</strong></div>
+            <div class="summary-chip"><span class="summary-label">Updates</span><strong>Enabled</strong></div>
+            <div class="summary-chip"><span class="summary-label">Activity</span><strong>Enabled</strong></div>
+          </div>
           <div data-notifications-list></div>
         </article>
       </section>
@@ -269,6 +332,32 @@
             Content is intentionally blended from multiple sources to keep your feed fresh and varied
             while preserving fast mobile performance.
           </p>
+          <div class="about-grid">
+            <section class="mini-list-card">
+              <h3 class="mini-list-title">Feed quality</h3>
+              <p class="section-copy">
+                Source balancing rotates AI, user, trending, recent, and random jokes to avoid repetitive streams.
+              </p>
+            </section>
+            <section class="mini-list-card">
+              <h3 class="mini-list-title">Interaction tools</h3>
+              <p class="section-copy">
+                Each joke supports reactions, comments, copy, share, save, and export as image with compact mobile UI.
+              </p>
+            </section>
+            <section class="mini-list-card">
+              <h3 class="mini-list-title">Account + controls</h3>
+              <p class="section-copy">
+                Profile and Settings provide account management, privacy controls, preferences, and private social links.
+              </p>
+            </section>
+            <section class="mini-list-card">
+              <h3 class="mini-list-title">Scalability</h3>
+              <p class="section-copy">
+                Core modules are built local-first with clear extension points for server sync and push infrastructure.
+              </p>
+            </section>
+          </div>
         </article>
       </section>
 
@@ -286,14 +375,6 @@
       </section>
     </main>
 
-    <nav class="tab-bar" aria-label="Main app sections">
-      <button class="tab-button is-active" data-tab-route="/feed" type="button">Feed</button>
-      <button class="tab-button" data-tab-route="/submit" type="button">Submit</button>
-      <button class="tab-button" data-tab-route="/profile" type="button">Profile</button>
-      <button class="tab-button" data-tab-route="/settings" type="button">Settings</button>
-      <button class="tab-button" data-tab-route="/notifications" type="button">Alerts</button>
-      <button class="tab-button" data-tab-route="/about" type="button">About</button>
-    </nav>
     <div class="toast" data-toast role="status" aria-live="polite"></div>
   </div>
 
