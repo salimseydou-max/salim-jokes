@@ -1669,6 +1669,337 @@
     .muted {
       color: var(--muted);
     }
+    /* --- Modern UI refresh: spacing, hierarchy, responsive cards --- */
+    :root {
+      --bg: #f2f5fb;
+      --bg-soft: #ecf2ff;
+      --card: #ffffff;
+      --text: #0f172a;
+      --muted: #5a6577;
+      --accent: #2563eb;
+      --accent-hover: #1d4ed8;
+      --accent-strong: #e6eeff;
+      --border: #d6deea;
+      --shadow: 0 14px 34px rgba(15, 23, 42, 0.09);
+      --radius: 18px;
+      --button-text: #ffffff;
+    }
+    [data-theme="dark"] {
+      --bg: #0a1222;
+      --bg-soft: #111f35;
+      --card: #0f1a2e;
+      --text: #e2e8f0;
+      --muted: #9aa7ba;
+      --accent: #60a5fa;
+      --accent-hover: #3b82f6;
+      --accent-strong: #1e3a67;
+      --border: #25364e;
+      --shadow: 0 16px 36px rgba(0, 0, 0, 0.45);
+      --button-text: #081225;
+    }
+    body {
+      line-height: 1.55;
+      background-size: 100% 360px, 180px 180px;
+    }
+    .page {
+      max-width: 1160px;
+      padding: 1.45rem clamp(1rem, 2.4vw, 2rem) 2.5rem;
+      display: grid;
+      gap: 0.5rem;
+    }
+    .top-bar {
+      background: rgba(255, 255, 255, 0.94);
+      border-bottom: 1px solid var(--border);
+      box-shadow: 0 10px 28px rgba(15, 23, 42, 0.1);
+    }
+    [data-theme="dark"] .top-bar {
+      background: rgba(10, 18, 34, 0.92);
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.48);
+    }
+    .brand-name {
+      letter-spacing: 0.01em;
+    }
+    .hero {
+      gap: 1.2rem;
+      padding: 0.7rem 0 0.2rem;
+      align-items: stretch;
+    }
+    .hero-content {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: clamp(1.1rem, 2vw, 1.7rem);
+      display: grid;
+      gap: 0.75rem;
+      align-content: center;
+    }
+    .hero-content h1 {
+      margin: 0;
+      font-size: clamp(1.8rem, 3.2vw, 2.55rem);
+      line-height: 1.15;
+      letter-spacing: -0.02em;
+    }
+    .hero-content p {
+      margin: 0;
+      max-width: 62ch;
+      color: var(--muted);
+      font-size: clamp(1rem, 1.6vw, 1.08rem);
+    }
+    .hero-card {
+      padding: 1.15rem;
+    }
+    .section {
+      padding: 1.6rem 0;
+      margin-top: 0.15rem;
+    }
+    .section h2 {
+      margin: 0 0 0.35rem;
+      font-size: clamp(1.45rem, 2.3vw, 1.95rem);
+      letter-spacing: -0.01em;
+    }
+    .section p {
+      margin-bottom: 1rem;
+    }
+    .card {
+      border-radius: var(--radius);
+      padding: 1.1rem 1.12rem;
+    }
+    .controls {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      padding: 0.85rem;
+      margin: 1rem 0 1.15rem;
+      gap: 0.95rem;
+    }
+    .control-group {
+      min-width: 190px;
+    }
+    .control-group label {
+      font-size: 0.78rem;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--muted);
+      font-weight: 700;
+    }
+    .joke-card {
+      max-width: 880px;
+      margin: 1rem auto;
+      padding: 1.2rem;
+      display: grid;
+      gap: 0.7rem;
+      border-radius: 20px;
+    }
+    .joke-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.8rem;
+    }
+    .joke-card-title-wrap {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.55rem;
+      min-width: 0;
+    }
+    .joke-header-emoji {
+      font-size: 1.3rem;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+    .joke-header-title {
+      margin: 0;
+      font-size: 0.92rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .joke-fresh-badge {
+      font-size: 0.85rem;
+      padding: 0.2rem 0.55rem;
+    }
+    .joke-text {
+      font-size: clamp(1.06rem, 2.1vw, 1.35rem);
+      line-height: 1.65;
+      min-height: 118px;
+      text-align: left;
+      background: var(--bg-soft);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 0.95rem;
+    }
+    .joke-meta,
+    .buttons,
+    .joke-action-primary,
+    .reaction-counts,
+    .session-progress {
+      justify-content: flex-start;
+      text-align: left;
+    }
+    .joke-actions {
+      margin-top: 0.7rem;
+      padding-top: 0.75rem;
+      border-top: 1px solid var(--border);
+    }
+    #saved-section-list,
+    #top-rated-list,
+    #leaderboard-list,
+    #trending-list {
+      display: grid;
+      gap: 0.9rem;
+    }
+    .joke-feed-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 0.95rem;
+      box-shadow: var(--shadow);
+      display: grid;
+      gap: 0.62rem;
+    }
+    .joke-feed-card.is-featured {
+      border-color: rgba(37, 99, 235, 0.44);
+      box-shadow: 0 16px 34px rgba(37, 99, 235, 0.13);
+    }
+    .joke-feed-card__header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 0.7rem;
+    }
+    .joke-feed-card__heading {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      min-width: 0;
+    }
+    .joke-feed-card__emoji {
+      font-size: 1.1rem;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+    .joke-feed-card__title {
+      margin: 0;
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.35;
+    }
+    .joke-feed-card__text {
+      margin: 0;
+      font-size: 0.98rem;
+      line-height: 1.62;
+      color: var(--text);
+      white-space: pre-line;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
+    .joke-feed-card__meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.42rem;
+      align-items: center;
+      color: var(--muted);
+      font-size: 0.82rem;
+    }
+    .joke-feed-card__actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+    .empty-state-card {
+      padding: 1.05rem;
+      border: 1px dashed var(--border);
+      border-radius: 14px;
+      background: var(--bg-soft);
+      color: var(--muted);
+      text-align: center;
+      font-size: 0.95rem;
+    }
+    .joke-card,
+    .hero-card,
+    .controls,
+    .joke-feed-card,
+    .card {
+      transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+    }
+    .joke-card:hover,
+    .hero-card:hover,
+    .joke-feed-card:hover {
+      transform: translateY(-2px);
+    }
+    button {
+      border-radius: 12px;
+      transition: transform 0.12s ease, background 0.18s ease, box-shadow 0.18s ease;
+    }
+    button:hover {
+      box-shadow: 0 8px 20px rgba(37, 99, 235, 0.24);
+    }
+    .ghost:hover {
+      box-shadow: none;
+    }
+    .rtl .joke-text {
+      text-align: right;
+    }
+    .rtl .joke-meta,
+    .rtl .buttons,
+    .rtl .joke-action-primary,
+    .rtl .reaction-counts,
+    .rtl .session-progress {
+      justify-content: flex-end;
+      text-align: right;
+    }
+    @media (max-width: 900px) {
+      .hero-content {
+        padding: 1rem;
+      }
+      .joke-card {
+        padding: 1rem;
+      }
+      .joke-feed-card__actions {
+        gap: 0.45rem;
+      }
+    }
+    @media (max-width: 680px) {
+      .hero {
+        grid-template-columns: 1fr;
+      }
+      .hero-content {
+        text-align: left;
+      }
+      .joke-card-header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .joke-text {
+        font-size: 1.02rem;
+        min-height: 100px;
+      }
+      .buttons,
+      .joke-action-primary,
+      .joke-feed-card__actions {
+        display: grid;
+        grid-template-columns: 1fr;
+        width: 100%;
+      }
+      .buttons button,
+      .joke-action-primary button,
+      .joke-feed-card__actions button {
+        width: 100%;
+      }
+      .joke-feed-card {
+        padding: 0.85rem;
+      }
+      .control-group {
+        min-width: 100%;
+      }
+    }
     .rtl {
       direction: rtl;
       text-align: right;
@@ -1882,6 +2213,52 @@
       * {
         animation: none !important;
         transition: none !important;
+      }
+    }
+    /* Final cascade guards for mobile layout */
+    @media (max-width: 900px) {
+      .hero-content {
+        padding: 1rem;
+      }
+      .joke-card {
+        padding: 1rem;
+      }
+      .joke-feed-card__actions {
+        gap: 0.45rem;
+      }
+    }
+    @media (max-width: 680px) {
+      .hero {
+        grid-template-columns: 1fr;
+      }
+      .hero-content {
+        text-align: left;
+      }
+      .joke-card-header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .joke-text {
+        font-size: 1.02rem;
+        min-height: 100px;
+      }
+      .buttons,
+      .joke-action-primary,
+      .joke-feed-card__actions {
+        display: grid;
+        grid-template-columns: 1fr;
+        width: 100%;
+      }
+      .buttons button,
+      .joke-action-primary button,
+      .joke-feed-card__actions button {
+        width: 100%;
+      }
+      .joke-feed-card {
+        padding: 0.85rem;
+      }
+      .control-group {
+        min-width: 100%;
       }
     }
   </style>
@@ -2456,6 +2833,13 @@
       <div id="category-suggestions" class="muted" hidden></div>
 
       <div id="joke-card" class="joke-card card">
+        <div class="joke-card-header">
+          <div class="joke-card-title-wrap">
+            <span id="joke-header-emoji" class="joke-header-emoji" aria-hidden="true">🤣</span>
+            <h3 id="joke-header-title" class="joke-header-title">Random · Jokes</h3>
+          </div>
+          <span id="joke-fresh-badge" class="badge joke-fresh-badge" aria-hidden="true">🆕</span>
+        </div>
         <div id="joke-skeleton" class="skeleton" hidden>
           <div class="skeleton-line medium"></div>
           <div class="skeleton-line"></div>
@@ -2646,7 +3030,7 @@
           <div id="saved-total" class="badge">0</div>
         </div>
       </div>
-      <div id="saved-section-list" class="list"></div>
+      <div id="saved-section-list" class="list joke-feed-grid"></div>
     </section>
 
     <section id="community" class="section view-section" data-view="community" data-emoji="🤝" hidden>
@@ -3034,6 +3418,9 @@
       category: document.getElementById('category-select'),
       voiceSpeed: document.getElementById('voice-speed'),
       jokeCard: document.getElementById('joke-card'),
+      jokeHeaderEmoji: document.getElementById('joke-header-emoji'),
+      jokeHeaderTitle: document.getElementById('joke-header-title'),
+      jokeFreshBadge: document.getElementById('joke-fresh-badge'),
       jokeText: document.getElementById('joke'),
       jokeToggle: document.getElementById('joke-toggle'),
       jokeSkeleton: document.getElementById('joke-skeleton'),
@@ -6969,6 +7356,7 @@
       updateNavActive(getRouteFromHash());
       initCollapsibles();
       renderJokeMedia();
+      updateJokeCardHeader();
     }
 
     const CATEGORY_I18N_KEYS = {
@@ -6986,8 +7374,44 @@
     };
 
     function getCategoryLabel(category) {
-      const key = CATEGORY_I18N_KEYS[category] || category;
+      const safeCategory = category || 'random';
+      const key = CATEGORY_I18N_KEYS[safeCategory] || safeCategory;
       return t(`categories.${key}`);
+    }
+
+    const CATEGORY_EMOJIS = {
+      random: '🤣',
+      classic: '😄',
+      story: '📖',
+      'one-line': '⚡',
+      qa: '❓',
+      dad: '👨',
+      pun: '🧠',
+      school: '🎒',
+      'school-life': '🎓',
+      tech: '💻',
+      relationship: '💞',
+      dark: '🌙',
+      roast: '🔥',
+      food: '🍕',
+      sleep: '😴',
+      memes: '📱'
+    };
+
+    function getCategoryEmoji(category = state.currentCategory) {
+      const safeCategory = category || 'random';
+      const alias = CATEGORY_ALIASES[safeCategory] || safeCategory;
+      return CATEGORY_EMOJIS[safeCategory] || CATEGORY_EMOJIS[alias] || '😂';
+    }
+
+    function updateJokeCardHeader() {
+      if (dom.jokeHeaderEmoji) {
+        dom.jokeHeaderEmoji.textContent = getCategoryEmoji(state.currentCategory);
+      }
+      if (dom.jokeHeaderTitle) {
+        const categoryLabel = state.currentCategory ? getCategoryLabel(state.currentCategory) : t('listen.title');
+        dom.jokeHeaderTitle.textContent = `${categoryLabel} · ${t('listen.title')}`;
+      }
     }
 
     function getSessionProgressKey(lang = state.currentLang, category = state.currentCategory) {
@@ -10159,6 +10583,89 @@
       removeSavedJokeByIndex(index, { silent: false });
     }
 
+    function createEmptyStateCard(message) {
+      const empty = document.createElement('div');
+      empty.className = 'empty-state-card';
+      empty.textContent = message;
+      return empty;
+    }
+
+    function createJokeFeedCard(options = {}) {
+      const resolved = options && typeof options === 'object' ? options : {};
+      const card = document.createElement('article');
+      card.className = 'joke-feed-card';
+      if (resolved.featured) {
+        card.classList.add('is-featured');
+      }
+
+      const header = document.createElement('div');
+      header.className = 'joke-feed-card__header';
+
+      const headingWrap = document.createElement('div');
+      headingWrap.className = 'joke-feed-card__heading';
+
+      const emoji = document.createElement('span');
+      emoji.className = 'joke-feed-card__emoji';
+      emoji.setAttribute('aria-hidden', 'true');
+      emoji.textContent = resolved.emoji || '😂';
+      headingWrap.appendChild(emoji);
+
+      const title = document.createElement('h4');
+      title.className = 'joke-feed-card__title';
+      title.textContent = resolved.title || t('listen.title');
+      headingWrap.appendChild(title);
+      header.appendChild(headingWrap);
+
+      if (resolved.score) {
+        const score = document.createElement('span');
+        score.className = 'badge joke-feed-card__score';
+        score.textContent = resolved.score;
+        header.appendChild(score);
+      }
+      card.appendChild(header);
+
+      const text = document.createElement('p');
+      text.className = 'joke-feed-card__text';
+      text.textContent = resolved.joke || '';
+      card.appendChild(text);
+
+      const metaItems = Array.isArray(resolved.metaItems)
+        ? resolved.metaItems.filter((entry) => typeof entry === 'string' && entry.trim())
+        : [];
+      if (metaItems.length) {
+        const meta = document.createElement('div');
+        meta.className = 'joke-feed-card__meta';
+        metaItems.forEach((entry) => {
+          const chip = document.createElement('span');
+          chip.className = 'badge';
+          chip.textContent = entry;
+          meta.appendChild(chip);
+        });
+        card.appendChild(meta);
+      }
+
+      const actions = Array.isArray(resolved.actions)
+        ? resolved.actions.filter((entry) => entry && typeof entry.onClick === 'function')
+        : [];
+      if (actions.length) {
+        const actionWrap = document.createElement('div');
+        actionWrap.className = 'joke-feed-card__actions';
+        actions.forEach((entry) => {
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.textContent = entry.label || '';
+          if (entry.ghost) {
+            button.classList.add('ghost');
+          }
+          button.onclick = entry.onClick;
+          actionWrap.appendChild(button);
+        });
+        card.appendChild(actionWrap);
+      }
+
+      return card;
+    }
+
     function renderSavedSection() {
       if (!dom.savedSectionList) {
         return;
@@ -10176,62 +10683,42 @@
         });
       }
       if (!getSavedJokesList().length) {
-        const empty = document.createElement('div');
-        empty.className = 'list-item';
-        empty.textContent = t('saved.none');
-        dom.savedSectionList.appendChild(empty);
+        dom.savedSectionList.appendChild(createEmptyStateCard(t('saved.none')));
         return;
       }
       if (query && !items.length) {
-        const empty = document.createElement('div');
-        empty.className = 'list-item';
-        empty.textContent = t('saved.searchEmpty');
-        dom.savedSectionList.appendChild(empty);
+        dom.savedSectionList.appendChild(createEmptyStateCard(t('saved.searchEmpty')));
         return;
       }
-      items.forEach((entry) => {
+      items.forEach((entry, index) => {
         const entryIndex = getSavedJokesList().findIndex((item) => item.id === entry.id);
-        const row = document.createElement('div');
-        row.className = 'list-item';
-
-        const text = document.createElement('div');
-        text.textContent = ensureSetupPunchline(entry.joke, entry.lang);
-
-        const meta = document.createElement('div');
-        meta.className = 'saved-meta';
-        const metaText = `${getCategoryLabel(entry.category)} · ${t(`languages.${entry.lang}`)}`;
+        const metaText = `${getCategoryLabel(entry.category)} • ${t(`languages.${entry.lang}`)}`;
         const date = entry.savedAt ? t('saved.savedOn', { date: formatSavedDate(entry.savedAt) }) : '';
-        meta.textContent = date ? `${metaText} · ${date}` : metaText;
-
-        const metaWrap = document.createElement('div');
-        metaWrap.appendChild(text);
-        metaWrap.appendChild(meta);
-
-        const actions = document.createElement('div');
-        actions.className = 'saved-actions';
-
-        const showButton = document.createElement('button');
-        showButton.type = 'button';
-        showButton.textContent = t('saved.show');
-        showButton.onclick = () => {
-          applyLanguage(entry.lang, { skipFetch: true });
-          dom.category.value = entry.category;
-          state.currentCategory = entry.category;
-          showJoke(entry.joke);
-          setJokeList();
-        };
-
-        const deleteButton = document.createElement('button');
-        deleteButton.type = 'button';
-        deleteButton.textContent = t('saved.delete');
-        deleteButton.onclick = () => removeSavedJokeByIndex(entryIndex);
-
-        actions.appendChild(showButton);
-        actions.appendChild(deleteButton);
-
-        row.appendChild(metaWrap);
-        row.appendChild(actions);
-        dom.savedSectionList.appendChild(row);
+        const card = createJokeFeedCard({
+          title: metaText,
+          joke: ensureSetupPunchline(entry.joke, entry.lang),
+          emoji: getCategoryEmoji(entry.category),
+          featured: index === 0,
+          metaItems: [date].filter(Boolean),
+          actions: [
+            {
+              label: t('saved.show'),
+              onClick: () => {
+                applyLanguage(entry.lang, { skipFetch: true });
+                dom.category.value = entry.category;
+                state.currentCategory = entry.category;
+                showJoke(entry.joke);
+                setJokeList();
+              }
+            },
+            {
+              label: t('saved.delete'),
+              ghost: true,
+              onClick: () => removeSavedJokeByIndex(entryIndex)
+            }
+          ]
+        });
+        dom.savedSectionList.appendChild(card);
       });
     }
 
@@ -10302,10 +10789,14 @@
       closeJokeActionMenus();
       dom.jokeText.textContent = joke;
       state.jokeExpanded = false;
+      updateJokeCardHeader();
       dom.jokeCategory.textContent = state.currentCategory
         ? getCategoryLabel(state.currentCategory)
         : '';
       dom.jokeLanguage.textContent = t(`languages.${state.currentLang}`);
+      if (dom.jokeFreshBadge) {
+        dom.jokeFreshBadge.hidden = state.currentIndex > 0;
+      }
       updateSavedControls();
       updateReactionUI();
       renderComments();
@@ -10332,9 +10823,13 @@
     function showJokeMessage(message) {
       state.currentJoke = '';
       closeJokeActionMenus();
+      updateJokeCardHeader();
       dom.jokeText.textContent = message;
       dom.jokeCategory.textContent = '';
       dom.jokeLanguage.textContent = '';
+      if (dom.jokeFreshBadge) {
+        dom.jokeFreshBadge.hidden = true;
+      }
       updateSavedControls();
       updateReactionUI();
       renderComments();
@@ -10781,6 +11276,9 @@
         return;
       }
       state.currentIndex = index;
+      if (dom.jokeFreshBadge) {
+        dom.jokeFreshBadge.hidden = state.currentIndex > 0;
+      }
       const id = state.jokeOrder[state.currentIndex];
       showJoke(state.jokeIndex[id]);
       state.lastJokeId = id;
@@ -11704,22 +12202,19 @@
       dom.topRatedList.innerHTML = '';
       const items = Object.values(reactionStore).sort((a, b) => reactionScore(b) - reactionScore(a)).slice(0, 5);
       if (!items.length) {
-        const empty = document.createElement('div');
-        empty.className = 'list-item';
-        empty.textContent = t('community.empty');
-        dom.topRatedList.appendChild(empty);
+        dom.topRatedList.appendChild(createEmptyStateCard(t('community.empty')));
         return;
       }
-      items.forEach((item) => {
-        const row = document.createElement('div');
-        row.className = 'list-item';
-        const text = document.createElement('span');
-        text.textContent = item.joke;
-        const score = document.createElement('span');
-        score.textContent = `⭐ ${reactionScore(item)}`;
-        row.appendChild(text);
-        row.appendChild(score);
-        dom.topRatedList.appendChild(row);
+      items.forEach((item, index) => {
+        const card = createJokeFeedCard({
+          title: `${t('community.topRated')} #${index + 1}`,
+          joke: item.joke,
+          emoji: getCategoryEmoji(item.category),
+          score: `⭐ ${reactionScore(item)}`,
+          featured: index === 0,
+          metaItems: [t(`languages.${item.lang}`), getCategoryLabel(item.category)]
+        });
+        dom.topRatedList.appendChild(card);
       });
     }
 
@@ -11729,23 +12224,20 @@
         .sort((a, b) => (b.funny + b.veryFunny + b.notFunny) - (a.funny + a.veryFunny + a.notFunny))
         .slice(0, 5);
       if (!items.length) {
-        const empty = document.createElement('div');
-        empty.className = 'list-item';
-        empty.textContent = t('community.empty');
-        dom.leaderboardList.appendChild(empty);
+        dom.leaderboardList.appendChild(createEmptyStateCard(t('community.empty')));
         return;
       }
       items.forEach((item, index) => {
         const total = item.funny + item.veryFunny + item.notFunny;
-        const row = document.createElement('div');
-        row.className = 'list-item';
-        const text = document.createElement('span');
-        text.textContent = `#${index + 1} ${item.joke}`;
-        const score = document.createElement('span');
-        score.textContent = `${total} 👍`;
-        row.appendChild(text);
-        row.appendChild(score);
-        dom.leaderboardList.appendChild(row);
+        const card = createJokeFeedCard({
+          title: `${t('community.leaderboard')} #${index + 1}`,
+          joke: item.joke,
+          emoji: getCategoryEmoji(item.category),
+          score: `${total} 👍`,
+          featured: index === 0,
+          metaItems: [t(`languages.${item.lang}`), getCategoryLabel(item.category)]
+        });
+        dom.leaderboardList.appendChild(card);
       });
     }
 
@@ -11769,23 +12261,20 @@
         .sort((a, b) => b.interactions - a.interactions)
         .slice(0, 5);
       if (!items.length) {
-        const empty = document.createElement('div');
-        empty.className = 'list-item';
-        empty.textContent = t('community.empty');
-        dom.trendingList.appendChild(empty);
+        dom.trendingList.appendChild(createEmptyStateCard(t('community.empty')));
         renderCategorySuggestions();
         return;
       }
-      items.forEach((item) => {
-        const row = document.createElement('div');
-        row.className = 'list-item';
-        const text = document.createElement('span');
-        text.textContent = item.joke;
-        const score = document.createElement('span');
-        score.textContent = `${item.interactions} ✨`;
-        row.appendChild(text);
-        row.appendChild(score);
-        dom.trendingList.appendChild(row);
+      items.forEach((item, index) => {
+        const card = createJokeFeedCard({
+          title: `${t('community.trending')} #${index + 1}`,
+          joke: item.joke,
+          emoji: getCategoryEmoji(item.category),
+          score: `${item.interactions} ✨`,
+          featured: index === 0,
+          metaItems: [t(`languages.${item.lang}`), getCategoryLabel(item.category)]
+        });
+        dom.trendingList.appendChild(card);
       });
       maybeAddTrendingJokesNotification(items);
       renderCategorySuggestions();
