@@ -3,7 +3,7 @@ const DEFAULT_URL = "/#/jokes";
 const DEFAULT_ICON = "/icons/icon-192.png";
 const DEFAULT_BADGE = "/icons/favicon-32.png";
 
-const CACHE_VERSION = "profile-controls-removed-v6";
+const CACHE_VERSION = "clean-ui-refresh-v7";
 const CORE_CACHE = `vjc-core-cache-${CACHE_VERSION}`;
 const RUNTIME_CACHE = `vjc-runtime-cache-${CACHE_VERSION}`;
 const API_CACHE = `vjc-api-cache-${CACHE_VERSION}`;
@@ -13,7 +13,7 @@ const CACHE_NAMES = [CORE_CACHE, RUNTIME_CACHE, API_CACHE, IMAGE_CACHE];
 const OFFLINE_FALLBACK_URL = "/offline.html";
 const APP_SHELL_URL = "/index.html";
 const FONT_STYLESHEET_URL =
-  "https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&display=swap";
+  "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap";
 const CORE_ASSETS = [
   "/",
   APP_SHELL_URL,
