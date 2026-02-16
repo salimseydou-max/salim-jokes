@@ -1,0 +1,128 @@
+export function applyThemeToDocument(theme) {
+  const root = document.documentElement;
+  const resolved = theme === "system"
+    ? (window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark")
+    : theme;
+  root.setAttribute("data-theme", resolved === "light" ? "light" : "dark");
+}
+
+function setFormValues(root, preferences) {
+  const form = root?.querySelector("[data-settings-form]");
+  if (!form || !preferences) {
+    return;
+  }
+  const setChecked = (selector, value) => {
+    const field = form.querySelector(selector);
+    if (field) {
+      field.checked = Boolean(value);
+    }
+  };
+  const setValue = (selector, value) => {
+    const field = form.querySelector(selector);
+    if (field) {
+      field.value = String(value || "");
+    }
+  };
+
+  setValue("[name='theme']", preferences.appearance.theme);
+  setChecked("[name='compactCards']", preferences.appearance.compactCards);
+  setChecked("[name='notifNewJokes']", preferences.notifications.newJokes);
+  setChecked("[name='notifReplies']", preferences.notifications.commentReplies);
+  setChecked("[name='notifUpdates']", preferences.notifications.featureUpdates);
+  setChecked("[name='notifActivity']", preferences.notifications.userActivity);
+  setValue("[name='profileVisibility']", preferences.privacy.profileVisibility);
+  setChecked("[name='allowActivitySync']", preferences.privacy.allowActivitySync);
+  setValue("[name='socialWebsite']", preferences.socialLinks.website);
+  setValue("[name='socialX']", preferences.socialLinks.x);
+  setValue("[name='socialInstagram']", preferences.socialLinks.instagram);
+  setValue("[name='socialYoutube']", preferences.socialLinks.youtube);
+}
+
+function readFormValues(form) {
+  return {
+    appearance: {
+      theme: form.querySelector("[name='theme']")?.value || "dark",
+      compactCards: Boolean(form.querySelector("[name='compactCards']")?.checked),
+    },
+    notifications: {
+      newJokes: Boolean(form.querySelector("[name='notifNewJokes']")?.checked),
+      commentReplies: Boolean(form.querySelector("[name='notifReplies']")?.checked),
+      featureUpdates: Boolean(form.querySelector("[name='notifUpdates']")?.checked),
+      userActivity: Boolean(form.querySelector("[name='notifActivity']")?.checked),
+    },
+    privacy: {
+      profileVisibility: form.querySelector("[name='profileVisibility']")?.value || "private",
+      allowActivitySync: Boolean(form.querySelector("[name='allowActivitySync']")?.checked),
+    },
+    socialLinks: {
+      website: form.querySelector("[name='socialWebsite']")?.value || "",
+      x: form.querySelector("[name='socialX']")?.value || "",
+      instagram: form.querySelector("[name='socialInstagram']")?.value || "",
+      youtube: form.querySelector("[name='socialYoutube']")?.value || "",
+    },
+  };
+}
+
+export function createSettingsView(options = {}) {
+  const root = options.root;
+  const preferencesStore = options.preferencesStore;
+  const toast = options.toast;
+  const notificationStore = options.notificationStore;
+
+  const form = root?.querySelector("[data-settings-form]");
+  const resetButton = root?.querySelector("[data-settings-reset]");
+  const saveButton = root?.querySelector("[data-settings-save]");
+
+  function applyFromStore() {
+    const preferences = preferencesStore.get();
+    setFormValues(root, preferences);
+    applyThemeToDocument(preferences.appearance.theme);
+  }
+
+  function onSubmit(event) {
+    event.preventDefault();
+    if (!form) {
+      return;
+    }
+    const values = readFormValues(form);
+    const updated = preferencesStore.update(values);
+    applyThemeToDocument(updated.appearance.theme);
+    toast?.show("Settings saved.");
+    if (updated.notifications.featureUpdates) {
+      notificationStore?.add({
+        type: "settings",
+        title: "Settings updated",
+        message: "Your preferences were saved successfully.",
+      });
+    }
+  }
+
+  function onReset() {
+    preferencesStore.set(preferencesStore.defaults);
+    applyFromStore();
+    toast?.show("Settings reset.");
+  }
+
+  function init() {
+    if (!form) {
+      return;
+    }
+    form.addEventListener("submit", onSubmit);
+    resetButton?.addEventListener("click", onReset);
+    saveButton?.addEventListener("click", () => {
+      // Allows dedicated mobile save tap without submitting keyboard unexpectedly.
+    });
+    preferencesStore.subscribe((nextPrefs) => {
+      applyThemeToDocument(nextPrefs.appearance.theme);
+    });
+    applyFromStore();
+  }
+
+  init();
+
+  return {
+    activate() {
+      applyFromStore();
+    },
+  };
+}

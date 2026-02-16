@@ -6,7 +6,7 @@
   <title>Voice Joke Club</title>
   <meta
     name="description"
-    content="A modern mobile-first joke app with endless scrolling, fast loading, and smooth app-like navigation."
+    content="A mobile-first joke app with diverse infinite feed, search, interactions, profile tools, and smooth app navigation."
   />
   <meta name="theme-color" content="#0f172a" />
   <meta name="application-name" content="Voice Joke Club" />
@@ -29,19 +29,54 @@
 <body>
   <div class="app-shell">
     <header class="app-header" aria-label="Voice Joke Club header">
-      <h1 class="app-title">Voice Joke Club</h1>
-      <p class="app-subtitle">Endless fast scrolling jokes with a clean app-style layout.</p>
+      <div class="app-header-row">
+        <div>
+          <h1 class="app-title">Voice Joke Club</h1>
+          <p class="app-subtitle">Balanced feed: AI, user, trending, recent, and random.</p>
+        </div>
+        <button class="icon-button" data-notifications-bell aria-label="Open notifications" aria-expanded="false">
+          <span aria-hidden="true">🔔</span>
+          <span class="notification-badge" data-notifications-badge hidden>0</span>
+        </button>
+      </div>
+
+      <section class="notification-panel" data-notification-panel hidden>
+        <div class="notification-panel-header">
+          <strong>Notifications</strong>
+          <button type="button" class="text-button" data-notification-panel-mark-all>Mark all read</button>
+        </div>
+        <div class="notification-panel-list" data-notification-panel-list></div>
+      </section>
     </header>
 
     <main class="app-main" id="app-main">
       <section class="app-view is-active" data-view="/feed" aria-label="Joke feed section">
+        <div class="feed-search">
+          <label class="sr-only" for="feed-search-input">Search jokes</label>
+          <input
+            id="feed-search-input"
+            data-feed-search-input
+            class="feed-search-input"
+            type="search"
+            placeholder="Search jokes by keyword, category, tag, or text..."
+            autocomplete="off"
+          />
+          <select data-feed-search-category class="feed-search-select" aria-label="Filter by category">
+            <option value="all">All categories</option>
+            <option value="random">Random</option>
+            <option value="dark">Dark</option>
+          </select>
+          <button type="button" class="feed-search-clear" data-feed-search-clear>Clear</button>
+          <p class="feed-search-meta" data-feed-search-meta></p>
+        </div>
+
         <div class="feed-list" data-feed-list aria-live="polite"></div>
         <div class="skeleton-host" data-feed-skeleton hidden></div>
         <div class="feed-loading" data-feed-loading hidden>
           <div class="spinner" aria-label="Loading more jokes" role="status"></div>
         </div>
         <div class="feed-empty" data-feed-empty hidden>
-          Jokes are loading right now. Keep scrolling and new jokes will appear automatically.
+          No jokes found. Try a new search term or keep scrolling for fresh content.
         </div>
         <div data-feed-sentinel aria-hidden="true"></div>
       </section>
@@ -50,8 +85,7 @@
         <article class="section-card">
           <h2 class="section-title">Submit a Joke</h2>
           <p class="section-copy">
-            Share your best clean joke with the community. Submissions are reviewed and can appear in
-            the live feed.
+            Share clean jokes with the community. Submissions can appear in the mixed feed.
           </p>
           <form class="submit-form" data-submit-form>
             <label for="submit-joke-text" class="section-copy">Your joke</label>
@@ -63,6 +97,19 @@
               placeholder="Write your joke here..."
               required
             ></textarea>
+            <div class="form-grid-two">
+              <label class="field-label">
+                Category
+                <select data-submit-category class="form-select">
+                  <option value="random">Random</option>
+                  <option value="dark">Dark</option>
+                </select>
+              </label>
+              <label class="field-label">
+                Tags (comma-separated)
+                <input type="text" data-submit-tags class="form-input" placeholder="work, family, tech" />
+              </label>
+            </div>
             <div class="submit-footer">
               <span class="submit-counter" data-submit-counter>0/480</span>
               <button class="submit-button" data-submit-button type="submit">Submit Joke</button>
@@ -71,17 +118,156 @@
         </article>
       </section>
 
+      <section class="app-view" data-view="/profile" hidden aria-label="Profile section">
+        <article class="section-card" data-profile-auth-card>
+          <h2 class="section-title">Sign in or create an account</h2>
+          <p class="section-copy">
+            Use username, email, and password. You may upload an optional profile picture.
+          </p>
+          <div class="profile-auth-grid">
+            <form class="mini-form" data-profile-login-form>
+              <h3 class="mini-form-title">Log in</h3>
+              <input class="form-input" type="email" name="email" placeholder="Email" required />
+              <input class="form-input" type="password" name="password" placeholder="Password" required />
+              <button class="submit-button" type="submit">Log in</button>
+            </form>
+
+            <form class="mini-form" data-profile-signup-form>
+              <h3 class="mini-form-title">Create account</h3>
+              <input class="form-input" type="text" name="username" placeholder="Username" required />
+              <input class="form-input" type="email" name="email" placeholder="Email" required />
+              <input class="form-input" type="password" name="password" placeholder="Password" required />
+              <label class="field-label">
+                Optional profile picture
+                <input class="form-input" type="file" name="avatar" accept="image/png,image/jpeg,image/webp" />
+              </label>
+              <button class="submit-button" type="submit">Create account</button>
+            </form>
+          </div>
+        </article>
+
+        <article class="section-card" data-profile-account-card hidden>
+          <div class="profile-summary">
+            <img src="" alt="Profile avatar" class="profile-avatar" data-profile-avatar />
+            <div>
+              <h2 class="section-title" data-profile-name>User</h2>
+              <p class="section-copy profile-email" data-profile-email></p>
+              <p class="section-copy profile-stats" data-profile-stats></p>
+            </div>
+            <button type="button" class="text-button" data-profile-logout>Log out</button>
+          </div>
+
+          <form class="mini-form" data-profile-edit-form>
+            <h3 class="mini-form-title">Edit account</h3>
+            <input class="form-input" type="text" name="displayName" placeholder="Display name" required />
+            <input class="form-input" type="text" name="phoneNumber" placeholder="Phone (optional)" />
+            <label class="field-label">
+              Update profile picture
+              <input class="form-input" type="file" name="avatar" accept="image/png,image/jpeg,image/webp" />
+            </label>
+            <button class="submit-button" type="submit">Save profile</button>
+          </form>
+
+          <div class="profile-collections">
+            <section class="mini-list-card">
+              <h3 class="mini-list-title">Saved jokes</h3>
+              <div data-profile-saved-list></div>
+            </section>
+            <section class="mini-list-card">
+              <h3 class="mini-list-title">Submitted jokes</h3>
+              <div data-profile-submitted-list></div>
+            </section>
+            <section class="mini-list-card">
+              <h3 class="mini-list-title">Reaction history</h3>
+              <div data-profile-reactions-list></div>
+            </section>
+          </div>
+        </article>
+      </section>
+
+      <section class="app-view" data-view="/settings" hidden aria-label="Settings section">
+        <article class="section-card">
+          <h2 class="section-title">Settings</h2>
+          <p class="section-copy">
+            Personal preferences, privacy controls, and social links are managed here only.
+          </p>
+          <form class="settings-form" data-settings-form>
+            <div class="settings-group">
+              <h3>Appearance</h3>
+              <label class="field-label">
+                Theme
+                <select name="theme" class="form-select">
+                  <option value="dark">Dark</option>
+                  <option value="light">Light</option>
+                  <option value="system">System</option>
+                </select>
+              </label>
+              <label class="checkbox-row">
+                <input type="checkbox" name="compactCards" />
+                Compact cards
+              </label>
+            </div>
+
+            <div class="settings-group">
+              <h3>Notifications</h3>
+              <label class="checkbox-row"><input type="checkbox" name="notifNewJokes" /> New jokes</label>
+              <label class="checkbox-row"><input type="checkbox" name="notifReplies" /> Comment replies</label>
+              <label class="checkbox-row"><input type="checkbox" name="notifUpdates" /> Feature updates</label>
+              <label class="checkbox-row"><input type="checkbox" name="notifActivity" /> User activity</label>
+            </div>
+
+            <div class="settings-group">
+              <h3>Privacy</h3>
+              <label class="field-label">
+                Profile visibility
+                <select name="profileVisibility" class="form-select">
+                  <option value="private">Private</option>
+                  <option value="friends">Friends only</option>
+                  <option value="public">Public</option>
+                </select>
+              </label>
+              <label class="checkbox-row">
+                <input type="checkbox" name="allowActivitySync" />
+                Allow activity sync
+              </label>
+            </div>
+
+            <div class="settings-group">
+              <h3>Social links (private in settings only)</h3>
+              <input class="form-input" type="url" name="socialWebsite" placeholder="Website URL" />
+              <input class="form-input" type="text" name="socialX" placeholder="X handle" />
+              <input class="form-input" type="text" name="socialInstagram" placeholder="Instagram handle" />
+              <input class="form-input" type="text" name="socialYoutube" placeholder="YouTube channel" />
+            </div>
+
+            <div class="submit-footer">
+              <button class="text-button" type="button" data-settings-reset>Reset</button>
+              <button class="submit-button" type="submit" data-settings-save>Save settings</button>
+            </div>
+          </form>
+        </article>
+      </section>
+
+      <section class="app-view" data-view="/notifications" hidden aria-label="Notifications section">
+        <article class="section-card">
+          <div class="section-title-row">
+            <h2 class="section-title">Notifications</h2>
+            <button type="button" class="text-button" data-notifications-mark-all>Mark all read</button>
+          </div>
+          <div data-notifications-list></div>
+        </article>
+      </section>
+
       <section class="app-view" data-view="/about" hidden aria-label="About section">
         <article class="section-card">
           <h2 class="section-title">About Voice Joke Club</h2>
           <p class="section-copy">
-            Voice Joke Club is focused on one thing: fast, readable jokes in a mobile-first feed that
-            feels smooth on every swipe. The app is optimized for performance, local saving, and
-            effortless sharing.
+            Voice Joke Club delivers a clean, app-style joke experience with smooth infinite scrolling,
+            search, reactions, comments, and local-first reliability.
           </p>
           <p class="section-copy">
-            New jokes are fetched incrementally to keep loading light and responsive. You can keep
-            scrolling and the feed will continue loading fresh content in the background.
+            Content is intentionally blended from multiple sources to keep your feed fresh and varied
+            while preserving fast mobile performance.
           </p>
         </article>
       </section>
@@ -102,7 +288,10 @@
 
     <nav class="tab-bar" aria-label="Main app sections">
       <button class="tab-button is-active" data-tab-route="/feed" type="button">Feed</button>
-      <button class="tab-button" data-tab-route="/submit" type="button">Submit Joke</button>
+      <button class="tab-button" data-tab-route="/submit" type="button">Submit</button>
+      <button class="tab-button" data-tab-route="/profile" type="button">Profile</button>
+      <button class="tab-button" data-tab-route="/settings" type="button">Settings</button>
+      <button class="tab-button" data-tab-route="/notifications" type="button">Alerts</button>
       <button class="tab-button" data-tab-route="/about" type="button">About</button>
     </nav>
     <div class="toast" data-toast role="status" aria-live="polite"></div>

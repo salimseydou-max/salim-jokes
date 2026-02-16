@@ -1,7 +1,20 @@
 import { createRouter } from "./core/router.js";
 import { createMonetizationInfrastructure } from "./monetization/index.js";
+import { createAuthService } from "./services/authService.js";
+import { createCommentStore } from "./services/commentStore.js";
+import { createFeedComposer } from "./services/feedComposer.js";
+import { createFavoritesStore } from "./services/favoritesStore.js";
+import { createNotificationStore } from "./services/notificationStore.js";
+import { createPreferencesStore } from "./services/preferencesStore.js";
+import { createReactionStore } from "./services/reactionStore.js";
+import { createSearchService } from "./services/searchService.js";
+import { getOrCreatePersistentId } from "./services/storage.js";
+import { createSubmissionStore } from "./services/submissionStore.js";
 import { createToast } from "./services/toast.js";
 import { createFeedView } from "./views/feedView.js";
+import { createNotificationsView } from "./views/notificationsView.js";
+import { createProfileView } from "./views/profileView.js";
+import { createSettingsView } from "./views/settingsView.js";
 import { createSubmitView } from "./views/submitView.js";
 
 const monetization = createMonetizationInfrastructure();
@@ -9,25 +22,103 @@ const monetization = createMonetizationInfrastructure();
 const routes = Object.freeze({
   FEED: "/feed",
   SUBMIT: "/submit",
+  PROFILE: "/profile",
+  SETTINGS: "/settings",
+  NOTIFICATIONS: "/notifications",
   ABOUT: "/about",
   FUTURE_PREMIUM: "/future-premium",
 });
 
 const sections = Array.from(document.querySelectorAll("[data-view]"));
 const tabButtons = Array.from(document.querySelectorAll("[data-tab-route]"));
+const notificationBell = document.querySelector("[data-notifications-bell]");
+const notificationBadge = document.querySelector("[data-notifications-badge]");
+const notificationPanel = document.querySelector("[data-notification-panel]");
 
 const toast = createToast(document.querySelector("[data-toast]"));
+
+const viewerId = getOrCreatePersistentId("vjc.viewer-id.v1");
+const authService = createAuthService();
+const preferencesStore = createPreferencesStore();
+const notificationStore = createNotificationStore();
+const favoritesStore = createFavoritesStore({
+  storageKey: "vjc.feed.favorite-jokes.v1",
+});
+const reactionStore = createReactionStore({
+  storageKey: "vjc.reactions.v1",
+});
+const commentStore = createCommentStore({
+  storageKey: "vjc.comments.v1",
+});
+const submissionStore = createSubmissionStore({
+  storageKey: "vjc.submissions.v1",
+});
+const searchService = createSearchService();
+const feedComposer = createFeedComposer({
+  language: "en",
+  category: "random",
+});
+
+let profileView = null;
+profileView = createProfileView({
+  root: document.querySelector("[data-view='/profile']"),
+  authService,
+  favoritesStore,
+  submissionStore,
+  reactionStore,
+  toast,
+  getViewerId: () => viewerId,
+  onUserChanged: () => {
+    profileView?.refreshCollections();
+  },
+});
+
 const feedView = createFeedView({
   root: document.querySelector("[data-view='/feed']"),
   toast,
   monetization,
+  feedComposer,
+  searchService,
+  favoritesStore,
+  reactionStore,
+  commentStore,
+  notificationStore,
+  preferencesStore,
+  profileView,
+  getViewerId: () => viewerId,
+  getCurrentUser: () => authService.getUser(),
 });
+
 const submitView = createSubmitView({
   root: document.querySelector("[data-view='/submit']"),
   toast,
-  onSubmitted: () => {
-    // Keep submissions isolated to the submit section while confirming success in-app.
+  notificationStore,
+  onSubmitted: (joke) => {
+    const ownerId = authService.getUser()?.id || viewerId;
+    if (joke) {
+      submissionStore.addSubmission(joke, ownerId);
+      feedView.addUserSubmission({
+        ...joke,
+        sourceType: "user",
+      });
+      profileView.refreshCollections();
+    }
   },
+});
+
+const settingsView = createSettingsView({
+  root: document.querySelector("[data-view='/settings']"),
+  preferencesStore,
+  toast,
+  notificationStore,
+});
+
+const notificationsView = createNotificationsView({
+  root: document.querySelector("[data-view='/notifications']"),
+  store: notificationStore,
+  bellButton: notificationBell,
+  badge: notificationBadge,
+  panel: notificationPanel,
 });
 
 function setActiveSection(route) {
@@ -51,10 +142,26 @@ function setActiveSection(route) {
   if (route === routes.SUBMIT) {
     submitView.focus();
   }
+  if (route === routes.PROFILE) {
+    profileView.activate();
+  }
+  if (route === routes.SETTINGS) {
+    settingsView.activate();
+  }
+  if (route === routes.NOTIFICATIONS) {
+    notificationsView.activate();
+  }
 }
 
 function normalizeAppRoute(route) {
-  if (route === routes.FEED || route === routes.SUBMIT || route === routes.ABOUT) {
+  if (
+    route === routes.FEED ||
+    route === routes.SUBMIT ||
+    route === routes.PROFILE ||
+    route === routes.SETTINGS ||
+    route === routes.NOTIFICATIONS ||
+    route === routes.ABOUT
+  ) {
     return route;
   }
   if (route === routes.FUTURE_PREMIUM) {
@@ -74,6 +181,9 @@ const sharedHandler = (incomingRoute) => {
 
 router.register(routes.FEED, sharedHandler);
 router.register(routes.SUBMIT, sharedHandler);
+router.register(routes.PROFILE, sharedHandler);
+router.register(routes.SETTINGS, sharedHandler);
+router.register(routes.NOTIFICATIONS, sharedHandler);
 router.register(routes.ABOUT, sharedHandler);
 router.register(routes.FUTURE_PREMIUM, sharedHandler);
 router.register("*", () => {
@@ -89,6 +199,8 @@ tabButtons.forEach((button) => {
     router.navigate(route);
   });
 });
+
+authService.refreshSession();
 
 if (
   window.location.pathname === routes.FUTURE_PREMIUM ||
