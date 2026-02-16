@@ -3389,7 +3389,7 @@
     };
     const PWA_INSTALL_COOLDOWN_MS = 3 * 24 * 60 * 60 * 1000;
     const SERVICE_WORKER_UPDATE_INTERVAL_MS = 30 * 60 * 1000;
-    const AVATAR_UPLOAD_MAX_BYTES = 1_000_000;
+    const AVATAR_SOURCE_MAX_BYTES = 12_000_000;
     const AVATAR_OUTPUT_MAX_CHARS = 950_000;
     const AVATAR_MAX_DIMENSION = 640;
     const DEFAULT_GUEST_AVATAR =
@@ -8796,7 +8796,7 @@
         }
       }
 
-      if (fallbackDataUrl && fallbackDataUrl.length <= AVATAR_UPLOAD_MAX_BYTES) {
+      if (fallbackDataUrl && fallbackDataUrl.length <= AVATAR_OUTPUT_MAX_CHARS) {
         return fallbackDataUrl;
       }
       throw new Error(t('auth.avatarTooLarge'));
@@ -9358,7 +9358,13 @@
           method: 'PATCH',
           body
         });
-        applyAuthenticatedUser(payload.user || null);
+        const nextUser = payload && payload.user && typeof payload.user === 'object' ? payload.user : null;
+        if (!nextUser || !nextUser.id) {
+          const authError = new Error(t('auth.loginRequired'));
+          authError.code = 'AUTH_REQUIRED';
+          throw authError;
+        }
+        applyAuthenticatedUser(nextUser);
         return payload;
       },
       async me() {
@@ -14637,7 +14643,7 @@
           dom.profileAvatarInput.value = '';
           return;
         }
-        if (file.size > AVATAR_UPLOAD_MAX_BYTES) {
+        if (file.size > AVATAR_SOURCE_MAX_BYTES) {
           if (dom.profileFeedback) {
             dom.profileFeedback.textContent = t('auth.avatarTooLarge');
           }

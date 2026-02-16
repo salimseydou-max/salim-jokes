@@ -16,6 +16,13 @@ export default async function handler(req, res) {
   try {
     const auth = await getAuthenticatedUserFromRequest(req);
     if (!auth || !auth.user) {
+      if (req.method === "PATCH") {
+        clearAuthSessionCookie(res);
+        return res.status(401).json({
+          error: "Authentication required.",
+          code: "AUTH_REQUIRED",
+        });
+      }
       clearAuthSessionCookie(res);
       return res.status(200).json({
         authenticated: false,
@@ -33,6 +40,7 @@ export default async function handler(req, res) {
       const result = await updateUserProfile(auth.user.id, {
         displayName: body.displayName,
         avatarUrl: body.avatarUrl,
+        phoneNumber: body.phoneNumber,
       });
       return res.status(200).json({
         success: true,
