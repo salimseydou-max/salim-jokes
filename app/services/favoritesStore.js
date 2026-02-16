@@ -32,6 +32,18 @@ function normalizeFavoriteEntry(entry) {
     id,
     text: String(entry.text || "").trim().slice(0, 1200),
     source: String(entry.source || "").trim().slice(0, 80),
+    sourceType: String(entry.sourceType || entry.source || "").trim().slice(0, 40),
+    category: String(entry.category || "random").trim().slice(0, 40).toLowerCase() || "random",
+    language: String(entry.language || "en").trim().slice(0, 12).toLowerCase() || "en",
+    tags: Array.isArray(entry.tags)
+      ? entry.tags
+          .map((tag) => String(tag || "").trim().toLowerCase().slice(0, 80))
+          .filter(Boolean)
+      : [],
+    createdAt:
+      typeof entry.createdAt === "string" && entry.createdAt
+        ? entry.createdAt
+        : new Date().toISOString(),
     savedAt:
       typeof entry.savedAt === "string" && entry.savedAt
         ? entry.savedAt

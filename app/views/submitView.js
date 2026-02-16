@@ -4,9 +4,12 @@ export function createSubmitView(options = {}) {
   const root = options.root;
   const toast = options.toast;
   const onSubmitted = typeof options.onSubmitted === "function" ? options.onSubmitted : () => {};
+  const notificationStore = options.notificationStore;
 
   const form = root?.querySelector("[data-submit-form]");
   const textarea = root?.querySelector("[data-submit-text]");
+  const categoryField = root?.querySelector("[data-submit-category]");
+  const tagsField = root?.querySelector("[data-submit-tags]");
   const button = root?.querySelector("[data-submit-button]");
   const counter = root?.querySelector("[data-submit-counter]");
 
@@ -39,15 +42,28 @@ export function createSubmitView(options = {}) {
 
     setLoading(true);
     try {
-      await submitJoke({
+      const joke = await submitJoke({
         text,
-        category: "random",
+        category: categoryField?.value || "random",
         language: "en",
+        tags: [
+          "user-submitted",
+          ...(String(tagsField?.value || "")
+            .split(",")
+            .map((tag) => tag.trim().toLowerCase())
+            .filter(Boolean)
+            .slice(0, 6)),
+        ],
       });
       toast?.show("Thanks! Your joke was submitted.");
+      notificationStore?.add({
+        type: "user-activity",
+        title: "Submission received",
+        message: "Your new joke was added and may appear in the live feed soon.",
+      });
       form?.reset();
       updateCounter();
-      onSubmitted();
+      onSubmitted(joke);
     } catch (error) {
       toast?.show("Submission failed. Please try again.", "error");
     } finally {
