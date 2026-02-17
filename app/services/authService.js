@@ -63,7 +63,11 @@ function normalizeUser(rawUser) {
 }
 
 async function requestJson(url, options = {}) {
-  const response = await fetch(url, options);
+  const response = await fetch(url, {
+    credentials: "same-origin",
+    cache: "no-store",
+    ...options,
+  });
   let payload = null;
   try {
     payload = await response.json();
@@ -331,10 +335,17 @@ export function createAuthService() {
     }
     let user = setUser(payload.user);
     if (input.avatarUrl) {
-      user = await updateProfile({
-        displayName: user.displayName,
-        avatarUrl: input.avatarUrl,
-      });
+      try {
+        user = await updateProfile({
+          displayName: user.displayName,
+          avatarUrl: input.avatarUrl,
+        });
+      } catch (error) {
+        if (/authentication required|sign in again/i.test(String(error?.message || ""))) {
+          return user;
+        }
+        throw error;
+      }
     }
     return user;
   }

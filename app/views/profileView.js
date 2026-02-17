@@ -321,7 +321,17 @@ export function createProfileView(options = {}) {
       renderAccount(user);
       onUserChanged(user);
     } catch (error) {
-      toast?.show(error.message || "Signup failed.", "error");
+      const message = error?.message || "Signup failed.";
+      if (/already exists/i.test(message)) {
+        setAuthMode("signin");
+        const loginEmail = loginForm?.querySelector("[name='identifier']");
+        if (loginEmail) {
+          loginEmail.value = email;
+        }
+        toast?.show("Account already exists. Please sign in.", "error");
+        return;
+      }
+      toast?.show(message, "error");
     }
   }
 
