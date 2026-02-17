@@ -1,0 +1,3 @@
+{
+  "ignoreCommand": "if [ \"$VERCEL_PROJECT_PRODUCTION_URL\" != \"salim-jokes.vercel.app\" ]; then echo \"Skipping deployment for non-primary Vercel project: $VERCEL_PROJECT_PRODUCTION_URL\"; exit 0; fi; echo \"Deploying primary Vercel project: $VERCEL_PROJECT_PRODUCTION_URL\"; exit 1"
+}

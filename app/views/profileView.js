@@ -326,23 +326,15 @@ export function createProfileView(options = {}) {
       return;
     }
     try {
-      const result = await verificationService.requestCode(type, target);
-      const maskedTarget =
-        result?.delivery?.maskedTarget ||
-        (type === "phone"
-          ? `***${String(target || "").replace(/\D/g, "").slice(-4)}`
-          : String(target || ""));
+      await verificationService.requestCode(type, target);
       setVerificationStatus(
-        `Verification code sent via ${type === "phone" ? "SMS" : "email"} to ${maskedTarget}.`,
+        `Verification code sent via ${type === "phone" ? "SMS" : "email"}.`,
         "success"
       );
       notificationStore?.add({
         type: "verification",
         title: "Verification sent",
-        message:
-          result?.delivery?.mock === true
-            ? "Verification is using mock delivery. Configure SMS/email providers for live delivery."
-            : `A code was sent via ${type === "phone" ? "SMS" : "email"}.`,
+        message: `A code was sent via ${type === "phone" ? "SMS" : "email"}.`,
       });
     } catch (error) {
       setVerificationStatus(error.message || "Failed to send code.", "error");
