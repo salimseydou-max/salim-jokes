@@ -2,7 +2,14 @@ const DEFAULT_LANG = "en";
 const DEFAULT_CATEGORY = "random";
 
 function sanitizeText(value, maxLength = 1200) {
-  return String(value || "").replace(/[<>]/g, "").trim().slice(0, maxLength);
+  return String(value || "")
+    .replace(/[<>]/g, "")
+    .replace(/\r\n/g, "\n")
+    .replace(/[ \t]+\n/g, "\n")
+    .replace(/\n[ \t]+/g, "\n")
+    .replace(/\n{2,}/g, "\n")
+    .trim()
+    .slice(0, maxLength);
 }
 
 function sanitizeTags(tags) {

@@ -57,7 +57,7 @@ function sanitizeText(value, maxLength = 480) {
     .replace(/[<>]/g, "")
     .replace(/\r\n/g, "\n")
     .replace(/[ \t]+/g, " ")
-    .replace(/\n{3,}/g, "\n\n")
+    .replace(/\n{2,}/g, "\n")
     .trim()
     .slice(0, maxLength);
 }

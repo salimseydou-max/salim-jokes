@@ -70,6 +70,15 @@ function sumReactionCounts(counts = {}) {
   return Object.values(counts).reduce((sum, value) => sum + (Number(value) || 0), 0);
 }
 
+function normalizeJokeText(value) {
+  return String(value || "")
+    .replace(/\r\n/g, "\n")
+    .replace(/[ \t]+\n/g, "\n")
+    .replace(/\n[ \t]+/g, "\n")
+    .replace(/\n{2,}/g, "\n")
+    .trim();
+}
+
 export function createFeedView(options = {}) {
   const root = options.root;
   const toast = options.toast;
@@ -379,6 +388,7 @@ export function createFeedView(options = {}) {
   function buildJokeCard(joke) {
     const card = createElement("article", "joke-card");
     card.dataset.jokeId = joke.id;
+    const normalizedJokeText = normalizeJokeText(joke.text) || String(joke.text || "");
 
     const header = createElement("header", "joke-card-header");
     const source = createElement("span", "joke-source");
@@ -388,7 +398,7 @@ export function createFeedView(options = {}) {
     header.append(source, meta);
 
     const content = createElement("p", "joke-text");
-    content.textContent = joke.text;
+    content.textContent = normalizedJokeText;
 
     const footer = createElement("div", "joke-footer");
     const footerMain = createElement("div", "joke-footer-main");
@@ -415,7 +425,7 @@ export function createFeedView(options = {}) {
     copyButton.textContent = "Copy";
     copyButton.addEventListener("click", async () => {
       try {
-        await copyToClipboard(joke.text);
+        await copyToClipboard(normalizedJokeText);
         toast?.show("Joke copied.");
       } catch (error) {
         toast?.show("Copy failed. Please try again.", "error");
@@ -430,10 +440,10 @@ export function createFeedView(options = {}) {
         if (navigator.share) {
           await navigator.share({
             title: "Voice Joke Club",
-            text: joke.text,
+            text: normalizedJokeText,
           });
         } else {
-          await copyToClipboard(joke.text);
+          await copyToClipboard(normalizedJokeText);
         }
         toast?.show("Ready to share.");
       } catch (error) {
@@ -446,7 +456,10 @@ export function createFeedView(options = {}) {
     imageButton.textContent = "Image";
     imageButton.addEventListener("click", async () => {
       try {
-        await exportJokeAsImage(joke);
+        await exportJokeAsImage({
+          ...joke,
+          text: normalizedJokeText,
+        });
         toast?.show("Image exported.");
       } catch (error) {
         toast?.show("Image export failed.", "error");
@@ -459,7 +472,7 @@ export function createFeedView(options = {}) {
     favoriteButton.addEventListener("click", () => {
       const result = favoritesStore.toggle({
         id: joke.id,
-        text: joke.text,
+        text: normalizedJokeText,
         source: joke.source,
         sourceType: joke.sourceType,
         category: joke.category,

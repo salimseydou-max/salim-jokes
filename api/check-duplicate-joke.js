@@ -1,4 +1,5 @@
 import { getOpenRouterConfig } from "../config/ai.js";
+import parseRequestBody from "../lib/parseRequestBody.js";
 
 const MAX_CANDIDATES = 12;
 const BLOCK_THRESHOLD = 90;
@@ -216,7 +217,7 @@ export default async function handler(req, res) {
 
   try {
     const openRouterConfig = getOpenRouterConfig();
-    const body = req.body && typeof req.body === "object" ? req.body : {};
+    const body = await parseRequestBody(req);
     const jokeText = sanitizeText(body.jokeText || body.joke || "");
     if (!jokeText) {
       return res.status(400).json({ error: "Missing joke text" });
