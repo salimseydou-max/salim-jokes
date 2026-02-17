@@ -104,14 +104,10 @@ export async function exportJokeAsImage(joke) {
   ctx.font = "700 52px Inter, Segoe UI, Arial";
   ctx.fillText("😂 Voice Joke Club 🤣", 116, 172);
 
-  ctx.fillStyle = "rgba(226, 232, 240, 0.92)";
-  ctx.font = "500 30px Inter, Segoe UI, Arial";
-  ctx.fillText("Fun logos • clean style • share your laugh", 116, 222);
-
   ctx.fillStyle = "#f8fafc";
   ctx.font = "600 42px Inter, Segoe UI, Arial";
   const lines = wrapText(ctx, enhancedText, canvas.width - 232);
-  const startY = 320;
+  const startY = 286;
   const lineHeight = 52;
   const maxLines = 10;
   const visibleLines = lines.slice(0, maxLines);
