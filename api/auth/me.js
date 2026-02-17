@@ -41,6 +41,7 @@ export default async function handler(req, res) {
         displayName: body.displayName,
         avatarUrl: body.avatarUrl,
         phoneNumber: body.phoneNumber,
+        language: body.language,
       });
       return res.status(200).json({
         success: true,

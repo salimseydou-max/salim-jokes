@@ -77,6 +77,8 @@ export function createProfileView(options = {}) {
   const submissionStore = options.submissionStore;
   const reactionStore = options.reactionStore;
   const commentStore = options.commentStore;
+  const i18nService = options.i18nService;
+  const notificationStore = options.notificationStore;
   const toast = options.toast;
   const getViewerId = typeof options.getViewerId === "function" ? options.getViewerId : () => "guest";
   const onUserChanged =
@@ -84,18 +86,20 @@ export function createProfileView(options = {}) {
 
   const authCard = root?.querySelector("[data-profile-auth-card]");
   const accountCard = root?.querySelector("[data-profile-account-card]");
+  const authModeButtons = Array.from(root?.querySelectorAll("[data-auth-mode-button]") || []);
+  const authPanels = Array.from(root?.querySelectorAll("[data-auth-panel]") || []);
   const loginForm = root?.querySelector("[data-profile-login-form]");
   const googleLoginButton = root?.querySelector("[data-profile-google-login]");
   const signupForm = root?.querySelector("[data-profile-signup-form]");
   const editForm = root?.querySelector("[data-profile-edit-form]");
   const logoutButton = root?.querySelector("[data-profile-logout]");
 
-  const sendEmailCodeButton = root?.querySelector("[data-signup-send-email-code]");
-  const sendPhoneCodeButton = root?.querySelector("[data-signup-send-phone-code]");
+  const sendCodeButton = root?.querySelector("[data-signup-send-code]");
   const verifyCodeButton = root?.querySelector("[data-signup-verify-code]");
   const verificationCodeInput = root?.querySelector("[data-signup-verification-code]");
-  const verificationTargetSelect = root?.querySelector("[data-signup-verification-target]");
   const verificationStatus = root?.querySelector("[data-signup-verification-status]");
+  const signupLanguageSelect = root?.querySelector("[data-signup-language]");
+  const profileLanguageSelect = root?.querySelector("[data-profile-language]");
 
   const profileName = root?.querySelector("[data-profile-name]");
   const profileEmail = root?.querySelector("[data-profile-email]");
@@ -158,6 +162,36 @@ export function createProfileView(options = {}) {
     if (accountCard) {
       accountCard.hidden = !authenticated;
     }
+  }
+
+  function setAuthMode(mode) {
+    const normalized = mode === "signup" ? "signup" : "signin";
+    authModeButtons.forEach((button) => {
+      const active = button.getAttribute("data-auth-mode-button") === normalized;
+      button.classList.toggle("is-active", active);
+      button.setAttribute("aria-selected", active ? "true" : "false");
+    });
+    authPanels.forEach((panel) => {
+      const active = panel.getAttribute("data-auth-panel") === normalized;
+      panel.hidden = !active;
+      panel.classList.toggle("is-active", active);
+    });
+  }
+
+  function populateLanguageOptions(select, selected) {
+    if (!select || !i18nService) {
+      return;
+    }
+    const languages = i18nService.getSupportedLanguages();
+    const current = String(selected || "en").slice(0, 2).toLowerCase();
+    select.innerHTML = "";
+    for (let i = 0; i < languages.length; i += 1) {
+      const option = document.createElement("option");
+      option.value = languages[i].code;
+      option.textContent = `${languages[i].label} (${languages[i].code})`;
+      select.appendChild(option);
+    }
+    select.value = languages.some((entry) => entry.code === current) ? current : "en";
   }
 
   function renderSavedList() {
@@ -249,7 +283,7 @@ export function createProfileView(options = {}) {
       profileName.textContent = user.displayName || "User";
     }
     if (profileEmail) {
-      profileEmail.textContent = user.email || "";
+      profileEmail.textContent = user.email ? `Email: ${user.email}` : "Email: not set";
     }
     if (profilePhone) {
       profilePhone.textContent = user.phoneNumber ? `Phone: ${user.phoneNumber}` : "Phone: not set";
@@ -264,26 +298,44 @@ export function createProfileView(options = {}) {
       profileStats.textContent = `Views ${views} • Favorites ${favorites} • Likes ${likes}`;
     }
     const nameInput = editForm?.querySelector("[name='displayName']");
+    const emailInput = editForm?.querySelector("[name='email']");
     const phoneInput = editForm?.querySelector("[name='phoneNumber']");
+    const languageInput = editForm?.querySelector("[name='language']");
     if (nameInput) {
       nameInput.value = user.displayName || "";
+    }
+    if (emailInput) {
+      emailInput.value = user.email || "";
     }
     if (phoneInput) {
       phoneInput.value = user.phoneNumber || "";
     }
+    if (languageInput) {
+      populateLanguageOptions(languageInput, user.language || user?.profile?.preferences?.language || "en");
+    }
     renderCollections();
   }
 
-  async function sendVerificationCode(type) {
+  async function sendVerificationCode() {
     const email = signupForm?.querySelector("[name='email']")?.value || "";
     const phone = sanitizePhone(signupForm?.querySelector("[name='phoneNumber']")?.value || "");
+    const type = phone ? "phone" : "email";
     const target = type === "phone" ? phone : email;
+    if (!target) {
+      setVerificationStatus("Enter a valid phone or email before requesting a code.", "error");
+      return;
+    }
     try {
-      const result = await verificationService.requestCode(type, target);
+      await verificationService.requestCode(type, target);
       setVerificationStatus(
-        `Verification code sent to ${type}. Code for now: ${result.code}`,
+        `Verification code sent via ${type === "phone" ? "SMS" : "email"}.`,
         "success"
       );
+      notificationStore?.add({
+        type: "verification",
+        title: "Verification sent",
+        message: `A code was sent via ${type === "phone" ? "SMS" : "email"}.`,
+      });
     } catch (error) {
       setVerificationStatus(error.message || "Failed to send code.", "error");
     }
@@ -292,16 +344,16 @@ export function createProfileView(options = {}) {
   function confirmVerificationCode() {
     const email = signupForm?.querySelector("[name='email']")?.value || "";
     const phone = sanitizePhone(signupForm?.querySelector("[name='phoneNumber']")?.value || "");
-    const targetType = verificationTargetSelect?.value === "phone" ? "phone" : "email";
-    const target = targetType === "phone" ? phone : email;
     const code = verificationCodeInput?.value || "";
-    const ok = verificationService.verifyCode(targetType, target, code);
-    if (!ok) {
+    const verifiedPhone = phone ? verificationService.verifyCode("phone", phone, code) : false;
+    const verifiedEmail = email ? verificationService.verifyCode("email", email, code) : false;
+    if (!verifiedPhone && !verifiedEmail) {
       setVerificationStatus("Invalid or expired verification code.", "error");
       return;
     }
+    const channel = verifiedPhone ? "phone" : "email";
     refreshVerificationState();
-    toast?.show(`${targetType} verified.`);
+    toast?.show(`${channel} verified.`);
   }
 
   async function submitLogin(event) {
@@ -311,6 +363,11 @@ export function createProfileView(options = {}) {
     try {
       const user = await authService.login({ identifier, password });
       toast?.show("Logged in.");
+      notificationStore?.add({
+        type: "login",
+        title: "Login successful",
+        message: "You signed in successfully.",
+      });
       renderAccount(user);
       onUserChanged(user);
     } catch (error) {
@@ -329,10 +386,12 @@ export function createProfileView(options = {}) {
     const username = signupForm?.querySelector("[name='username']")?.value || "";
     const email = signupForm?.querySelector("[name='email']")?.value || "";
     const phoneNumber = sanitizePhone(signupForm?.querySelector("[name='phoneNumber']")?.value || "");
+    const language =
+      signupForm?.querySelector("[name='language']")?.value || i18nService?.getLanguage?.() || "en";
     const password = signupForm?.querySelector("[name='password']")?.value || "";
     const avatarFile = signupForm?.querySelector("[name='avatar']")?.files?.[0];
-    if (!phoneNumber) {
-      toast?.show("Enter a valid phone number.", "error");
+    if (!email && !phoneNumber) {
+      toast?.show("Provide email or phone number to continue.", "error");
       return;
     }
 
@@ -342,11 +401,18 @@ export function createProfileView(options = {}) {
         username,
         email,
         phoneNumber,
+        language,
         password,
         avatarUrl,
       });
       toast?.show("Account created.");
+      notificationStore?.add({
+        type: "signup",
+        title: "Account created",
+        message: "Your account was created successfully.",
+      });
       signupForm?.reset();
+      populateLanguageOptions(signupLanguageSelect, i18nService?.getLanguage?.() || "en");
       if (verificationCodeInput) {
         verificationCodeInput.value = "";
       }
@@ -360,8 +426,15 @@ export function createProfileView(options = {}) {
 
   async function handleGoogleLogin() {
     try {
-      const user = await authService.loginWithGoogle();
+      const user = await authService.loginWithGoogle({
+        language: i18nService?.getLanguage?.() || "en",
+      });
       toast?.show("Signed in with Google.");
+      notificationStore?.add({
+        type: "login",
+        title: "Google sign-in",
+        message: "You signed in with Google.",
+      });
       renderAccount(user);
       onUserChanged(user);
     } catch (error) {
@@ -373,10 +446,11 @@ export function createProfileView(options = {}) {
     event.preventDefault();
     const displayName = editForm?.querySelector("[name='displayName']")?.value || "";
     const phoneNumber = editForm?.querySelector("[name='phoneNumber']")?.value || "";
+    const language = editForm?.querySelector("[name='language']")?.value || "";
     const avatarFile = editForm?.querySelector("[name='avatar']")?.files?.[0];
     try {
       const avatarUrl = avatarFile ? await fileToDataUrl(avatarFile) : "";
-      const user = await authService.updateProfile({ displayName, phoneNumber, avatarUrl });
+      const user = await authService.updateProfile({ displayName, phoneNumber, avatarUrl, language });
       toast?.show("Profile updated.");
       renderAccount(user);
       onUserChanged(user);
@@ -387,6 +461,11 @@ export function createProfileView(options = {}) {
 
   async function handleLogout() {
     await authService.logout();
+    notificationStore?.add({
+      type: "account",
+      title: "Logged out",
+      message: "Your session ended on this device.",
+    });
     renderAccount(null);
     setAuthVisibility(false);
     toast?.show("Logged out.");
@@ -395,17 +474,35 @@ export function createProfileView(options = {}) {
   }
 
   function init() {
+    authModeButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        const mode = button.getAttribute("data-auth-mode-button") || "signin";
+        setAuthMode(mode);
+      });
+    });
     loginForm?.addEventListener("submit", submitLogin);
     googleLoginButton?.addEventListener("click", handleGoogleLogin);
     signupForm?.addEventListener("submit", submitSignup);
     editForm?.addEventListener("submit", submitProfileUpdate);
     logoutButton?.addEventListener("click", handleLogout);
 
-    sendEmailCodeButton?.addEventListener("click", () => sendVerificationCode("email"));
-    sendPhoneCodeButton?.addEventListener("click", () => sendVerificationCode("phone"));
+    sendCodeButton?.addEventListener("click", () => sendVerificationCode());
     verifyCodeButton?.addEventListener("click", confirmVerificationCode);
     signupForm?.querySelector("[name='email']")?.addEventListener("input", refreshVerificationState);
     signupForm?.querySelector("[name='phoneNumber']")?.addEventListener("input", refreshVerificationState);
+    populateLanguageOptions(signupLanguageSelect, i18nService?.getLanguage?.() || "en");
+    populateLanguageOptions(profileLanguageSelect, i18nService?.getLanguage?.() || "en");
+    setAuthMode("signin");
+    i18nService?.subscribe?.(() => {
+      populateLanguageOptions(
+        signupLanguageSelect,
+        signupForm?.querySelector("[name='language']")?.value || i18nService?.getLanguage?.() || "en"
+      );
+      populateLanguageOptions(
+        profileLanguageSelect,
+        editForm?.querySelector("[name='language']")?.value || i18nService?.getLanguage?.() || "en"
+      );
+    });
 
     authService.subscribe((user) => {
       renderAccount(user);
@@ -419,8 +516,25 @@ export function createProfileView(options = {}) {
     renderAccount(user);
     setAuthVisibility(Boolean(user));
     if (!user) {
+      setAuthMode("signin");
+    }
+    if (!user) {
       renderCollections();
     }
+  }
+
+  function openEditInfo() {
+    const user = authService.getUser();
+    if (!user) {
+      setAuthMode("signup");
+      const signupFocus = signupForm?.querySelector("[name='username']");
+      signupFocus?.focus();
+      return;
+    }
+    setAuthVisibility(true);
+    const displayNameInput = editForm?.querySelector("[name='displayName']");
+    displayNameInput?.focus();
+    displayNameInput?.select();
   }
 
   init();
@@ -429,5 +543,6 @@ export function createProfileView(options = {}) {
     activate,
     refreshCollections: renderCollections,
     getOwnerId,
+    openEditInfo,
   };
 }

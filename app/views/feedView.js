@@ -80,9 +80,14 @@ export function createFeedView(options = {}) {
   const notificationStore = options.notificationStore;
   const preferencesStore = options.preferencesStore;
   const profileView = options.profileView;
+  const i18nService = options.i18nService;
   const getViewerId = typeof options.getViewerId === "function" ? options.getViewerId : () => "guest";
   const getCurrentUser =
     typeof options.getCurrentUser === "function" ? options.getCurrentUser : () => null;
+  const t =
+    typeof i18nService?.t === "function"
+      ? (key, fallback) => i18nService.t(key, fallback)
+      : (_key, fallback) => fallback;
 
   const searchInput = document.querySelector("[data-global-search-input]");
   const searchClear = document.querySelector("[data-global-search-clear]");
@@ -487,7 +492,10 @@ export function createFeedView(options = {}) {
       return;
     }
     if (!searchMode || !searchQuery) {
-      searchMeta.textContent = "Mixing AI, user, trending, recent, and random jokes.";
+      searchMeta.textContent = t(
+        "search.meta.default",
+        "Mixing AI, user, trending, recent, and random jokes."
+      );
       return;
     }
     searchMeta.textContent = `${formatCount(searchResults.length)} result${
