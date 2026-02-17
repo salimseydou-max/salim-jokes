@@ -3,7 +3,7 @@ const DEFAULT_URL = "/#/feed";
 const DEFAULT_ICON = "/icons/icon-192.png";
 const DEFAULT_BADGE = "/icons/favicon-32.png";
 
-const CACHE_VERSION = "auth-persistence-v14";
+const CACHE_VERSION = "image-export-watermark-v15";
 const CORE_CACHE = `vjc-core-cache-${CACHE_VERSION}`;
 const RUNTIME_CACHE = `vjc-runtime-cache-${CACHE_VERSION}`;
 const API_CACHE = `vjc-api-cache-${CACHE_VERSION}`;
