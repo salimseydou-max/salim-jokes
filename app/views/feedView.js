@@ -9,6 +9,7 @@ import { exportJokeAsImage } from "../services/imageExport.js";
 const VISIBLE_BATCH_SIZE = 5;
 const SEARCH_BATCH_SIZE = 6;
 const SEARCH_DEBOUNCE_MS = 160;
+const RECENT_FEED_WINDOW = 18;
 
 function createElement(tag, className = "") {
   const element = document.createElement(tag);
@@ -99,7 +100,10 @@ export function createFeedView(options = {}) {
   const emptyState = root?.querySelector("[data-feed-empty]");
 
   const duplicateTracker = createDuplicateTracker({
-    sessionKey: "vjc.feed.seen-joke-ids.v1",
+    sessionKey: "vjc.feed.seen-joke-state.v3",
+    localKey: "vjc.feed.seen-joke-state.local.v3",
+    maxIds: 460,
+    maxFingerprints: 560,
     // Placeholder for future persistent duplicate filtering backend.
     persistenceAdapter: {
       async load() {
@@ -205,6 +209,21 @@ export function createFeedView(options = {}) {
     if (!mainFeedJokes.some((entry) => entry.id === joke.id)) {
       mainFeedJokes.push(joke);
     }
+  }
+
+  function isInRecentFeedWindow(jokeId, windowSize = RECENT_FEED_WINDOW) {
+    const id = String(jokeId || "").trim();
+    if (!id || !mainFeedJokes.length) {
+      return false;
+    }
+    const cap = Math.max(1, Math.floor(Number(windowSize) || RECENT_FEED_WINDOW));
+    const startIndex = Math.max(0, mainFeedJokes.length - cap);
+    for (let i = startIndex; i < mainFeedJokes.length; i += 1) {
+      if (mainFeedJokes[i]?.id === id) {
+        return true;
+      }
+    }
+    return false;
   }
 
   function updateCommentButtonText(button, jokeId) {
@@ -505,18 +524,20 @@ export function createFeedView(options = {}) {
 
   function filterUniqueMainFeed(rawJokes = []) {
     const unique = [];
+    const batchIds = new Set();
     for (let i = 0; i < rawJokes.length; i += 1) {
       const item = rawJokes[i];
       const id = String(item?.id || "").trim();
       if (!id) {
         continue;
       }
-      if (
-        !duplicateTracker.markDisplayedJoke(item) ||
-        mainFeedJokes.some((entry) => entry.id === id)
-      ) {
+      if (batchIds.has(id) || isInRecentFeedWindow(id)) {
         continue;
       }
+      if (!duplicateTracker.markDisplayedJoke(item)) {
+        continue;
+      }
+      batchIds.add(id);
       unique.push(item);
     }
     return unique;
@@ -613,11 +634,37 @@ export function createFeedView(options = {}) {
         VISIBLE_BATCH_SIZE,
         (id, joke) =>
           duplicateTracker.hasJoke(joke || { id }) ||
-          mainFeedJokes.some((entry) => entry.id === id)
+          isInRecentFeedWindow(id)
       );
       collected = filterUniqueMainFeed(next);
     } catch (error) {
       collected = [];
+    }
+
+    if (collected.length < 2) {
+      try {
+        duplicateTracker.reset();
+        for (let i = 0; i < collected.length; i += 1) {
+          duplicateTracker.markDisplayedJoke(collected[i]);
+        }
+        const retryBatch = await feedComposer.nextBatch(
+          VISIBLE_BATCH_SIZE,
+          (id) => isInRecentFeedWindow(id)
+        );
+        const retryUnique = filterUniqueMainFeed(retryBatch);
+        if (retryUnique.length) {
+          const already = new Set(collected.map((entry) => entry.id));
+          for (let i = 0; i < retryUnique.length; i += 1) {
+            if (already.has(retryUnique[i].id)) {
+              continue;
+            }
+            already.add(retryUnique[i].id);
+            collected.push(retryUnique[i]);
+          }
+        }
+      } catch (error) {
+        // Keep feed resilient if retry path fails.
+      }
     }
 
     if (collected.length) {
