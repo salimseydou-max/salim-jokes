@@ -44,8 +44,32 @@ body {
 }
 
 body {
+  position: relative;
   display: flex;
   justify-content: center;
+}
+
+body::before {
+  content:
+    "😂 🤣 😹 😜 😆 😎 🤪 😁 😂 🤣 😹 😜 😆 😎 🤪 😁\A"
+    "😄 🤣 😍 😂 😹 😜 😆 😎 🤪 😁 😄 🤣 😍 😂 😹 😜\A"
+    "🤩 😂 🤣 😹 😜 😆 😎 🤪 😁 🤩 😂 🤣 😹 😜 😆 😎\A"
+    "😂 🤣 😹 😜 😆 😎 🤪 😁 😂 🤣 😹 😜 😆 😎 🤪 😁\A"
+    "😄 🤣 😍 😂 😹 😜 😆 😎 🤪 😁 😄 🤣 😍 😂 😹 😜";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  white-space: pre;
+  line-height: 2.3;
+  font-size: 1.2rem;
+  letter-spacing: 0.5rem;
+  opacity: 0.08;
+  text-align: center;
+}
+
+html[data-theme="light"] body::before {
+  opacity: 0.1;
 }
 
 a {
@@ -68,6 +92,8 @@ a {
 }
 
 .app-shell {
+  position: relative;
+  z-index: 1;
   width: 100%;
   max-width: 920px;
   min-height: 100vh;

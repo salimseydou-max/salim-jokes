@@ -12,7 +12,6 @@ import { createSearchService } from "./services/searchService.js";
 import { getOrCreatePersistentId } from "./services/storage.js";
 import { createSubmissionStore } from "./services/submissionStore.js";
 import { createToast } from "./services/toast.js";
-import { createVerificationService } from "./services/verificationService.js";
 import { createFeedView } from "./views/feedView.js";
 import { createNotificationsView } from "./views/notificationsView.js";
 import { createProfileView } from "./views/profileView.js";
@@ -60,18 +59,6 @@ const i18nService = createI18nService({
   defaultLanguage: preferencesStore.get().general?.language || "en",
 });
 const notificationStore = createNotificationStore();
-const verificationService = createVerificationService({
-  transport: {
-    async sendCode(payload) {
-      const channel = payload?.type === "phone" ? "SMS" : "email";
-      notificationStore.add({
-        type: "verification",
-        title: `${channel} verification`,
-        message: `A verification code was sent via ${channel.toUpperCase()}.`,
-      });
-    },
-  },
-});
 const favoritesStore = createFavoritesStore({
   storageKey: "vjc.feed.favorite-jokes.v1",
 });
@@ -147,7 +134,6 @@ let profileView = null;
 profileView = createProfileView({
   root: document.querySelector("[data-view='/profile']"),
   authService,
-  verificationService,
   favoritesStore,
   submissionStore,
   reactionStore,

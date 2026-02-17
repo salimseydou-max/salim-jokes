@@ -24,6 +24,30 @@
     rel="stylesheet"
     href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
   />
+  <script>
+    (function () {
+      try {
+        var raw = localStorage.getItem("vjc.preferences.v1");
+        if (!raw) {
+          return;
+        }
+        var parsed = JSON.parse(raw) || {};
+        var theme = String((parsed.appearance && parsed.appearance.theme) || "").toLowerCase();
+        var resolved = theme;
+        if (theme === "system") {
+          resolved =
+            window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches
+              ? "light"
+              : "dark";
+        }
+        var normalized = resolved === "light" ? "light" : "dark";
+        document.documentElement.setAttribute("data-theme", normalized);
+        document.documentElement.style.colorScheme = normalized;
+      } catch (error) {
+        // Keep first paint resilient if localStorage is unavailable.
+      }
+    })();
+  </script>
   <link rel="stylesheet" href="/app/styles/app.css" />
 </head>
 <body>
@@ -202,7 +226,7 @@
         <article class="section-card" data-profile-auth-card>
           <h2 class="section-title">Sign in or create account</h2>
           <p class="section-copy">
-            Quick sign-in and sign-up forms. Verification code uses SMS when phone is provided, otherwise email.
+            Quick sign-in and sign-up forms using email and password.
           </p>
           <div class="auth-switcher" role="tablist" aria-label="Authentication mode">
             <button
@@ -228,7 +252,7 @@
           </div>
 
           <form class="mini-form auth-pane is-active" data-profile-login-form data-auth-panel="signin">
-            <input class="form-input" type="text" name="identifier" placeholder="Email or phone" required />
+            <input class="form-input" type="email" name="identifier" placeholder="Email" required />
             <input class="form-input" type="password" name="password" placeholder="Password" required />
             <button class="submit-button" type="submit" data-i18n="profile.signIn">Sign in</button>
             <button class="text-button" type="button" data-profile-google-login data-i18n="auth.google">
@@ -238,8 +262,7 @@
 
           <form class="mini-form auth-pane" data-profile-signup-form data-auth-panel="signup" hidden>
             <input class="form-input" type="text" name="username" placeholder="Username" required />
-            <input class="form-input" type="email" name="email" placeholder="Email (or phone only)" />
-            <input class="form-input" type="tel" name="phoneNumber" placeholder="Phone number" />
+            <input class="form-input" type="email" name="email" placeholder="Email" required />
             <input class="form-input" type="password" name="password" placeholder="Password" required />
             <label class="field-label">
               Preferred language
@@ -249,19 +272,6 @@
               Optional profile picture
               <input class="form-input" type="file" name="avatar" accept="image/png,image/jpeg,image/webp" />
             </label>
-
-            <div class="verification-box">
-              <div class="verification-actions">
-                <button class="text-button" type="button" data-signup-send-code>Send verification code</button>
-              </div>
-              <div class="verification-inline">
-                <input class="form-input" data-signup-verification-code type="text" placeholder="Enter 6-digit code" />
-                <button class="submit-button" type="button" data-signup-verify-code>Confirm</button>
-              </div>
-              <p class="verification-status" data-signup-verification-status>
-                Verify at least email or phone before creating the account.
-              </p>
-            </div>
 
             <button class="submit-button" type="submit" data-i18n="profile.signUp">Create account</button>
           </form>
