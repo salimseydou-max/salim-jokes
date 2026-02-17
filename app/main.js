@@ -16,7 +16,7 @@ import { createVerificationService } from "./services/verificationService.js";
 import { createFeedView } from "./views/feedView.js";
 import { createNotificationsView } from "./views/notificationsView.js";
 import { createProfileView } from "./views/profileView.js";
-import { createSettingsView } from "./views/settingsView.js";
+import { applyThemeToDocument, createSettingsView } from "./views/settingsView.js";
 import { createSubmitView } from "./views/submitView.js";
 
 createMonetizationInfrastructure();
@@ -55,6 +55,7 @@ const toast = createToast(document.querySelector("[data-toast]"));
 const viewerId = getOrCreatePersistentId("vjc.viewer-id.v1");
 const authService = createAuthService();
 const preferencesStore = createPreferencesStore();
+applyThemeToDocument(preferencesStore.get().appearance?.theme || "dark");
 const i18nService = createI18nService({
   defaultLanguage: preferencesStore.get().general?.language || "en",
 });
