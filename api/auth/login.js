@@ -5,6 +5,16 @@ import {
 } from "../../lib/auth.js";
 import parseRequestBody from "../../lib/parseRequestBody.js";
 
+function setNoStoreHeaders(res) {
+  if (!res || typeof res.setHeader !== "function") {
+    return;
+  }
+  res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+  res.setHeader("Pragma", "no-cache");
+  res.setHeader("Expires", "0");
+  res.setHeader("Vary", "Cookie");
+}
+
 function getClientIp(req) {
   const forwarded = req?.headers?.["x-forwarded-for"];
   if (Array.isArray(forwarded)) {
@@ -17,6 +27,7 @@ function getClientIp(req) {
 }
 
 export default async function handler(req, res) {
+  setNoStoreHeaders(res);
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }

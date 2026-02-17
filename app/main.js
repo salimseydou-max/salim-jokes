@@ -447,13 +447,38 @@ if (
 router.start();
 updateHeaderProfile(authService.getUser());
 
+let authHeartbeatTimer = 0;
+function stopAuthHeartbeat() {
+  if (authHeartbeatTimer) {
+    window.clearInterval(authHeartbeatTimer);
+    authHeartbeatTimer = 0;
+  }
+}
+
+function startAuthHeartbeat() {
+  stopAuthHeartbeat();
+  authHeartbeatTimer = window.setInterval(() => {
+    authService.refreshSession({ keepLocalOnFailure: true }).catch(() => null);
+  }, 5 * 60 * 1000);
+}
+
 authService.subscribe((user) => {
   updateHeaderProfile(user);
   syncLanguageFromUser(user);
+  if (user) {
+    startAuthHeartbeat();
+  } else {
+    stopAuthHeartbeat();
+  }
 });
-authService.refreshSession().then((user) => {
+authService.refreshSession({ keepLocalOnFailure: true }).then((user) => {
   updateHeaderProfile(user);
   syncLanguageFromUser(user);
+  if (user) {
+    startAuthHeartbeat();
+  } else {
+    stopAuthHeartbeat();
+  }
 });
 
 if ("serviceWorker" in navigator && window.isSecureContext) {
