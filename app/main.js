@@ -4,6 +4,7 @@ import { createAuthService } from "./services/authService.js";
 import { createCommentStore } from "./services/commentStore.js";
 import { createFeedComposer } from "./services/feedComposer.js";
 import { createFavoritesStore } from "./services/favoritesStore.js";
+import { createI18nService } from "./services/i18nService.js";
 import { createNotificationStore } from "./services/notificationStore.js";
 import { createPreferencesStore } from "./services/preferencesStore.js";
 import { createReactionStore } from "./services/reactionStore.js";
@@ -36,19 +37,40 @@ const routes = Object.freeze({
 const sections = Array.from(document.querySelectorAll("[data-view]"));
 const tabButtons = Array.from(document.querySelectorAll("[data-tab-route]"));
 const menuRouteButtons = Array.from(document.querySelectorAll("[data-menu-route]"));
+const profileRouteButtons = Array.from(document.querySelectorAll("[data-profile-route]"));
+const profileActionButtons = Array.from(document.querySelectorAll("[data-profile-action]"));
 
 const menuToggle = document.querySelector("[data-overflow-menu-toggle]");
 const menuClose = document.querySelector("[data-overflow-menu-close]");
 const menuPanel = document.querySelector("[data-overflow-menu]");
-const menuAlertBadge = document.querySelector("[data-menu-alert-badge]");
+const profileMenuToggle = document.querySelector("[data-profile-menu-toggle]");
+const profileMenuClose = document.querySelector("[data-profile-menu-close]");
+const profileMenuPanel = document.querySelector("[data-profile-menu]");
+const profileAlertBadge = document.querySelector("[data-profile-alert-badge]");
+const headerProfileAvatar = document.querySelector("[data-header-profile-avatar]");
+const headerProfileInitial = document.querySelector("[data-header-profile-initial]");
 
 const toast = createToast(document.querySelector("[data-toast]"));
 
 const viewerId = getOrCreatePersistentId("vjc.viewer-id.v1");
 const authService = createAuthService();
-const verificationService = createVerificationService();
 const preferencesStore = createPreferencesStore();
+const i18nService = createI18nService({
+  defaultLanguage: preferencesStore.get().general?.language || "en",
+});
 const notificationStore = createNotificationStore();
+const verificationService = createVerificationService({
+  transport: {
+    async sendCode(payload) {
+      const channel = payload?.type === "phone" ? "SMS" : "email";
+      notificationStore.add({
+        type: "verification",
+        title: `${channel} verification`,
+        message: `A verification code was sent via ${channel.toUpperCase()}.`,
+      });
+    },
+  },
+});
 const favoritesStore = createFavoritesStore({
   storageKey: "vjc.feed.favorite-jokes.v1",
 });
@@ -63,9 +85,62 @@ const submissionStore = createSubmissionStore({
 });
 const searchService = createSearchService();
 const feedComposer = createFeedComposer({
-  language: "en",
+  language: i18nService.getLanguage(),
   category: "random",
 });
+
+const RTL_LANGUAGES = new Set(["ar", "he", "fa", "ur"]);
+
+function applyDocumentLanguage(languageCode) {
+  const language = String(languageCode || "en").slice(0, 2).toLowerCase();
+  document.documentElement.setAttribute("lang", language);
+  document.documentElement.setAttribute("dir", RTL_LANGUAGES.has(language) ? "rtl" : "ltr");
+}
+
+function updateHeaderProfile(user) {
+  const entry = user || authService.getUser();
+  const label = entry?.displayName || entry?.email || "User";
+  const initial = String(label).trim().charAt(0).toUpperCase() || "U";
+  const avatarUrl = entry?.avatarUrl || entry?.profile?.avatarUrl || "";
+
+  if (headerProfileInitial) {
+    headerProfileInitial.textContent = initial;
+  }
+  if (headerProfileAvatar) {
+    if (avatarUrl) {
+      headerProfileAvatar.src = avatarUrl;
+      headerProfileAvatar.hidden = false;
+      if (headerProfileInitial) {
+        headerProfileInitial.hidden = true;
+      }
+    } else {
+      headerProfileAvatar.hidden = true;
+      if (headerProfileInitial) {
+        headerProfileInitial.hidden = false;
+      }
+    }
+  }
+  if (profileMenuToggle) {
+    profileMenuToggle.setAttribute("aria-label", `Open profile menu for ${label}`);
+  }
+}
+
+function syncLanguageFromUser(user) {
+  const language = String(user?.language || user?.profile?.preferences?.language || "")
+    .slice(0, 2)
+    .toLowerCase();
+  if (!language) {
+    return;
+  }
+  const current = preferencesStore.get().general?.language || "en";
+  if (current !== language) {
+    preferencesStore.update({
+      general: {
+        language,
+      },
+    });
+  }
+}
 
 let profileView = null;
 profileView = createProfileView({
@@ -76,10 +151,14 @@ profileView = createProfileView({
   submissionStore,
   reactionStore,
   commentStore,
+  i18nService,
+  notificationStore,
   toast,
   getViewerId: () => viewerId,
-  onUserChanged: () => {
+  onUserChanged: (user) => {
     profileView?.refreshCollections();
+    updateHeaderProfile(user || authService.getUser());
+    syncLanguageFromUser(user || authService.getUser());
   },
 });
 
@@ -94,6 +173,7 @@ const feedView = createFeedView({
   notificationStore,
   preferencesStore,
   profileView,
+  i18nService,
   getViewerId: () => viewerId,
   getCurrentUser: () => authService.getUser(),
 });
@@ -118,6 +198,7 @@ const submitView = createSubmitView({
 const settingsView = createSettingsView({
   root: document.querySelector("[data-view='/settings']"),
   preferencesStore,
+  i18nService,
   authService,
   toast,
   notificationStore,
@@ -127,11 +208,10 @@ const notificationsView = createNotificationsView({
   root: document.querySelector("[data-view='/notifications']"),
   store: notificationStore,
   onUnreadChange: (count) => {
-    if (!menuAlertBadge) {
-      return;
+    if (profileAlertBadge) {
+      profileAlertBadge.textContent = String(count);
+      profileAlertBadge.hidden = count <= 0;
     }
-    menuAlertBadge.textContent = String(count);
-    menuAlertBadge.hidden = count <= 0;
   },
 });
 
@@ -143,12 +223,28 @@ function closeMenu() {
   menuToggle.setAttribute("aria-expanded", "false");
 }
 
+function closeProfileMenu() {
+  if (!profileMenuPanel || !profileMenuToggle) {
+    return;
+  }
+  profileMenuPanel.hidden = true;
+  profileMenuToggle.setAttribute("aria-expanded", "false");
+}
+
 function openMenu() {
   if (!menuPanel || !menuToggle) {
     return;
   }
   menuPanel.hidden = false;
   menuToggle.setAttribute("aria-expanded", "true");
+}
+
+function openProfileMenu() {
+  if (!profileMenuPanel || !profileMenuToggle) {
+    return;
+  }
+  profileMenuPanel.hidden = false;
+  profileMenuToggle.setAttribute("aria-expanded", "true");
 }
 
 function toggleMenu() {
@@ -160,6 +256,17 @@ function toggleMenu() {
     return;
   }
   closeMenu();
+}
+
+function toggleProfileMenu() {
+  if (!profileMenuPanel) {
+    return;
+  }
+  if (profileMenuPanel.hidden) {
+    openProfileMenu();
+    return;
+  }
+  closeProfileMenu();
 }
 
 function setActiveSection(route) {
@@ -222,6 +329,7 @@ const sharedHandler = (incomingRoute) => {
   const route = normalizeAppRoute(incomingRoute);
   setActiveSection(route);
   closeMenu();
+  closeProfileMenu();
 };
 
 router.register(routes.FEED, sharedHandler);
@@ -258,28 +366,89 @@ menuRouteButtons.forEach((button) => {
   });
 });
 
+profileRouteButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    const route = button.getAttribute("data-profile-route");
+    if (!route) {
+      return;
+    }
+    router.navigate(route);
+  });
+});
+
+profileActionButtons.forEach((button) => {
+  button.addEventListener("click", async () => {
+    const action = button.getAttribute("data-profile-action");
+    if (!action) {
+      return;
+    }
+    if (action === "edit-info") {
+      router.navigate(routes.PROFILE);
+      window.setTimeout(() => {
+        profileView?.openEditInfo?.();
+      }, 20);
+      return;
+    }
+    if (action === "logout") {
+      await authService.logout();
+      updateHeaderProfile(null);
+      toast.show("Logged out.");
+      router.navigate(routes.FEED);
+    }
+  });
+});
+
 menuToggle?.addEventListener("click", (event) => {
   event.stopPropagation();
+  closeProfileMenu();
   toggleMenu();
 });
 menuClose?.addEventListener("click", () => {
   closeMenu();
 });
+profileMenuToggle?.addEventListener("click", (event) => {
+  event.stopPropagation();
+  closeMenu();
+  toggleProfileMenu();
+});
+profileMenuClose?.addEventListener("click", () => {
+  closeProfileMenu();
+});
 document.addEventListener("click", (event) => {
   if (!menuPanel || menuPanel.hidden) {
-    return;
+    if (!profileMenuPanel || profileMenuPanel.hidden) {
+      return;
+    }
   }
   const target = event.target;
   if (!(target instanceof Node)) {
     return;
   }
-  if (menuPanel.contains(target) || menuToggle?.contains(target)) {
-    return;
+  if (menuPanel && !menuPanel.hidden) {
+    if (!menuPanel.contains(target) && !menuToggle?.contains(target)) {
+      closeMenu();
+    }
   }
-  closeMenu();
+  if (profileMenuPanel && !profileMenuPanel.hidden) {
+    if (!profileMenuPanel.contains(target) && !profileMenuToggle?.contains(target)) {
+      closeProfileMenu();
+    }
+  }
 });
 
-authService.refreshSession();
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") {
+    closeMenu();
+    closeProfileMenu();
+  }
+});
+
+i18nService.applyTranslations(document);
+applyDocumentLanguage(i18nService.getLanguage());
+i18nService.subscribe((language) => {
+  applyDocumentLanguage(language);
+  i18nService.applyTranslations(document);
+});
 
 if (
   window.location.pathname === routes.FUTURE_PREMIUM ||
@@ -289,6 +458,16 @@ if (
 }
 
 router.start();
+updateHeaderProfile(authService.getUser());
+
+authService.subscribe((user) => {
+  updateHeaderProfile(user);
+  syncLanguageFromUser(user);
+});
+authService.refreshSession().then((user) => {
+  updateHeaderProfile(user);
+  syncLanguageFromUser(user);
+});
 
 if ("serviceWorker" in navigator && window.isSecureContext) {
   window.addEventListener("load", () => {

@@ -24,6 +24,7 @@ function setFormValues(root, preferences) {
     }
   };
 
+  setValue("[name='language']", preferences.general?.language || "en");
   setValue("[name='theme']", preferences.appearance.theme);
   setChecked("[name='compactCards']", preferences.appearance.compactCards);
   setChecked("[name='notifNewJokes']", preferences.notifications.newJokes);
@@ -40,6 +41,9 @@ function setFormValues(root, preferences) {
 
 function readFormValues(form) {
   return {
+    general: {
+      language: form.querySelector("[name='language']")?.value || "en",
+    },
     appearance: {
       theme: form.querySelector("[name='theme']")?.value || "dark",
       compactCards: Boolean(form.querySelector("[name='compactCards']")?.checked),
@@ -66,6 +70,7 @@ function readFormValues(form) {
 export function createSettingsView(options = {}) {
   const root = options.root;
   const preferencesStore = options.preferencesStore;
+  const i18nService = options.i18nService;
   const authService = options.authService;
   const toast = options.toast;
   const notificationStore = options.notificationStore;
@@ -74,11 +79,31 @@ export function createSettingsView(options = {}) {
   const resetButton = root?.querySelector("[data-settings-reset]");
   const saveButton = root?.querySelector("[data-settings-save]");
   const accountInfo = root?.querySelector("[data-settings-account-info]");
+  const languageSelect = root?.querySelector("[name='language']");
+
+  function populateLanguageOptions() {
+    if (!languageSelect || !i18nService) {
+      return;
+    }
+    const current = languageSelect.value || "en";
+    languageSelect.innerHTML = "";
+    const languages = i18nService.getSupportedLanguages();
+    for (let i = 0; i < languages.length; i += 1) {
+      const option = document.createElement("option");
+      option.value = languages[i].code;
+      option.textContent = `${languages[i].label} (${languages[i].code})`;
+      languageSelect.appendChild(option);
+    }
+    languageSelect.value = current;
+  }
 
   function applyFromStore() {
     const preferences = preferencesStore.get();
+    populateLanguageOptions();
     setFormValues(root, preferences);
+    i18nService?.setLanguage(preferences.general?.language || "en");
     applyThemeToDocument(preferences.appearance.theme);
+    i18nService?.applyTranslations(document);
     const user = authService?.getUser?.();
     if (accountInfo) {
       if (user) {
@@ -98,8 +123,20 @@ export function createSettingsView(options = {}) {
     }
     const values = readFormValues(form);
     const updated = preferencesStore.update(values);
+    i18nService?.setLanguage(updated.general?.language || "en");
     applyThemeToDocument(updated.appearance.theme);
+    i18nService?.applyTranslations(document);
     toast?.show("Settings saved.");
+    const user = authService?.getUser?.();
+    if (user?.id) {
+      authService
+        .updateProfile({
+          displayName: user.displayName,
+          phoneNumber: user.phoneNumber,
+          language: updated.general?.language || "en",
+        })
+        .catch(() => null);
+    }
     if (updated.notifications.featureUpdates) {
       notificationStore?.add({
         type: "settings",
@@ -125,7 +162,9 @@ export function createSettingsView(options = {}) {
       // Allows dedicated mobile save tap without submitting keyboard unexpectedly.
     });
     preferencesStore.subscribe((nextPrefs) => {
+      i18nService?.setLanguage(nextPrefs.general?.language || "en");
       applyThemeToDocument(nextPrefs.appearance.theme);
+      i18nService?.applyTranslations(document);
     });
     authService?.subscribe?.(() => {
       applyFromStore();

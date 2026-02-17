@@ -18,6 +18,14 @@ function normalizePhone(value) {
   return `${hasPlus ? "+" : ""}${digits}`;
 }
 
+function normalizePublicEmail(value) {
+  const email = sanitizeText(value, 320).toLowerCase();
+  if (!email || /@local\.voicejoke\.app$/i.test(email)) {
+    return "";
+  }
+  return email;
+}
+
 function getLocalStorageSafe() {
   try {
     return window.localStorage;
@@ -35,7 +43,7 @@ function normalizeUser(rawUser) {
   const profile = rawUser.profile && typeof rawUser.profile === "object" ? rawUser.profile : {};
   return {
     id: sanitizeText(rawUser.id, 120),
-    email: sanitizeText(rawUser.email, 320),
+    email: normalizePublicEmail(rawUser.email),
     createdAt: sanitizeText(rawUser.createdAt, 80),
     updatedAt: sanitizeText(rawUser.updatedAt, 80),
     displayName: sanitizeText(profile.displayName, 80) || "User",
@@ -44,6 +52,9 @@ function normalizeUser(rawUser) {
     favorites: Array.isArray(profile.favorites) ? profile.favorites : [],
     likedJokes: Array.isArray(profile.likedJokes) ? profile.likedJokes : [],
     provider: sanitizeText(rawUser.provider || profile.provider || "local", 32) || "local",
+    language:
+      sanitizeText(profile?.preferences?.language || profile?.basics?.locale, 20).toLowerCase() ||
+      "en",
     profile,
     stats: rawUser.stats && typeof rawUser.stats === "object" ? rawUser.stats : {},
   };
@@ -177,6 +188,8 @@ export function createAuthService() {
         phoneNumber: normalizePhone(input.phoneNumber),
         password: String(input.password || ""),
         displayName: sanitizeText(input.username || input.displayName, 80),
+        locale: sanitizeText(input.language || input.locale || "en", 12),
+        language: sanitizeText(input.language || input.locale || "en", 12),
       }),
     });
     if (!payload?.success || !payload?.user) {
@@ -202,6 +215,7 @@ export function createAuthService() {
         displayName: sanitizeText(input.displayName, 80),
         avatarUrl: sanitizeText(input.avatarUrl, 1000000),
         phoneNumber: sanitizeText(input.phoneNumber, 32),
+        language: sanitizeText(input.language, 12),
       }),
     });
     if (!payload?.success || !payload?.user) {
@@ -244,7 +258,11 @@ export function createAuthService() {
         favorites: [],
         likedJokes: [],
         basics: {},
-        preferences: {},
+        preferences: {
+          language: sanitizeText(input.language || navigator.language || "en", 12)
+            .slice(0, 2)
+            .toLowerCase(),
+        },
         subscription: {
           plan: "free",
           status: "active",

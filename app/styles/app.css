@@ -107,6 +107,12 @@ html[data-theme="light"] .app-header {
   gap: 0.55rem;
 }
 
+.toolbar-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.42rem;
+}
+
 .brand-block {
   display: inline-flex;
   align-items: center;
@@ -179,6 +185,36 @@ html[data-theme="light"] .global-search-input {
   cursor: pointer;
 }
 
+.profile-circle-button {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: rgba(20, 33, 58, 0.7);
+  color: var(--text);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+html[data-theme="light"] .profile-circle-button {
+  background: rgba(255, 255, 255, 0.88);
+}
+
+.profile-circle-avatar {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.profile-circle-initial {
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
 html[data-theme="light"] .icon-button {
   background: rgba(255, 255, 255, 0.88);
 }
@@ -215,7 +251,8 @@ html[data-theme="light"] .tab-button.is-active {
   color: #0c4a6e;
 }
 
-.overflow-menu {
+.overflow-menu,
+.profile-menu {
   position: absolute;
   top: calc(100% + 6px);
   right: 0.75rem;
@@ -229,8 +266,13 @@ html[data-theme="light"] .tab-button.is-active {
   padding: 0.56rem;
 }
 
-html[data-theme="light"] .overflow-menu {
+html[data-theme="light"] .overflow-menu,
+html[data-theme="light"] .profile-menu {
   background: rgba(255, 255, 255, 0.99);
+}
+
+.profile-menu {
+  right: 0.75rem;
 }
 
 .overflow-menu-header {
@@ -242,6 +284,11 @@ html[data-theme="light"] .overflow-menu {
 }
 
 .overflow-menu-list {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.profile-menu-list {
   display: grid;
   gap: 0.35rem;
 }
@@ -313,7 +360,7 @@ html[data-theme="light"] .menu-item {
 .feed-list {
   display: grid;
   gap: 0.7rem;
-  scroll-snap-type: y proximity;
+  scroll-snap-type: y mandatory;
 }
 
 .joke-card {
@@ -322,7 +369,7 @@ html[data-theme="light"] .menu-item {
   background: linear-gradient(180deg, #172844, #12213b);
   box-shadow: var(--shadow);
   padding: 0.86rem;
-  min-height: min(74vh, 560px);
+  min-height: calc(100svh - 220px);
   display: flex;
   flex-direction: column;
   gap: 0.8rem;
@@ -371,7 +418,7 @@ html[data-theme="light"] .joke-card {
 
 .joke-footer-main {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: space-between;
   gap: 0.6rem;
   flex-wrap: wrap;
@@ -383,6 +430,11 @@ html[data-theme="light"] .joke-card {
   align-items: center;
   gap: 0.42rem;
   flex-wrap: wrap;
+}
+
+.joke-tools {
+  margin-left: auto;
+  justify-content: flex-end;
 }
 
 .compact-button,
@@ -662,6 +714,38 @@ html[data-theme="light"] .section-card {
   display: grid;
   gap: 0.64rem;
   margin-top: 0.68rem;
+}
+
+.auth-switcher {
+  margin-top: 0.65rem;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.42rem;
+}
+
+.auth-switch-button {
+  min-height: 38px;
+  border-radius: 11px;
+  border: 1px solid var(--border);
+  background: rgba(10, 18, 33, 0.66);
+  color: var(--muted);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+html[data-theme="light"] .auth-switch-button {
+  background: #ffffff;
+}
+
+.auth-switch-button.is-active {
+  color: var(--text);
+  border-color: rgba(56, 189, 248, 0.72);
+  background: rgba(56, 189, 248, 0.2);
+}
+
+.auth-pane {
+  margin-top: 0.65rem;
 }
 
 .submit-textarea {
@@ -960,7 +1044,7 @@ html[data-theme="light"] .notification-item {
   }
 
   .joke-card {
-    min-height: min(64vh, 580px);
+    min-height: min(68vh, 620px);
     padding: 0.95rem;
   }
 

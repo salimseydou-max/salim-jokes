@@ -29,6 +29,7 @@ export default async function handler(req, res) {
       displayName: body.displayName,
       phoneNumber: body.phoneNumber,
       locale: body.locale,
+      language: body.language || body.locale,
       timezone: body.timezone,
       userAgent: req?.headers?.["user-agent"] || "",
       ipAddress: getClientIp(req),

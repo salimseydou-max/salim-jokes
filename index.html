@@ -45,6 +45,7 @@
             data-global-search-input
             class="global-search-input"
             type="search"
+            data-i18n-placeholder="search.placeholder"
             placeholder="Search jokes, tags, categories..."
             autocomplete="off"
           />
@@ -53,44 +54,89 @@
           </button>
         </div>
 
-        <button
-          class="icon-button menu-toggle"
-          data-overflow-menu-toggle
-          aria-label="Open app menu"
-          aria-expanded="false"
-        >
-          <span aria-hidden="true">⋮</span>
-        </button>
+        <div class="toolbar-actions">
+          <button
+            class="profile-circle-button"
+            data-profile-menu-toggle
+            aria-label="Open profile menu"
+            aria-expanded="false"
+            type="button"
+          >
+            <img class="profile-circle-avatar" data-header-profile-avatar alt="Profile" hidden />
+            <span class="profile-circle-initial" data-header-profile-initial>U</span>
+          </button>
+          <button
+            class="icon-button menu-toggle"
+            data-overflow-menu-toggle
+            aria-label="Open app menu"
+            aria-expanded="false"
+            type="button"
+          >
+            <span aria-hidden="true">⋮</span>
+          </button>
+        </div>
       </div>
 
       <nav class="primary-tabs" aria-label="Primary app sections">
-        <button class="tab-button is-active" data-tab-route="/feed" type="button">Feed</button>
-        <button class="tab-button" data-tab-route="/submit" type="button">Submit Joke</button>
+        <button class="tab-button is-active" data-tab-route="/feed" type="button" data-i18n="nav.feed">Feed</button>
+        <button class="tab-button" data-tab-route="/submit" type="button" data-i18n="nav.submit">Submit Joke</button>
       </nav>
+
+      <section class="profile-menu" data-profile-menu hidden>
+        <div class="overflow-menu-header">
+          <strong data-i18n="menu.profile">Profile</strong>
+          <button type="button" class="text-button" data-profile-menu-close data-i18n="common.close">Close</button>
+        </div>
+        <div class="profile-menu-list">
+          <button class="menu-item" data-profile-route="/profile" type="button" data-i18n="menu.profile">
+            Profile
+          </button>
+          <button class="menu-item" data-profile-action="edit-info" type="button" data-i18n="menu.editInfo">
+            Edit Info
+          </button>
+          <button class="menu-item" data-profile-route="/settings" type="button" data-i18n="menu.settings">
+            Settings
+          </button>
+          <button class="menu-item" data-profile-route="/notifications" type="button">
+            <span data-i18n="menu.notifications">Notifications</span>
+            <span class="menu-alert-badge" data-profile-alert-badge hidden>0</span>
+          </button>
+          <button class="menu-item" data-profile-action="logout" type="button" data-i18n="menu.logout">
+            Log Out
+          </button>
+        </div>
+      </section>
 
       <section class="overflow-menu" data-overflow-menu hidden>
         <div class="overflow-menu-header">
           <strong>Menu</strong>
-          <button type="button" class="text-button" data-overflow-menu-close>Close</button>
+          <button type="button" class="text-button" data-overflow-menu-close data-i18n="common.close">Close</button>
         </div>
         <div class="overflow-menu-list">
-          <button class="menu-item" data-menu-route="/profile" type="button">Profile</button>
-          <button class="menu-item" data-menu-route="/settings" type="button">Settings</button>
-          <button class="menu-item" data-menu-route="/notifications" type="button">
-            Alerts / Notifications
-            <span class="menu-alert-badge" data-menu-alert-badge hidden>0</span>
+          <button class="menu-item" data-menu-route="/about" type="button" data-i18n="menu.about">
+            About / Creator
           </button>
-          <button class="menu-item" data-menu-route="/about" type="button">About / Creator</button>
-          <button class="menu-item" data-menu-route="/privacy" type="button">Privacy policy</button>
-          <button class="menu-item" data-menu-route="/help" type="button">Help center</button>
-          <button class="menu-item" data-menu-route="/contact" type="button">Contact support</button>
+          <button class="menu-item" data-menu-route="/privacy" type="button" data-i18n="menu.privacy">
+            Privacy policy
+          </button>
+          <button class="menu-item" data-menu-route="/help" type="button" data-i18n="menu.help">
+            Help center
+          </button>
+          <button class="menu-item" data-menu-route="/settings" type="button" data-i18n="menu.social">
+            Social links
+          </button>
+          <button class="menu-item" data-menu-route="/contact" type="button" data-i18n="menu.contact">
+            Contact support
+          </button>
         </div>
       </section>
     </header>
 
     <main class="app-main" id="app-main">
       <section class="app-view is-active" data-view="/feed" aria-label="Joke feed section">
-        <p class="feed-search-meta" data-feed-search-meta></p>
+        <p class="feed-search-meta" data-feed-search-meta data-i18n="search.meta.default">
+          Mixing AI, user, trending, recent, and random jokes.
+        </p>
         <div class="feed-list" data-feed-list aria-live="polite"></div>
         <div class="skeleton-host" data-feed-skeleton hidden></div>
         <div class="feed-loading" data-feed-loading hidden>
@@ -156,50 +202,69 @@
         <article class="section-card" data-profile-auth-card>
           <h2 class="section-title">Sign in or create account</h2>
           <p class="section-copy">
-            Sign up with email/password and phone number. Verify email or phone before account creation.
-            Optional Google login is available.
+            Quick sign-in and sign-up forms. Verification code uses SMS when phone is provided, otherwise email.
           </p>
-          <div class="profile-auth-grid">
-            <form class="mini-form" data-profile-login-form>
-              <h3 class="mini-form-title">Log in</h3>
-              <input class="form-input" type="text" name="identifier" placeholder="Email or phone" required />
-              <input class="form-input" type="password" name="password" placeholder="Password" required />
-              <button class="submit-button" type="submit">Log in</button>
-              <button class="text-button" type="button" data-profile-google-login>Continue with Google</button>
-            </form>
-
-            <form class="mini-form" data-profile-signup-form>
-              <h3 class="mini-form-title">Create account</h3>
-              <input class="form-input" type="text" name="username" placeholder="Username" required />
-              <input class="form-input" type="email" name="email" placeholder="Email" required />
-              <input class="form-input" type="tel" name="phoneNumber" placeholder="Phone number" required />
-              <input class="form-input" type="password" name="password" placeholder="Password" required />
-              <label class="field-label">
-                Optional profile picture
-                <input class="form-input" type="file" name="avatar" accept="image/png,image/jpeg,image/webp" />
-              </label>
-
-              <div class="verification-box">
-                <div class="verification-actions">
-                  <button class="text-button" type="button" data-signup-send-email-code>Verify email</button>
-                  <button class="text-button" type="button" data-signup-send-phone-code>Verify phone</button>
-                </div>
-                <div class="verification-inline">
-                  <select class="form-select" data-signup-verification-target>
-                    <option value="email">Email code</option>
-                    <option value="phone">Phone code</option>
-                  </select>
-                  <input class="form-input" data-signup-verification-code type="text" placeholder="Enter 6-digit code" />
-                  <button class="submit-button" type="button" data-signup-verify-code>Confirm</button>
-                </div>
-                <p class="verification-status" data-signup-verification-status>
-                  Verify at least email or phone before creating the account.
-                </p>
-              </div>
-
-              <button class="submit-button" type="submit">Create account</button>
-            </form>
+          <div class="auth-switcher" role="tablist" aria-label="Authentication mode">
+            <button
+              class="auth-switch-button is-active"
+              type="button"
+              role="tab"
+              aria-selected="true"
+              data-auth-mode-button="signin"
+              data-i18n="profile.signIn"
+            >
+              Sign in
+            </button>
+            <button
+              class="auth-switch-button"
+              type="button"
+              role="tab"
+              aria-selected="false"
+              data-auth-mode-button="signup"
+              data-i18n="profile.signUp"
+            >
+              Create account
+            </button>
           </div>
+
+          <form class="mini-form auth-pane is-active" data-profile-login-form data-auth-panel="signin">
+            <input class="form-input" type="text" name="identifier" placeholder="Email or phone" required />
+            <input class="form-input" type="password" name="password" placeholder="Password" required />
+            <button class="submit-button" type="submit" data-i18n="profile.signIn">Sign in</button>
+            <button class="text-button" type="button" data-profile-google-login data-i18n="auth.google">
+              Continue with Google
+            </button>
+          </form>
+
+          <form class="mini-form auth-pane" data-profile-signup-form data-auth-panel="signup" hidden>
+            <input class="form-input" type="text" name="username" placeholder="Username" required />
+            <input class="form-input" type="email" name="email" placeholder="Email (or phone only)" />
+            <input class="form-input" type="tel" name="phoneNumber" placeholder="Phone number" />
+            <input class="form-input" type="password" name="password" placeholder="Password" required />
+            <label class="field-label">
+              Preferred language
+              <select class="form-select" name="language" data-signup-language required></select>
+            </label>
+            <label class="field-label">
+              Optional profile picture
+              <input class="form-input" type="file" name="avatar" accept="image/png,image/jpeg,image/webp" />
+            </label>
+
+            <div class="verification-box">
+              <div class="verification-actions">
+                <button class="text-button" type="button" data-signup-send-code>Send verification code</button>
+              </div>
+              <div class="verification-inline">
+                <input class="form-input" data-signup-verification-code type="text" placeholder="Enter 6-digit code" />
+                <button class="submit-button" type="button" data-signup-verify-code>Confirm</button>
+              </div>
+              <p class="verification-status" data-signup-verification-status>
+                Verify at least email or phone before creating the account.
+              </p>
+            </div>
+
+            <button class="submit-button" type="submit" data-i18n="profile.signUp">Create account</button>
+          </form>
         </article>
 
         <article class="section-card" data-profile-account-card hidden>
@@ -217,7 +282,12 @@
           <form class="mini-form" data-profile-edit-form>
             <h3 class="mini-form-title">Edit account</h3>
             <input class="form-input" type="text" name="displayName" placeholder="Display name" required />
+            <input class="form-input" type="email" name="email" placeholder="Email" disabled />
             <input class="form-input" type="text" name="phoneNumber" placeholder="Phone number" />
+            <label class="field-label">
+              Language
+              <select class="form-select" name="language" data-profile-language></select>
+            </label>
             <label class="field-label">
               Update profile picture
               <input class="form-input" type="file" name="avatar" accept="image/png,image/jpeg,image/webp" />
@@ -248,7 +318,7 @@
 
       <section class="app-view" data-view="/settings" hidden aria-label="Settings section">
         <article class="section-card">
-          <h2 class="section-title">Settings</h2>
+          <h2 class="section-title" data-i18n="settings.title">Settings</h2>
           <p class="section-copy">
             Centralized preferences for notifications, appearance, privacy, social links, and account management.
           </p>
@@ -269,6 +339,10 @@
           <form class="settings-form" data-settings-form>
             <div class="settings-group">
               <h3>Appearance</h3>
+              <label class="field-label">
+                <span data-i18n="settings.language">Language</span>
+                <select name="language" class="form-select"></select>
+              </label>
               <label class="field-label">
                 Theme
                 <select name="theme" class="form-select">
@@ -316,8 +390,10 @@
             </div>
 
             <div class="submit-footer">
-              <button class="text-button" type="button" data-settings-reset>Reset</button>
-              <button class="submit-button" type="submit" data-settings-save>Save settings</button>
+              <button class="text-button" type="button" data-settings-reset data-i18n="common.reset">Reset</button>
+              <button class="submit-button" type="submit" data-settings-save data-i18n="common.save">
+                Save settings
+              </button>
             </div>
           </form>
         </article>

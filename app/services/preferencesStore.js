@@ -3,6 +3,9 @@ import { readStorageValue, writeStorageValue } from "./storage.js";
 const STORAGE_KEY = "vjc.preferences.v1";
 
 const DEFAULT_PREFERENCES = Object.freeze({
+  general: {
+    language: "en",
+  },
   appearance: {
     theme: "dark",
     compactCards: true,
@@ -40,9 +43,20 @@ function normalizeTheme(value) {
   return "dark";
 }
 
+function normalizeLanguage(value) {
+  const language = sanitizeText(value, 12).toLowerCase();
+  if (!language) {
+    return "en";
+  }
+  return language;
+}
+
 function normalizePreferences(raw) {
   const source = raw && typeof raw === "object" ? raw : {};
   return {
+    general: {
+      language: normalizeLanguage(source?.general?.language || DEFAULT_PREFERENCES.general.language),
+    },
     appearance: {
       theme: normalizeTheme(source?.appearance?.theme || DEFAULT_PREFERENCES.appearance.theme),
       compactCards: Boolean(
@@ -112,6 +126,10 @@ export function createPreferencesStore(options = {}) {
     const merged = {
       ...state,
       ...(partial || {}),
+      general: {
+        ...state.general,
+        ...((partial && partial.general) || {}),
+      },
       appearance: {
         ...state.appearance,
         ...((partial && partial.appearance) || {}),
