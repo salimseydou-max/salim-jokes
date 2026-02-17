@@ -15,6 +15,16 @@ function sanitizeId(value) {
   return String(value || "").trim();
 }
 
+function makeTextFingerprint(value) {
+  return String(value || "")
+    .toLowerCase()
+    .replace(/[\u2019']/g, "")
+    .replace(/[^a-z0-9\u00c0-\u024f\u0400-\u04ff\u0600-\u06ff\u0900-\u097f\s]/gi, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 420);
+}
+
 function shuffle(list = []) {
   const next = list.slice();
   for (let i = next.length - 1; i > 0; i -= 1) {
@@ -37,7 +47,16 @@ export function createFeedComposer(options = {}) {
   };
 
   const catalogById = new Map();
+  const catalogByFingerprint = new Map();
   let pointer = 0;
+
+  function getItemFingerprint(item) {
+    if (!item) {
+      return "";
+    }
+    const language = String(item.language || "").trim().toLowerCase();
+    return makeTextFingerprint(`${language}|${item.text || ""}`);
+  }
 
   function addToCatalog(jokes = []) {
     for (let i = 0; i < jokes.length; i += 1) {
@@ -46,8 +65,12 @@ export function createFeedComposer(options = {}) {
       if (!normalized || !normalized.id) {
         continue;
       }
+      const fingerprint = getItemFingerprint(normalized);
       if (!catalogById.has(normalized.id)) {
         catalogById.set(normalized.id, normalized);
+      }
+      if (fingerprint && !catalogByFingerprint.has(fingerprint)) {
+        catalogByFingerprint.set(fingerprint, normalized.id);
       }
     }
   }
@@ -59,16 +82,31 @@ export function createFeedComposer(options = {}) {
     }
     const deduped = [];
     const localQueueIds = new Set(state.queue.map((item) => sanitizeId(item?.id)));
+    const localQueueFingerprints = new Set(
+      state.queue
+        .map((item) => getItemFingerprint(item))
+        .filter(Boolean)
+    );
     for (let i = 0; i < jokes.length; i += 1) {
       const item = normalizeFeedItem(jokes[i], sourceName);
       const jokeId = sanitizeId(item?.id);
+      const fingerprint = getItemFingerprint(item);
       if (!item || !jokeId) {
         continue;
       }
-      if (localQueueIds.has(jokeId)) {
+      if (localQueueIds.has(jokeId) || catalogById.has(jokeId)) {
+        continue;
+      }
+      if (
+        fingerprint &&
+        (localQueueFingerprints.has(fingerprint) || catalogByFingerprint.has(fingerprint))
+      ) {
         continue;
       }
       localQueueIds.add(jokeId);
+      if (fingerprint) {
+        localQueueFingerprints.add(fingerprint);
+      }
       deduped.push({ ...item, sourceType: sourceName });
     }
     if (deduped.length) {
@@ -165,10 +203,11 @@ export function createFeedComposer(options = {}) {
   async function nextBatch(batchSize = 6, isSeenFn = () => false) {
     const target = Math.max(1, Math.min(12, Number(batchSize) || 6));
     const output = [];
+    const batchFingerprints = new Set();
     await Promise.all(SOURCE_NAMES.map((sourceName) => ensureSourceBuffer(sourceName, 4)));
 
     let attempts = 0;
-    const maxAttempts = target * 18;
+    const maxAttempts = target * 30;
     while (output.length < target && attempts < maxAttempts) {
       attempts += 1;
       const sourceName = nextSourceName();
@@ -183,22 +222,42 @@ export function createFeedComposer(options = {}) {
       if (!next || !next.id) {
         continue;
       }
-      if (isSeenFn(next.id)) {
+      if (isSeenFn(next.id, next)) {
+        continue;
+      }
+      const fingerprint = getItemFingerprint(next);
+      if (fingerprint && batchFingerprints.has(fingerprint)) {
         continue;
       }
       output.push(next);
+      if (fingerprint) {
+        batchFingerprints.add(fingerprint);
+      }
       if (state.queue.length < 3 && state.hasMore !== false) {
         ensureSourceBuffer(sourceName, 6);
       }
     }
 
-    if (output.length < target) {
+    let fallbackAttempts = 0;
+    while (output.length < target && fallbackAttempts < 5) {
+      fallbackAttempts += 1;
       try {
         const external = await fetchExternalRandomJoke({ language, category });
-        if (external && !isSeenFn(external.id)) {
-          output.push({ ...external, sourceType: "random" });
-          addToCatalog([external]);
+        if (!external) {
+          continue;
         }
+        if (isSeenFn(external.id, external)) {
+          continue;
+        }
+        const externalFingerprint = getItemFingerprint(external);
+        if (externalFingerprint && batchFingerprints.has(externalFingerprint)) {
+          continue;
+        }
+        output.push({ ...external, sourceType: "random" });
+        if (externalFingerprint) {
+          batchFingerprints.add(externalFingerprint);
+        }
+        addToCatalog([external]);
       } catch (error) {
         // Keep feed resilient if fallback source is unavailable.
       }
