@@ -47,29 +47,25 @@ body {
   position: relative;
   display: flex;
   justify-content: center;
+  min-height: 100vh;
+  width: 100%;
+  overflow-x: hidden;
 }
 
 body::before {
-  content:
-    "😂 🤣 😹 😜 😆 😎 🤪 😁 😂 🤣 😹 😜 😆 😎 🤪 😁\A"
-    "😄 🤣 😍 😂 😹 😜 😆 😎 🤪 😁 😄 🤣 😍 😂 😹 😜\A"
-    "🤩 😂 🤣 😹 😜 😆 😎 🤪 😁 🤩 😂 🤣 😹 😜 😆 😎\A"
-    "😂 🤣 😹 😜 😆 😎 🤪 😁 😂 🤣 😹 😜 😆 😎 🤪 😁\A"
-    "😄 🤣 😍 😂 😹 😜 😆 😎 🤪 😁 😄 🤣 😍 😂 😹 😜";
+  content: "";
   position: fixed;
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  white-space: pre;
-  line-height: 2.3;
-  font-size: 1.2rem;
-  letter-spacing: 0.5rem;
-  opacity: 0.08;
-  text-align: center;
+  background-repeat: repeat;
+  background-size: 220px 220px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220' viewBox='0 0 220 220'%3E%3Ctext x='24' y='54' font-size='34' fill='%23ffffff' fill-opacity='0.42'%3E%26%23x1F602%3B%3C/text%3E%3Ctext x='126' y='78' font-size='32' fill='%23ffffff' fill-opacity='0.38'%3E%26%23x1F923%3B%3C/text%3E%3Ctext x='52' y='144' font-size='30' fill='%23ffffff' fill-opacity='0.36'%3E%26%23x1F61C%3B%3C/text%3E%3Ctext x='152' y='162' font-size='31' fill='%23ffffff' fill-opacity='0.35'%3E%26%23x1F60E%3B%3C/text%3E%3Ctext x='86' y='206' font-size='30' fill='%23ffffff' fill-opacity='0.37'%3E%26%23x1F92A%3B%3C/text%3E%3C/svg%3E");
+  opacity: 0.16;
 }
 
 html[data-theme="light"] body::before {
-  opacity: 0.1;
+  opacity: 0.19;
 }
 
 a {

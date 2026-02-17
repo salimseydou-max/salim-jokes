@@ -511,7 +511,10 @@ export function createFeedView(options = {}) {
       if (!id) {
         continue;
       }
-      if (!duplicateTracker.markDisplayed(id) || mainFeedJokes.some((entry) => entry.id === id)) {
+      if (
+        !duplicateTracker.markDisplayedJoke(item) ||
+        mainFeedJokes.some((entry) => entry.id === id)
+      ) {
         continue;
       }
       unique.push(item);
@@ -523,7 +526,7 @@ export function createFeedView(options = {}) {
     try {
       const extra = await feedComposer.nextBatch(
         SEARCH_BATCH_SIZE,
-        (id) => knownById.has(id) || duplicateTracker.has(id)
+        (id, joke) => knownById.has(id) || duplicateTracker.hasJoke(joke || { id })
       );
       const fresh = extra.filter((joke) => joke?.id && !knownById.has(joke.id));
       if (!fresh.length) {
@@ -608,7 +611,9 @@ export function createFeedView(options = {}) {
     try {
       const next = await feedComposer.nextBatch(
         VISIBLE_BATCH_SIZE,
-        (id) => duplicateTracker.has(id) || mainFeedJokes.some((entry) => entry.id === id)
+        (id, joke) =>
+          duplicateTracker.hasJoke(joke || { id }) ||
+          mainFeedJokes.some((entry) => entry.id === id)
       );
       collected = filterUniqueMainFeed(next);
     } catch (error) {
