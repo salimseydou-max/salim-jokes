@@ -133,6 +133,62 @@ export function createAuthService() {
     return currentUser ? { ...currentUser } : null;
   }
 
+  function buildLocalProfileUpdate(baseUser, input = {}) {
+    if (!baseUser) {
+      return null;
+    }
+    const now = new Date().toISOString();
+    const displayName =
+      sanitizeText(input.displayName, 80) ||
+      sanitizeText(baseUser.displayName || baseUser?.profile?.displayName, 80) ||
+      "User";
+    const phoneNumber = normalizePhone(
+      sanitizeText(input.phoneNumber, 32) ||
+        sanitizeText(baseUser.phoneNumber || baseUser?.profile?.phoneNumber, 32)
+    );
+    const avatarUrl =
+      sanitizeText(input.avatarUrl, 1000000) ||
+      sanitizeText(baseUser.avatarUrl || baseUser?.profile?.avatarUrl, 1000000);
+    const language =
+      sanitizeText(
+        input.language ||
+          baseUser.language ||
+          baseUser?.profile?.preferences?.language ||
+          baseUser?.profile?.basics?.locale ||
+          "en",
+        12
+      )
+        .slice(0, 2)
+        .toLowerCase() || "en";
+
+    return {
+      ...baseUser,
+      updatedAt: now,
+      displayName,
+      avatarUrl,
+      phoneNumber,
+      language,
+      profile: {
+        ...(baseUser.profile || {}),
+        displayName,
+        avatarUrl,
+        phoneNumber,
+        basics: {
+          ...(baseUser?.profile?.basics || {}),
+          locale: language,
+        },
+        preferences: {
+          ...(baseUser?.profile?.preferences || {}),
+          language,
+        },
+        provider: sanitizeText(
+          baseUser.provider || baseUser?.profile?.provider || "local",
+          32
+        ).toLowerCase(),
+      },
+    };
+  }
+
   async function refreshSession() {
     try {
       const payload = await requestJson("/api/auth/me", {
@@ -206,22 +262,50 @@ export function createAuthService() {
   }
 
   async function updateProfile(input = {}) {
-    const payload = await requestJson("/api/auth/me", {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        displayName: sanitizeText(input.displayName, 80),
-        avatarUrl: sanitizeText(input.avatarUrl, 1000000),
-        phoneNumber: sanitizeText(input.phoneNumber, 32),
-        language: sanitizeText(input.language, 12),
-      }),
-    });
-    if (!payload?.success || !payload?.user) {
-      throw new Error(payload?.error || "Profile update failed.");
+    const activeUser = getUser();
+    if (!activeUser) {
+      throw new Error("Please sign in to save profile changes.");
     }
-    return setUser(payload.user);
+
+    // Google login is local-only in this app, so profile updates are persisted locally.
+    if (activeUser.provider === "google") {
+      const nextUser = buildLocalProfileUpdate(activeUser, input);
+      if (!nextUser) {
+        throw new Error("Profile update failed.");
+      }
+      return setUser(nextUser);
+    }
+
+    try {
+      const payload = await requestJson("/api/auth/me", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          displayName: sanitizeText(input.displayName, 80),
+          avatarUrl: sanitizeText(input.avatarUrl, 1000000),
+          phoneNumber: sanitizeText(input.phoneNumber, 32),
+          language: sanitizeText(input.language, 12),
+        }),
+      });
+      if (!payload?.success || !payload?.user) {
+        throw new Error(payload?.error || "Profile update failed.");
+      }
+      return setUser(payload.user);
+    } catch (error) {
+      if (/authentication required/i.test(String(error?.message || ""))) {
+        const refreshed = await refreshSession();
+        if (refreshed?.provider === "google") {
+          const nextUser = buildLocalProfileUpdate(refreshed, input);
+          if (nextUser) {
+            return setUser(nextUser);
+          }
+        }
+        throw new Error("Please sign in again to save your profile.");
+      }
+      throw error;
+    }
   }
 
   async function logout() {
