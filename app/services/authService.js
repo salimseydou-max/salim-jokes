@@ -37,6 +37,7 @@ function getLocalStorageSafe() {
 const GOOGLE_SESSION_STORAGE_KEY = "vjc.auth.google-session.v1";
 const AUTH_USER_CACHE_STORAGE_KEY = "vjc.auth.user-cache.v1";
 const AUTH_SYNC_STORAGE_KEY = "vjc.auth.sync.v1";
+const AUTH_SESSION_TOKEN_STORAGE_KEY = "vjc.auth.session-token.v1";
 
 function normalizeUser(rawUser) {
   if (!rawUser || typeof rawUser !== "object" || !rawUser.id) {
@@ -75,7 +76,11 @@ async function requestJson(url, options = {}) {
     payload = null;
   }
   if (!response.ok) {
-    throw new Error(payload?.error || `Request failed with status ${response.status}`);
+    const error = new Error(payload?.error || `Request failed with status ${response.status}`);
+    error.status = response.status;
+    error.code = payload?.code || "";
+    error.payload = payload;
+    throw error;
   }
   return payload;
 }
@@ -118,6 +123,35 @@ export function createAuthService() {
           cachedAt: new Date().toISOString(),
         })
       );
+    } catch (error) {
+      // Ignore storage failures for compatibility.
+    }
+  }
+
+  function loadSessionToken() {
+    const storage = getLocalStorageSafe();
+    if (!storage) {
+      return "";
+    }
+    try {
+      return sanitizeText(storage.getItem(AUTH_SESSION_TOKEN_STORAGE_KEY), 400);
+    } catch (error) {
+      return "";
+    }
+  }
+
+  function saveSessionToken(token) {
+    const storage = getLocalStorageSafe();
+    if (!storage) {
+      return;
+    }
+    try {
+      const safeToken = sanitizeText(token, 400);
+      if (!safeToken) {
+        storage.removeItem(AUTH_SESSION_TOKEN_STORAGE_KEY);
+        return;
+      }
+      storage.setItem(AUTH_SESSION_TOKEN_STORAGE_KEY, safeToken);
     } catch (error) {
       // Ignore storage failures for compatibility.
     }
@@ -188,9 +222,19 @@ export function createAuthService() {
 
   function setUser(user, options = {}) {
     const shouldBroadcast = options.broadcast !== false;
+    const hasSessionTokenOption = Object.prototype.hasOwnProperty.call(options, "sessionToken");
+    const shouldClearToken =
+      Object.prototype.hasOwnProperty.call(options, "clearSessionToken")
+        ? Boolean(options.clearSessionToken)
+        : !user;
     currentUser = normalizeUser(user);
     saveGoogleSession(currentUser);
     saveUserCache(currentUser);
+    if (hasSessionTokenOption) {
+      saveSessionToken(options.sessionToken || "");
+    } else if (shouldClearToken) {
+      saveSessionToken("");
+    }
     if (shouldBroadcast) {
       broadcastAuthSync(currentUser ? "updated" : "logged_out", currentUser);
     }
@@ -258,22 +302,78 @@ export function createAuthService() {
     };
   }
 
+  async function restoreSessionFromToken(token, options = {}) {
+    const sessionToken = sanitizeText(token, 400);
+    if (!sessionToken) {
+      return null;
+    }
+    const clearOnAuthFailure = options.clearOnAuthFailure !== false;
+    try {
+      const payload = await requestJson("/api/auth/restore", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          sessionToken,
+        }),
+      });
+      if (!payload?.authenticated || !payload?.user) {
+        if (clearOnAuthFailure) {
+          saveSessionToken("");
+          setUser(null, { broadcast: false });
+        }
+        return null;
+      }
+      const refreshedToken = sanitizeText(payload?.sessionToken || sessionToken, 400);
+      return setUser(payload.user, {
+        broadcast: false,
+        sessionToken: refreshedToken,
+      });
+    } catch (error) {
+      const status = Number(error?.status) || 0;
+      if (clearOnAuthFailure && (status === 401 || status === 403)) {
+        saveSessionToken("");
+        setUser(null, { broadcast: false });
+      }
+      return null;
+    }
+  }
+
   async function refreshSession(options = {}) {
     const keepLocalOnFailure = options.keepLocalOnFailure !== false;
+    const sessionToken = loadSessionToken();
     try {
       const payload = await requestJson("/api/auth/me", {
         method: "GET",
       });
       if (!payload?.authenticated || !payload.user) {
+        const restored = await restoreSessionFromToken(sessionToken, {
+          clearOnAuthFailure: true,
+        });
+        if (restored) {
+          return restored;
+        }
         const googleSession = loadGoogleSession();
         if (googleSession) {
           return setUser(googleSession, { broadcast: false });
         }
-        setUser(null, { broadcast: false });
+        if (!keepLocalOnFailure) {
+          setUser(null, { broadcast: false });
+        }
         return null;
       }
-      return setUser(payload.user, { broadcast: false });
+      return setUser(payload.user, {
+        broadcast: false,
+        sessionToken: sessionToken || "",
+      });
     } catch (error) {
+      const restored = await restoreSessionFromToken(sessionToken, {
+        clearOnAuthFailure: false,
+      });
+      if (restored) {
+        return restored;
+      }
       const googleSession = loadGoogleSession();
       if (googleSession) {
         return setUser(googleSession, { broadcast: false });
@@ -289,6 +389,7 @@ export function createAuthService() {
         }
       }
       if (!keepLocalOnFailure) {
+        saveSessionToken("");
         setUser(null, { broadcast: false });
       }
       return null;
@@ -312,7 +413,9 @@ export function createAuthService() {
     if (!payload?.success || !payload?.user) {
       throw new Error(payload?.error || "Login failed.");
     }
-    return setUser(payload.user);
+    return setUser(payload.user, {
+      sessionToken: sanitizeText(payload?.sessionToken, 400),
+    });
   }
 
   async function signup(input = {}) {
@@ -333,7 +436,9 @@ export function createAuthService() {
     if (!payload?.success || !payload?.user) {
       throw new Error(payload?.error || "Signup failed.");
     }
-    let user = setUser(payload.user);
+    let user = setUser(payload.user, {
+      sessionToken: sanitizeText(payload?.sessionToken, 400),
+    });
     if (input.avatarUrl) {
       try {
         user = await updateProfile({
@@ -401,7 +506,8 @@ export function createAuthService() {
     await requestJson("/api/auth/logout", {
       method: "POST",
     }).catch(() => null);
-    setUser(null);
+    saveSessionToken("");
+    setUser(null, { clearSessionToken: true });
   }
 
   async function loginWithGoogle(input = {}) {
@@ -448,7 +554,7 @@ export function createAuthService() {
         likesAdded: 0,
       },
     };
-    return setUser(user);
+    return setUser(user, { sessionToken: "" });
   }
 
   function subscribe(listener) {
@@ -476,10 +582,20 @@ export function createAuthService() {
       if (event.key === AUTH_SYNC_STORAGE_KEY) {
         const payload = String(event.newValue || "");
         if (payload.includes("\"logged_out\"")) {
+          saveSessionToken("");
           if (currentUser) {
             currentUser = null;
             emit();
           }
+          return;
+        }
+        refreshSession({ keepLocalOnFailure: true }).catch(() => null);
+        return;
+      }
+      if (event.key === AUTH_SESSION_TOKEN_STORAGE_KEY) {
+        if (!event.newValue && currentUser?.provider !== "google") {
+          currentUser = null;
+          emit();
           return;
         }
         refreshSession({ keepLocalOnFailure: true }).catch(() => null);

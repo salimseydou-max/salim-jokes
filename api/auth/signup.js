@@ -52,6 +52,7 @@ export default async function handler(req, res) {
     return res.status(201).json({
       success: true,
       user: result.user,
+      sessionToken: result.sessionToken,
     });
   } catch (error) {
     console.error("POST /api/auth/signup failed:", error);
