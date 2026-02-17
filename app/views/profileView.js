@@ -345,6 +345,17 @@ export function createProfileView(options = {}) {
 
   async function submitProfileUpdate(event) {
     event.preventDefault();
+    if (!authService?.isAuthenticated?.()) {
+      toast?.show("Please sign in to save your profile.", "error");
+      setAuthMode("signin");
+      return;
+    }
+    const restoredUser = await authService.refreshSession();
+    if (!restoredUser && !authService?.isAuthenticated?.()) {
+      toast?.show("Session expired. Please sign in again.", "error");
+      setAuthMode("signin");
+      return;
+    }
     const displayName = editForm?.querySelector("[name='displayName']")?.value || "";
     const phoneNumber = editForm?.querySelector("[name='phoneNumber']")?.value || "";
     const language = editForm?.querySelector("[name='language']")?.value || "";
