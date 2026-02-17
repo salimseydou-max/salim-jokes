@@ -3,7 +3,9 @@ export function applyThemeToDocument(theme) {
   const resolved = theme === "system"
     ? (window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark")
     : theme;
-  root.setAttribute("data-theme", resolved === "light" ? "light" : "dark");
+  const normalized = resolved === "light" ? "light" : "dark";
+  root.setAttribute("data-theme", normalized);
+  root.style.colorScheme = normalized;
 }
 
 function setFormValues(root, preferences) {
@@ -80,6 +82,7 @@ export function createSettingsView(options = {}) {
   const saveButton = root?.querySelector("[data-settings-save]");
   const accountInfo = root?.querySelector("[data-settings-account-info]");
   const languageSelect = root?.querySelector("[name='language']");
+  const themeSelect = root?.querySelector("[name='theme']");
 
   function populateLanguageOptions() {
     if (!languageSelect || !i18nService) {
@@ -161,6 +164,23 @@ export function createSettingsView(options = {}) {
     saveButton?.addEventListener("click", () => {
       // Allows dedicated mobile save tap without submitting keyboard unexpectedly.
     });
+    themeSelect?.addEventListener("change", () => {
+      applyThemeToDocument(themeSelect.value || "dark");
+    });
+    if (window.matchMedia) {
+      const systemThemeQuery = window.matchMedia("(prefers-color-scheme: light)");
+      const syncSystemTheme = () => {
+        const selectedTheme = themeSelect?.value || preferencesStore.get().appearance.theme;
+        if (selectedTheme === "system") {
+          applyThemeToDocument("system");
+        }
+      };
+      if (typeof systemThemeQuery.addEventListener === "function") {
+        systemThemeQuery.addEventListener("change", syncSystemTheme);
+      } else if (typeof systemThemeQuery.addListener === "function") {
+        systemThemeQuery.addListener(syncSystemTheme);
+      }
+    }
     preferencesStore.subscribe((nextPrefs) => {
       i18nService?.setLanguage(nextPrefs.general?.language || "en");
       applyThemeToDocument(nextPrefs.appearance.theme);
