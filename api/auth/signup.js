@@ -1,6 +1,7 @@
 import {
   setAuthSessionCookie,
   signupUser,
+  shouldUseSecureCookies,
   toSafeAuthError,
 } from "../../lib/auth.js";
 import parseRequestBody from "../../lib/parseRequestBody.js";
@@ -45,7 +46,9 @@ export default async function handler(req, res) {
       userAgent: req?.headers?.["user-agent"] || "",
       ipAddress: getClientIp(req),
     });
-    setAuthSessionCookie(res, result.sessionToken, result.sessionExpiresAt);
+    setAuthSessionCookie(res, result.sessionToken, result.sessionExpiresAt, {
+      secure: shouldUseSecureCookies(req),
+    });
     return res.status(201).json({
       success: true,
       user: result.user,

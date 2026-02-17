@@ -1,4 +1,7 @@
-const DEFAULT_AUTH_STORAGE_FILE = "/tmp/jokes-auth.json";
+import { dirname, resolve } from "node:path";
+
+const DEFAULT_AUTH_STORAGE_FILE = ".data/jokes-auth.json";
+const LEGACY_SERVERLESS_AUTH_STORAGE_FILE = "/tmp/jokes-auth.json";
 const DEFAULT_SESSION_TTL_MS = 10 * 365 * 24 * 60 * 60 * 1000;
 const DEFAULT_PASSWORD_MIN_LENGTH = 8;
 const DEFAULT_MAX_SESSIONS_PER_USER = 0;
@@ -27,9 +30,29 @@ function toBoolean(value, fallback) {
 }
 
 export function getAuthConfig() {
+  const explicitStorage = (process.env.AUTH_STORAGE_FILE || "").trim();
+  const databaseStorage = (process.env.DATABASE_STORAGE_FILE || "").trim();
+  const runningInServerless = Boolean(
+    process.env.VERCEL ||
+      process.env.AWS_LAMBDA_FUNCTION_NAME ||
+      process.env.LAMBDA_TASK_ROOT ||
+      process.env.NETLIFY
+  );
   const secureByDefault = process.env.NODE_ENV === "production";
+  const resolvedStorageFile = (() => {
+    if (explicitStorage) {
+      return explicitStorage;
+    }
+    if (databaseStorage && !databaseStorage.startsWith("/tmp/")) {
+      return resolve(dirname(databaseStorage), "jokes-auth.json");
+    }
+    if (runningInServerless) {
+      return LEGACY_SERVERLESS_AUTH_STORAGE_FILE;
+    }
+    return resolve(process.cwd(), DEFAULT_AUTH_STORAGE_FILE);
+  })();
   return {
-    authStorageFile: (process.env.AUTH_STORAGE_FILE || DEFAULT_AUTH_STORAGE_FILE).trim(),
+    authStorageFile: resolvedStorageFile,
     sessionTtlMs: toPositiveInt(process.env.AUTH_SESSION_TTL_MS, DEFAULT_SESSION_TTL_MS),
     passwordMinLength: toPositiveInt(
       process.env.AUTH_PASSWORD_MIN_LENGTH,

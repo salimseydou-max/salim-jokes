@@ -3,6 +3,7 @@ import {
   getAuthenticatedUserFromRequest,
   readAuthTokenFromRequest,
   setAuthSessionCookie,
+  shouldUseSecureCookies,
   toSafeAuthError,
   updateUserProfile,
 } from "../../lib/auth.js";
@@ -28,13 +29,17 @@ export default async function handler(req, res) {
     const auth = await getAuthenticatedUserFromRequest(req);
     if (!auth || !auth.user) {
       if (req.method === "PATCH") {
-        clearAuthSessionCookie(res);
+        clearAuthSessionCookie(res, {
+          secure: shouldUseSecureCookies(req),
+        });
         return res.status(401).json({
           error: "Authentication required.",
           code: "AUTH_REQUIRED",
         });
       }
-      clearAuthSessionCookie(res);
+      clearAuthSessionCookie(res, {
+        secure: shouldUseSecureCookies(req),
+      });
       return res.status(200).json({
         authenticated: false,
         user: null,
@@ -43,7 +48,9 @@ export default async function handler(req, res) {
 
     const token = readAuthTokenFromRequest(req);
     if (token && auth.session?.expiresAt) {
-      setAuthSessionCookie(res, token, auth.session.expiresAt);
+      setAuthSessionCookie(res, token, auth.session.expiresAt, {
+        secure: shouldUseSecureCookies(req),
+      });
     }
 
     if (req.method === "PATCH") {

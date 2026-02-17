@@ -1,6 +1,7 @@
 import {
   loginUser,
   setAuthSessionCookie,
+  shouldUseSecureCookies,
   toSafeAuthError,
 } from "../../lib/auth.js";
 import parseRequestBody from "../../lib/parseRequestBody.js";
@@ -42,7 +43,9 @@ export default async function handler(req, res) {
       userAgent: req?.headers?.["user-agent"] || "",
       ipAddress: getClientIp(req),
     });
-    setAuthSessionCookie(res, result.sessionToken, result.sessionExpiresAt);
+    setAuthSessionCookie(res, result.sessionToken, result.sessionExpiresAt, {
+      secure: shouldUseSecureCookies(req),
+    });
     return res.status(200).json({
       success: true,
       user: result.user,
@@ -50,12 +53,9 @@ export default async function handler(req, res) {
   } catch (error) {
     console.error("POST /api/auth/login failed:", error);
     const safe = toSafeAuthError(error);
-    if (safe.status === 401) {
-      return res.status(200).json({
-        success: false,
-        ...safe.body,
-      });
-    }
-    return res.status(safe.status).json(safe.body);
+    return res.status(safe.status).json({
+      success: false,
+      ...safe.body,
+    });
   }
 }
