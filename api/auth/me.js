@@ -1,5 +1,6 @@
 import {
   clearAuthSessionCookie,
+  getAuthenticatedUserByToken,
   getAuthenticatedUserFromRequest,
   readAuthTokenFromRequest,
   setAuthSessionCookie,
@@ -21,11 +22,47 @@ function setNoStoreHeaders(res) {
 
 export default async function handler(req, res) {
   setNoStoreHeaders(res);
-  if (req.method !== "GET" && req.method !== "PATCH") {
+  if (req.method !== "GET" && req.method !== "PATCH" && req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
   try {
+    if (req.method === "POST") {
+      const body = await parseRequestBody(req);
+      const sessionToken = String(body?.sessionToken || "").trim();
+      if (!sessionToken) {
+        clearAuthSessionCookie(res, {
+          secure: shouldUseSecureCookies(req),
+        });
+        return res.status(401).json({
+          authenticated: false,
+          error: "Authentication required.",
+          code: "AUTH_REQUIRED",
+        });
+      }
+
+      const restoredAuth = await getAuthenticatedUserByToken(sessionToken);
+      if (!restoredAuth?.user || !restoredAuth?.session?.expiresAt) {
+        clearAuthSessionCookie(res, {
+          secure: shouldUseSecureCookies(req),
+        });
+        return res.status(401).json({
+          authenticated: false,
+          error: "Session expired. Please sign in again.",
+          code: "AUTH_SESSION_EXPIRED",
+        });
+      }
+
+      setAuthSessionCookie(res, sessionToken, restoredAuth.session.expiresAt, {
+        secure: shouldUseSecureCookies(req),
+      });
+      return res.status(200).json({
+        authenticated: true,
+        user: restoredAuth.user,
+        sessionToken,
+      });
+    }
+
     const auth = await getAuthenticatedUserFromRequest(req);
     if (!auth || !auth.user) {
       if (req.method === "PATCH") {
