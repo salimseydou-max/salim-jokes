@@ -309,7 +309,7 @@ export function createAuthService() {
     }
     const clearOnAuthFailure = options.clearOnAuthFailure !== false;
     try {
-      const payload = await requestJson("/api/auth/restore", {
+      const payload = await requestJson("/api/auth/me", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
