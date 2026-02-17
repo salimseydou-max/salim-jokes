@@ -165,7 +165,13 @@ export function createSettingsView(options = {}) {
       // Allows dedicated mobile save tap without submitting keyboard unexpectedly.
     });
     themeSelect?.addEventListener("change", () => {
-      applyThemeToDocument(themeSelect.value || "dark");
+      const nextTheme = themeSelect.value || "dark";
+      preferencesStore.update({
+        appearance: {
+          theme: nextTheme,
+        },
+      });
+      applyThemeToDocument(nextTheme);
     });
     if (window.matchMedia) {
       const systemThemeQuery = window.matchMedia("(prefers-color-scheme: light)");

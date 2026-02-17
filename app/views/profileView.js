@@ -15,19 +15,6 @@ function formatDate(value) {
   return new Date(time).toLocaleDateString();
 }
 
-function sanitizePhone(value) {
-  const raw = String(value || "").trim();
-  if (!raw) {
-    return "";
-  }
-  const plus = raw.startsWith("+");
-  const digits = raw.replace(/\D/g, "");
-  if (digits.length < 7 || digits.length > 15) {
-    return "";
-  }
-  return `${plus ? "+" : ""}${digits}`;
-}
-
 async function fileToDataUrl(file) {
   if (!file) {
     return "";
@@ -72,7 +59,6 @@ function renderList(target, items, emptyText, itemRenderer) {
 export function createProfileView(options = {}) {
   const root = options.root;
   const authService = options.authService;
-  const verificationService = options.verificationService;
   const favoritesStore = options.favoritesStore;
   const submissionStore = options.submissionStore;
   const reactionStore = options.reactionStore;
@@ -94,10 +80,6 @@ export function createProfileView(options = {}) {
   const editForm = root?.querySelector("[data-profile-edit-form]");
   const logoutButton = root?.querySelector("[data-profile-logout]");
 
-  const sendCodeButton = root?.querySelector("[data-signup-send-code]");
-  const verifyCodeButton = root?.querySelector("[data-signup-verify-code]");
-  const verificationCodeInput = root?.querySelector("[data-signup-verification-code]");
-  const verificationStatus = root?.querySelector("[data-signup-verification-status]");
   const signupLanguageSelect = root?.querySelector("[data-signup-language]");
   const profileLanguageSelect = root?.querySelector("[data-profile-language]");
 
@@ -117,42 +99,8 @@ export function createProfileView(options = {}) {
   const reactionsList = root?.querySelector("[data-profile-reactions-list]");
   const commentsList = root?.querySelector("[data-profile-comments-list]");
 
-  let verificationState = {
-    emailVerified: false,
-    phoneVerified: false,
-  };
-
   function getOwnerId() {
     return authService.getUser()?.id || getViewerId();
-  }
-
-  function setVerificationStatus(message, type = "") {
-    if (!verificationStatus) {
-      return;
-    }
-    verificationStatus.textContent = message;
-    verificationStatus.classList.remove("is-success", "is-error");
-    if (type === "success") {
-      verificationStatus.classList.add("is-success");
-    }
-    if (type === "error") {
-      verificationStatus.classList.add("is-error");
-    }
-  }
-
-  function refreshVerificationState() {
-    const email = signupForm?.querySelector("[name='email']")?.value || "";
-    const phone = sanitizePhone(signupForm?.querySelector("[name='phoneNumber']")?.value || "");
-    verificationState = {
-      emailVerified: verificationService.isVerified("email", email),
-      phoneVerified: phone ? verificationService.isVerified("phone", phone) : false,
-    };
-    if (verificationState.emailVerified || verificationState.phoneVerified) {
-      const channel = verificationState.emailVerified ? "email" : "phone";
-      setVerificationStatus(`Verified via ${channel}.`, "success");
-    } else {
-      setVerificationStatus("Verify at least email or phone before creating the account.");
-    }
   }
 
   function setAuthVisibility(authenticated) {
@@ -316,57 +264,21 @@ export function createProfileView(options = {}) {
     renderCollections();
   }
 
-  async function sendVerificationCode() {
-    const email = signupForm?.querySelector("[name='email']")?.value || "";
-    const phone = sanitizePhone(signupForm?.querySelector("[name='phoneNumber']")?.value || "");
-    const type = phone ? "phone" : "email";
-    const target = type === "phone" ? phone : email;
-    if (!target) {
-      setVerificationStatus("Enter a valid phone or email before requesting a code.", "error");
-      return;
-    }
-    try {
-      await verificationService.requestCode(type, target);
-      setVerificationStatus(
-        `Verification code sent via ${type === "phone" ? "SMS" : "email"}.`,
-        "success"
-      );
-      notificationStore?.add({
-        type: "verification",
-        title: "Verification sent",
-        message: `A code was sent via ${type === "phone" ? "SMS" : "email"}.`,
-      });
-    } catch (error) {
-      setVerificationStatus(error.message || "Failed to send code.", "error");
-    }
-  }
-
-  function confirmVerificationCode() {
-    const email = signupForm?.querySelector("[name='email']")?.value || "";
-    const phone = sanitizePhone(signupForm?.querySelector("[name='phoneNumber']")?.value || "");
-    const code = verificationCodeInput?.value || "";
-    const verifiedPhone = phone ? verificationService.verifyCode("phone", phone, code) : false;
-    const verifiedEmail = email ? verificationService.verifyCode("email", email, code) : false;
-    if (!verifiedPhone && !verifiedEmail) {
-      setVerificationStatus("Invalid or expired verification code.", "error");
-      return;
-    }
-    const channel = verifiedPhone ? "phone" : "email";
-    refreshVerificationState();
-    toast?.show(`${channel} verified.`);
-  }
-
   async function submitLogin(event) {
     event.preventDefault();
-    const identifier = loginForm?.querySelector("[name='identifier']")?.value || "";
+    const email = loginForm?.querySelector("[name='identifier']")?.value || "";
     const password = loginForm?.querySelector("[name='password']")?.value || "";
+    if (!email || !email.includes("@")) {
+      toast?.show("Enter a valid email address.", "error");
+      return;
+    }
     try {
-      const user = await authService.login({ identifier, password });
+      const user = await authService.login({ email, password });
       toast?.show("Logged in.");
       notificationStore?.add({
         type: "login",
         title: "Login successful",
-        message: "You signed in successfully.",
+        message: "Your account and previous info are restored on this device.",
       });
       renderAccount(user);
       onUserChanged(user);
@@ -377,21 +289,15 @@ export function createProfileView(options = {}) {
 
   async function submitSignup(event) {
     event.preventDefault();
-    refreshVerificationState();
-    if (!verificationState.emailVerified && !verificationState.phoneVerified) {
-      toast?.show("Verify email or phone before signup.", "error");
-      return;
-    }
 
     const username = signupForm?.querySelector("[name='username']")?.value || "";
     const email = signupForm?.querySelector("[name='email']")?.value || "";
-    const phoneNumber = sanitizePhone(signupForm?.querySelector("[name='phoneNumber']")?.value || "");
     const language =
       signupForm?.querySelector("[name='language']")?.value || i18nService?.getLanguage?.() || "en";
     const password = signupForm?.querySelector("[name='password']")?.value || "";
     const avatarFile = signupForm?.querySelector("[name='avatar']")?.files?.[0];
-    if (!email && !phoneNumber) {
-      toast?.show("Provide email or phone number to continue.", "error");
+    if (!email || !email.includes("@")) {
+      toast?.show("Provide a valid email address to continue.", "error");
       return;
     }
 
@@ -400,7 +306,6 @@ export function createProfileView(options = {}) {
       const user = await authService.signup({
         username,
         email,
-        phoneNumber,
         language,
         password,
         avatarUrl,
@@ -413,10 +318,6 @@ export function createProfileView(options = {}) {
       });
       signupForm?.reset();
       populateLanguageOptions(signupLanguageSelect, i18nService?.getLanguage?.() || "en");
-      if (verificationCodeInput) {
-        verificationCodeInput.value = "";
-      }
-      setVerificationStatus("Account created and verified.", "success");
       renderAccount(user);
       onUserChanged(user);
     } catch (error) {
@@ -486,10 +387,6 @@ export function createProfileView(options = {}) {
     editForm?.addEventListener("submit", submitProfileUpdate);
     logoutButton?.addEventListener("click", handleLogout);
 
-    sendCodeButton?.addEventListener("click", () => sendVerificationCode());
-    verifyCodeButton?.addEventListener("click", confirmVerificationCode);
-    signupForm?.querySelector("[name='email']")?.addEventListener("input", refreshVerificationState);
-    signupForm?.querySelector("[name='phoneNumber']")?.addEventListener("input", refreshVerificationState);
     populateLanguageOptions(signupLanguageSelect, i18nService?.getLanguage?.() || "en");
     populateLanguageOptions(profileLanguageSelect, i18nService?.getLanguage?.() || "en");
     setAuthMode("signin");
@@ -508,7 +405,6 @@ export function createProfileView(options = {}) {
       renderAccount(user);
       onUserChanged(user);
     });
-    refreshVerificationState();
   }
 
   async function activate() {
