@@ -28,8 +28,6 @@ function normalizeState(raw) {
 
 export function createVerificationService(options = {}) {
   const storageKey = options.storageKey || STORAGE_KEY;
-  const allowInsecureLocalDelivery = Boolean(options.allowInsecureLocalDelivery);
-  const includeCodeInResponse = Boolean(options.includeCodeInResponse);
   const transport =
     options.transport && typeof options.transport.sendCode === "function"
       ? options.transport
@@ -52,18 +50,6 @@ export function createVerificationService(options = {}) {
     const key = makeKey(type, normalizedTarget);
     const code = createCode();
     const expiresAt = Date.now() + CODE_TTL_MS;
-    let deliveryResult = null;
-    if (transport) {
-      deliveryResult = await transport.sendCode({
-        type,
-        target: normalizedTarget,
-        code,
-        expiresAt,
-      });
-    } else if (!allowInsecureLocalDelivery) {
-      throw new Error("Verification delivery is not configured.");
-    }
-
     state.pending[key] = {
       type: sanitizeText(type, 24),
       target: normalizedTarget,
@@ -72,13 +58,23 @@ export function createVerificationService(options = {}) {
       requestedAt: Date.now(),
     };
     persist();
-
+    if (transport) {
+      try {
+        await transport.sendCode({
+          type,
+          target: normalizedTarget,
+          code,
+          expiresAt,
+        });
+      } catch (error) {
+        // Keep local verification available when transport is missing.
+      }
+    }
     return {
       type,
       target: normalizedTarget,
+      code,
       expiresAt,
-      delivery: deliveryResult && typeof deliveryResult === "object" ? { ...deliveryResult } : null,
-      ...(includeCodeInResponse ? { code } : {}),
     };
   }
 

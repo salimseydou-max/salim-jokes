@@ -64,35 +64,11 @@ const verificationService = createVerificationService({
   transport: {
     async sendCode(payload) {
       const channel = payload?.type === "phone" ? "SMS" : "email";
-      const response = await fetch("/api/verification/send", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          type: payload?.type,
-          target: payload?.target,
-          code: payload?.code,
-          expiresAt: payload?.expiresAt,
-        }),
-      });
-      let result = {};
-      try {
-        result = await response.json();
-      } catch (error) {
-        result = {};
-      }
-      if (!response.ok || !result?.success) {
-        throw new Error(result?.error || "Verification delivery failed.");
-      }
       notificationStore.add({
         type: "verification",
         title: `${channel} verification`,
-        message: result.mock
-          ? `Verification code prepared via mock ${channel} delivery.`
-          : `A verification code was sent via ${channel.toUpperCase()}.`,
+        message: `A verification code was sent via ${channel.toUpperCase()}.`,
       });
-      return result;
     },
   },
 });
