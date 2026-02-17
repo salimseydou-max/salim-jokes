@@ -35,6 +35,8 @@ function getLocalStorageSafe() {
 }
 
 const GOOGLE_SESSION_STORAGE_KEY = "vjc.auth.google-session.v1";
+const AUTH_USER_CACHE_STORAGE_KEY = "vjc.auth.user-cache.v1";
+const AUTH_SYNC_STORAGE_KEY = "vjc.auth.sync.v1";
 
 function normalizeUser(rawUser) {
   if (!rawUser || typeof rawUser !== "object" || !rawUser.id) {
@@ -77,6 +79,64 @@ async function requestJson(url, options = {}) {
 export function createAuthService() {
   let currentUser = null;
   const listeners = new Set();
+
+  function loadUserCache() {
+    const storage = getLocalStorageSafe();
+    if (!storage) {
+      return null;
+    }
+    try {
+      const raw = storage.getItem(AUTH_USER_CACHE_STORAGE_KEY);
+      if (!raw) {
+        return null;
+      }
+      const parsed = JSON.parse(raw);
+      return normalizeUser(parsed?.user || parsed);
+    } catch (error) {
+      return null;
+    }
+  }
+
+  function saveUserCache(user) {
+    const storage = getLocalStorageSafe();
+    if (!storage) {
+      return;
+    }
+    try {
+      if (!user) {
+        storage.removeItem(AUTH_USER_CACHE_STORAGE_KEY);
+        return;
+      }
+      storage.setItem(
+        AUTH_USER_CACHE_STORAGE_KEY,
+        JSON.stringify({
+          user,
+          cachedAt: new Date().toISOString(),
+        })
+      );
+    } catch (error) {
+      // Ignore storage failures for compatibility.
+    }
+  }
+
+  function broadcastAuthSync(action, user) {
+    const storage = getLocalStorageSafe();
+    if (!storage) {
+      return;
+    }
+    try {
+      storage.setItem(
+        AUTH_SYNC_STORAGE_KEY,
+        JSON.stringify({
+          action: sanitizeText(action, 48),
+          userId: sanitizeText(user?.id, 120),
+          at: Date.now(),
+        })
+      );
+    } catch (error) {
+      // Ignore cross-tab sync failures.
+    }
+  }
 
   function loadGoogleSession() {
     const storage = getLocalStorageSafe();
@@ -122,9 +182,14 @@ export function createAuthService() {
     });
   }
 
-  function setUser(user) {
+  function setUser(user, options = {}) {
+    const shouldBroadcast = options.broadcast !== false;
     currentUser = normalizeUser(user);
     saveGoogleSession(currentUser);
+    saveUserCache(currentUser);
+    if (shouldBroadcast) {
+      broadcastAuthSync(currentUser ? "updated" : "logged_out", currentUser);
+    }
     emit();
     return currentUser;
   }
@@ -189,7 +254,8 @@ export function createAuthService() {
     };
   }
 
-  async function refreshSession() {
+  async function refreshSession(options = {}) {
+    const keepLocalOnFailure = options.keepLocalOnFailure !== false;
     try {
       const payload = await requestJson("/api/auth/me", {
         method: "GET",
@@ -197,18 +263,30 @@ export function createAuthService() {
       if (!payload?.authenticated || !payload.user) {
         const googleSession = loadGoogleSession();
         if (googleSession) {
-          return setUser(googleSession);
+          return setUser(googleSession, { broadcast: false });
         }
-        setUser(null);
+        setUser(null, { broadcast: false });
         return null;
       }
-      return setUser(payload.user);
+      return setUser(payload.user, { broadcast: false });
     } catch (error) {
       const googleSession = loadGoogleSession();
       if (googleSession) {
-        return setUser(googleSession);
+        return setUser(googleSession, { broadcast: false });
       }
-      setUser(null);
+      if (keepLocalOnFailure) {
+        const cachedUser = currentUser || loadUserCache();
+        if (cachedUser) {
+          if (!currentUser) {
+            currentUser = normalizeUser(cachedUser);
+            emit();
+          }
+          return getUser();
+        }
+      }
+      if (!keepLocalOnFailure) {
+        setUser(null, { broadcast: false });
+      }
       return null;
     }
   }
@@ -295,7 +373,7 @@ export function createAuthService() {
       return setUser(payload.user);
     } catch (error) {
       if (/authentication required/i.test(String(error?.message || ""))) {
-        const refreshed = await refreshSession();
+        const refreshed = await refreshSession({ keepLocalOnFailure: false });
         if (refreshed?.provider === "google") {
           const nextUser = buildLocalProfileUpdate(refreshed, input);
           if (nextUser) {
@@ -370,6 +448,32 @@ export function createAuthService() {
     return () => {
       listeners.delete(listener);
     };
+  }
+
+  currentUser = loadUserCache() || loadGoogleSession();
+
+  const localStorageRef = getLocalStorageSafe();
+  if (
+    localStorageRef &&
+    typeof window !== "undefined" &&
+    typeof window.addEventListener === "function"
+  ) {
+    window.addEventListener("storage", (event) => {
+      if (!event || event.storageArea !== localStorageRef || !event.key) {
+        return;
+      }
+      if (event.key === AUTH_SYNC_STORAGE_KEY) {
+        const payload = String(event.newValue || "");
+        if (payload.includes("\"logged_out\"")) {
+          if (currentUser) {
+            currentUser = null;
+            emit();
+          }
+          return;
+        }
+        refreshSession({ keepLocalOnFailure: true }).catch(() => null);
+      }
+    });
   }
 
   return {
