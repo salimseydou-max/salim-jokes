@@ -47,7 +47,6 @@ export function createFeedComposer(options = {}) {
   };
 
   const catalogById = new Map();
-  const catalogByFingerprint = new Map();
   let pointer = 0;
 
   function getItemFingerprint(item) {
@@ -65,12 +64,8 @@ export function createFeedComposer(options = {}) {
       if (!normalized || !normalized.id) {
         continue;
       }
-      const fingerprint = getItemFingerprint(normalized);
       if (!catalogById.has(normalized.id)) {
         catalogById.set(normalized.id, normalized);
-      }
-      if (fingerprint && !catalogByFingerprint.has(fingerprint)) {
-        catalogByFingerprint.set(fingerprint, normalized.id);
       }
     }
   }
@@ -94,13 +89,10 @@ export function createFeedComposer(options = {}) {
       if (!item || !jokeId) {
         continue;
       }
-      if (localQueueIds.has(jokeId) || catalogById.has(jokeId)) {
+      if (localQueueIds.has(jokeId)) {
         continue;
       }
-      if (
-        fingerprint &&
-        (localQueueFingerprints.has(fingerprint) || catalogByFingerprint.has(fingerprint))
-      ) {
+      if (fingerprint && localQueueFingerprints.has(fingerprint)) {
         continue;
       }
       localQueueIds.add(jokeId);
