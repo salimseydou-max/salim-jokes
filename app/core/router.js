@@ -37,6 +37,7 @@ export function createRouter(options = {}) {
   const defaultRoute = normalizeRoute(options.defaultRoute || DEFAULT_ROUTE);
   const routes = new Map();
   let started = false;
+  let lastEmittedRoute = "";
 
   function getCurrentRoute() {
     return readHashRoute() || readPathRoute() || defaultRoute;
@@ -44,6 +45,10 @@ export function createRouter(options = {}) {
 
   function emitRouteChange() {
     const route = getCurrentRoute();
+    if (route === lastEmittedRoute) {
+      return route;
+    }
+    lastEmittedRoute = route;
     const handler = routes.get(route) || routes.get("*");
     if (typeof handler === "function") {
       handler(route);
@@ -78,6 +83,7 @@ export function createRouter(options = {}) {
     window.addEventListener("popstate", emitRouteChange);
     if (!readHashRoute() && !readPathRoute()) {
       window.location.hash = defaultRoute;
+      emitRouteChange();
       return;
     }
     emitRouteChange();

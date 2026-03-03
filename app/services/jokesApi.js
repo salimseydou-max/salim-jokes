@@ -1,5 +1,17 @@
 const DEFAULT_LANG = "en";
 const DEFAULT_CATEGORY = "random";
+const REQUEST_TIMEOUT_MS = 5000;
+const GET_RETRY_ATTEMPTS = 1;
+const LOCAL_QUICK_FALLBACK_JOKES = Object.freeze([
+  "I asked my coffee for motivation, and it said, \"One sip at a time.\"",
+  "My to-do list called me brave for opening it before breakfast.",
+  "I cleaned my desk for focus and accidentally organized my snacks first.",
+]);
+const LOCAL_STORY_FALLBACK_JOKES = Object.freeze([
+  "I promised I would wake up early and be productive.\nMy alarm sounded heroic, and I negotiated for five more minutes.\nBy 7:30, I had won the negotiation and lost the productivity.",
+  "I tried meal prep to become an organized adult.\nBy Tuesday every container looked identical and lunch became mystery roulette.\nThe good news is mystery pasta pairs well with optimism.",
+  "I opened ten tabs to finish one task faster.\nTab seven was penguins, tab eight was a recipe, and tab nine sold lamps.\nThe task is still open, but now I am informed and well-lit.",
+]);
 
 function sanitizeText(value, maxLength = 1200) {
   return String(value || "")
@@ -29,6 +41,42 @@ function sanitizeTags(tags) {
   return output;
 }
 
+function wait(delayMs) {
+  return new Promise((resolve) => {
+    globalThis.setTimeout(resolve, Math.max(0, Number(delayMs) || 0));
+  });
+}
+
+function createScopedSignal(parentSignal, timeoutMs = REQUEST_TIMEOUT_MS) {
+  const controller = new AbortController();
+  const safeTimeout = Math.max(1200, Number(timeoutMs) || REQUEST_TIMEOUT_MS);
+  const timer = globalThis.setTimeout(() => {
+    controller.abort(new DOMException("Request timed out", "AbortError"));
+  }, safeTimeout);
+
+  const onParentAbort = () => {
+    controller.abort(parentSignal?.reason || new DOMException("Request aborted", "AbortError"));
+  };
+
+  if (parentSignal) {
+    if (parentSignal.aborted) {
+      onParentAbort();
+    } else {
+      parentSignal.addEventListener("abort", onParentAbort, { once: true });
+    }
+  }
+
+  return {
+    signal: controller.signal,
+    cleanup() {
+      globalThis.clearTimeout(timer);
+      if (parentSignal) {
+        parentSignal.removeEventListener("abort", onParentAbort);
+      }
+    },
+  };
+}
+
 export function normalizeFeedItem(input = {}, sourceType = "") {
   const id = sanitizeText(input.id || "");
   const text = sanitizeText(input.text || input.joke || "", 1400);
@@ -54,18 +102,61 @@ export function normalizeFeedItem(input = {}, sourceType = "") {
 }
 
 async function requestJson(url, options = {}) {
-  const response = await fetch(url, options);
-  let payload = null;
-  try {
-    payload = await response.json();
-  } catch (error) {
-    payload = null;
+  const {
+    timeoutMs,
+    retries,
+    signal,
+    method: requestedMethod,
+    ...fetchOptions
+  } = options;
+  const method = String(requestedMethod || "GET").toUpperCase();
+  const attempts =
+    Number.isFinite(Number(retries)) && Number(retries) > 0
+      ? Math.floor(Number(retries))
+      : method === "GET"
+        ? GET_RETRY_ATTEMPTS
+        : 1;
+  let lastError = null;
+
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
+    const scoped = createScopedSignal(signal, timeoutMs);
+    try {
+      const response = await fetch(url, {
+        ...fetchOptions,
+        method,
+        signal: scoped.signal,
+      });
+      const rawText = await response.text().catch(() => "");
+      let payload = null;
+      if (rawText) {
+        try {
+          payload = JSON.parse(rawText);
+        } catch (error) {
+          payload = null;
+        }
+      }
+      if (!response.ok) {
+        const message =
+          payload?.error ||
+          payload?.message ||
+          (rawText ? rawText.slice(0, 180) : "") ||
+          `Request failed with status ${response.status}`;
+        throw new Error(message);
+      }
+      return payload;
+    } catch (error) {
+      lastError = error;
+      const canRetry = attempt < attempts - 1;
+      if (!canRetry) {
+        break;
+      }
+      await wait((attempt + 1) * 250);
+    } finally {
+      scoped.cleanup();
+    }
   }
-  if (!response.ok) {
-    const message = payload?.error || payload?.message || `Request failed with status ${response.status}`;
-    throw new Error(message);
-  }
-  return payload;
+
+  throw lastError || new Error(`Request failed for ${url}`);
 }
 
 function normalizeList(payload, sourceType) {
@@ -218,20 +309,38 @@ function createGeneratedId(text) {
   return `gen_${Date.now()}_${Math.abs(hash)}`;
 }
 
+function pickLocalFallbackJoke(style = "mixed") {
+  const normalized = String(style || "mixed").toLowerCase();
+  const source = normalized === "story" ? LOCAL_STORY_FALLBACK_JOKES : LOCAL_QUICK_FALLBACK_JOKES;
+  const index = Math.floor(Math.random() * source.length);
+  const selected = source[index] || source[0] || LOCAL_QUICK_FALLBACK_JOKES[0];
+  return {
+    joke: selected,
+    style: normalized === "story" ? "story" : "quick",
+  };
+}
+
 export async function generateFallbackJoke(options = {}) {
   const style = String(options.style || "mixed").toLowerCase();
-  const payload = await requestJson(`/api/generateJoke?style=${encodeURIComponent(style)}`, {
-    method: "GET",
-  });
-  const text = sanitizeText(payload?.joke || "");
+  let payload = null;
+  try {
+    payload = await requestJson(`/api/generateJoke?style=${encodeURIComponent(style)}`, {
+      method: "GET",
+      timeoutMs: 2400,
+      retries: 1,
+    });
+  } catch (error) {
+    payload = null;
+  }
+  let text = sanitizeText(payload?.joke || "");
   if (!text) {
-    throw new Error("No joke returned from generator.");
+    text = sanitizeText(pickLocalFallbackJoke(style).joke);
   }
   return normalizeFeedItem(
     {
       id: createGeneratedId(text),
       text,
-      source: payload?.fallback ? "fallback_ai" : "ai",
+      source: payload?.fallback || !payload ? "fallback_ai" : "ai",
       sourceType: "ai",
       category: DEFAULT_CATEGORY,
       language: DEFAULT_LANG,
@@ -243,20 +352,13 @@ export async function generateFallbackJoke(options = {}) {
 }
 
 export async function generateAiJokes(count = 2) {
-  const output = [];
   const target = Math.max(1, Math.min(6, Number(count) || 1));
-  for (let i = 0; i < target; i += 1) {
-    try {
-      const style = i % 3 === 1 ? "story" : "quick";
-      const joke = await generateFallbackJoke({ style });
-      if (joke) {
-        output.push(joke);
-      }
-    } catch (error) {
-      continue;
-    }
-  }
-  return output;
+  const jobs = Array.from({ length: target }, (_entry, index) => {
+    const style = index % 3 === 1 ? "story" : "quick";
+    return generateFallbackJoke({ style }).catch(() => null);
+  });
+  const results = await Promise.all(jobs);
+  return results.filter(Boolean);
 }
 
 export async function submitJoke(input = {}) {

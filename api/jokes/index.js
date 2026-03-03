@@ -12,6 +12,13 @@ const FEED_DEFAULT_OFFSET = 0;
 const FEED_REMOTE_TIMEOUT_MS = 7000;
 const FEED_MAX_EXTERNAL_BATCH = 8;
 const FEED_MAX_AI_BATCH = 5;
+const FEED_EMERGENCY_JOKES = Object.freeze([
+  "I told my coffee I needed motivation. It said, \"I already do all the work.\"",
+  "My to-do list looked at me and said, \"Let us start with one easy win.\"",
+  "I cleaned my desk for focus and found yesterday's snacks, not my focus.",
+  "My browser opened ten tabs to solve one task. Collaboration can be chaotic.",
+  "I asked my alarm for support, and it replied with confidence at 6 a.m.",
+]);
 const FEED_BLOCKED_PATTERN =
   /\b(hate|kill|murder|rape|terror|nazi|racist|genocide|porn|nsfw|sex|explicit)\b/i;
 
@@ -222,6 +229,30 @@ function interleaveBuckets(buckets = [], maxItems = FEED_MAX_LIMIT) {
   return output;
 }
 
+function buildEmergencyFeedCandidates(lang, category, limit) {
+  const target = Math.max(1, Math.min(FEED_MAX_LIMIT, Number(limit) || FEED_DEFAULT_LIMIT));
+  const now = new Date().toISOString();
+  const output = [];
+  for (let i = 0; i < target; i += 1) {
+    const text = FEED_EMERGENCY_JOKES[i % FEED_EMERGENCY_JOKES.length];
+    const candidate = normalizeFeedCandidate(
+      {
+        id: `emergency_${buildContentHash(`${lang}|${category}|${text}`).slice(0, 14)}`,
+        text,
+        language: lang,
+        category,
+        source: "local_fallback",
+        createdAt: now,
+      },
+      { language: lang, category, source: "local_fallback" }
+    );
+    if (candidate) {
+      output.push(applyMonetizationTags(candidate));
+    }
+  }
+  return output;
+}
+
 async function fetchExternalFeedCandidates(lang, category, count) {
   const targetCount = Math.max(1, Math.min(FEED_MAX_EXTERNAL_BATCH, Number(count) || 1));
   const url = buildExternalBatchUrl(lang, category, targetCount);
@@ -405,12 +436,15 @@ async function handleFeedRequest(query, res) {
   const deduped = dedupeFeedCandidates(mixed).map(applyMonetizationTags);
   const filtered = includePremium ? deduped : deduped.filter((item) => item.tier !== "premium");
   const paged = filtered.slice(offset, offset + limit);
+  const emergency = !paged.length ? buildEmergencyFeedCandidates(lang, category, limit) : [];
+  const finalJokes = paged.length ? paged : emergency;
+  const usedEmergencyFallback = !paged.length && emergency.length > 0;
 
   return res.status(200).json({
     success: true,
-    jokes: paged,
-    total: filtered.length,
-    hasMore: offset + limit < filtered.length || localResult.total > offset + limit,
+    jokes: finalJokes,
+    total: Math.max(filtered.length, finalJokes.length),
+    hasMore: usedEmergencyFallback ? false : offset + limit < filtered.length || localResult.total > offset + limit,
     filters: {
       source: "feed",
       lang,
@@ -423,6 +457,7 @@ async function handleFeedRequest(query, res) {
       externalApi: externalList.length,
       ai: aiList.length,
     },
+    fallback: usedEmergencyFallback ? "emergency-local" : "",
     monetizationReady: featureFlags.monetizationEnabled,
     cached: false,
   });

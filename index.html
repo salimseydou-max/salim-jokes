@@ -52,6 +52,7 @@
 </head>
 <body>
   <div class="app-shell">
+    <h1 class="sr-only">Voice Joke Club</h1>
     <header class="app-header" aria-label="Voice Joke Club header">
       <div class="top-toolbar">
         <div class="brand-block" role="img" aria-label="Voice Joke Club">
@@ -161,10 +162,11 @@
         <p class="feed-search-meta" data-feed-search-meta data-i18n="search.meta.default">
           Mixing AI, user, trending, recent, and random jokes.
         </p>
-        <div class="feed-list" data-feed-list aria-live="polite"></div>
+        <div class="feed-list" data-feed-list aria-live="polite" role="feed" aria-busy="false"></div>
         <div class="skeleton-host" data-feed-skeleton hidden></div>
-        <div class="feed-loading" data-feed-loading hidden>
-          <div class="spinner" aria-label="Loading more jokes" role="status"></div>
+        <div class="feed-loading" data-feed-loading hidden role="status" aria-live="polite">
+          <span class="sr-only">Loading more jokes</span>
+          <div class="spinner" aria-hidden="true"></div>
         </div>
         <div class="feed-empty" data-feed-empty hidden>
           No jokes found. Try a different search keyword or keep scrolling for fresh content.

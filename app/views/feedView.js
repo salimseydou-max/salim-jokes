@@ -10,6 +10,7 @@ const VISIBLE_BATCH_SIZE = 5;
 const SEARCH_BATCH_SIZE = 6;
 const SEARCH_DEBOUNCE_MS = 160;
 const RECENT_FEED_WINDOW = 18;
+const FEED_LOAD_ERROR_MESSAGE = "Could not load jokes right now. Please try again.";
 
 function createElement(tag, className = "") {
   const element = document.createElement(tag);
@@ -107,6 +108,9 @@ export function createFeedView(options = {}) {
   const loadingFooter = root?.querySelector("[data-feed-loading]");
   const sentinel = root?.querySelector("[data-feed-sentinel]");
   const emptyState = root?.querySelector("[data-feed-empty]");
+  const defaultEmptyMessage =
+    emptyState?.textContent?.trim() ||
+    "No jokes found. Try a different search keyword or keep scrolling for fresh content.";
 
   const duplicateTracker = createDuplicateTracker({
     sessionKey: "vjc.feed.seen-joke-state.v3",
@@ -134,6 +138,8 @@ export function createFeedView(options = {}) {
   let searchResults = [];
   let searchOffset = 0;
   let activeReactionPicker = null;
+  let activeReactionToggle = null;
+  let primingTask = null;
 
   const mainFeedJokes = [];
   const knownById = new Map();
@@ -143,6 +149,13 @@ export function createFeedView(options = {}) {
       return;
     }
     skeletonHost.hidden = !isVisible;
+  }
+
+  function setFeedBusy(isBusy) {
+    if (!feedList) {
+      return;
+    }
+    feedList.setAttribute("aria-busy", isBusy ? "true" : "false");
   }
 
   function setFooterLoading(isVisible) {
@@ -157,6 +170,13 @@ export function createFeedView(options = {}) {
       return;
     }
     emptyState.hidden = !isVisible;
+  }
+
+  function setEmptyMessage(message) {
+    if (!emptyState) {
+      return;
+    }
+    emptyState.textContent = String(message || defaultEmptyMessage);
   }
 
   function renderSkeletonCards(count = 3) {
@@ -246,7 +266,9 @@ export function createFeedView(options = {}) {
   function closeActiveReactionPicker() {
     if (activeReactionPicker) {
       activeReactionPicker.hidden = true;
+      activeReactionToggle?.setAttribute("aria-expanded", "false");
       activeReactionPicker = null;
+      activeReactionToggle = null;
     }
   }
 
@@ -254,8 +276,12 @@ export function createFeedView(options = {}) {
     const wrapper = createElement("div", "reaction-control");
     const toggleButton = createElement("button", "compact-button");
     toggleButton.type = "button";
+    toggleButton.setAttribute("aria-haspopup", "true");
+    toggleButton.setAttribute("aria-expanded", "false");
     const picker = createElement("div", "reaction-picker");
     picker.hidden = true;
+    picker.id = `reaction-picker-${String(joke?.id || "").replace(/[^a-zA-Z0-9_-]/g, "")}`;
+    toggleButton.setAttribute("aria-controls", picker.id);
 
     const owner = getActiveOwnerIdentity();
 
@@ -305,8 +331,10 @@ export function createFeedView(options = {}) {
       const willOpen = picker.hidden;
       closeActiveReactionPicker();
       picker.hidden = !willOpen;
+      toggleButton.setAttribute("aria-expanded", willOpen ? "true" : "false");
       if (willOpen) {
         activeReactionPicker = picker;
+        activeReactionToggle = toggleButton;
       }
     });
 
@@ -319,6 +347,9 @@ export function createFeedView(options = {}) {
     const section = createElement("section", "comment-section");
     section.hidden = true;
     section.dataset.open = "false";
+    section.id = `comments-${String(joke?.id || "").replace(/[^a-zA-Z0-9_-]/g, "")}`;
+    commentButton.setAttribute("aria-controls", section.id);
+    commentButton.setAttribute("aria-expanded", "false");
 
     const list = createElement("div", "comment-list");
     const form = createElement("form", "comment-form");
@@ -415,6 +446,7 @@ export function createFeedView(options = {}) {
       const nextOpen = commentSection.dataset.open !== "true";
       commentSection.dataset.open = nextOpen ? "true" : "false";
       commentSection.hidden = !nextOpen;
+      commentButton.setAttribute("aria-expanded", nextOpen ? "true" : "false");
       if (nextOpen && typeof commentSection.renderComments === "function") {
         commentSection.renderComments();
       }
@@ -603,6 +635,7 @@ export function createFeedView(options = {}) {
       searchResults = [];
       searchOffset = 0;
       appendJokesToFeed(mainFeedJokes, { append: false, trackViews: false });
+      setEmptyMessage(defaultEmptyMessage);
       setEmptyVisible(mainFeedJokes.length === 0);
       renderSearchMetadata();
       return;
@@ -628,12 +661,15 @@ export function createFeedView(options = {}) {
       window.clearTimeout(searchTimer);
     }
     searchTimer = window.setTimeout(() => {
-      applySearch(searchInput?.value || "");
+      applySearch(searchInput?.value || "").catch(() => {
+        toast?.show("Search failed. Please try again.", "error");
+      });
     }, SEARCH_DEBOUNCE_MS);
   }
 
   async function loadMoreFeed() {
     const initialLoad = !feedList || feedList.children.length === 0;
+    let loadError = null;
     if (initialLoad) {
       renderSkeletonCards(3);
       setSkeletonVisible(true);
@@ -652,6 +688,7 @@ export function createFeedView(options = {}) {
       collected = filterUniqueMainFeed(next);
     } catch (error) {
       collected = [];
+      loadError = error;
     }
 
     if (collected.length < 2) {
@@ -676,6 +713,7 @@ export function createFeedView(options = {}) {
           }
         }
       } catch (error) {
+        loadError = loadError || error;
         // Keep feed resilient if retry path fails.
       }
     }
@@ -695,11 +733,12 @@ export function createFeedView(options = {}) {
         });
       }
     } else if (!feedList || feedList.children.length === 0) {
+      setEmptyMessage(loadError ? FEED_LOAD_ERROR_MESSAGE : defaultEmptyMessage);
       setEmptyVisible(true);
+      if (loadError) {
+        toast?.show(FEED_LOAD_ERROR_MESSAGE, "error");
+      }
     }
-
-    setSkeletonVisible(false);
-    setFooterLoading(false);
   }
 
   async function loadMore() {
@@ -707,14 +746,26 @@ export function createFeedView(options = {}) {
       return;
     }
     loading = true;
+    setFeedBusy(true);
     setEmptyVisible(false);
-    if (searchMode) {
-      await loadMoreSearch();
+    try {
+      if (searchMode) {
+        await loadMoreSearch();
+        return;
+      }
+      await loadMoreFeed();
+    } catch (error) {
+      if (!feedList || feedList.children.length === 0) {
+        setEmptyMessage(FEED_LOAD_ERROR_MESSAGE);
+        setEmptyVisible(true);
+      }
+      toast?.show(FEED_LOAD_ERROR_MESSAGE, "error");
+    } finally {
       loading = false;
-      return;
+      setSkeletonVisible(false);
+      setFooterLoading(false);
+      setFeedBusy(false);
     }
-    await loadMoreFeed();
-    loading = false;
   }
 
   function onIntersect(entries) {
@@ -753,11 +804,32 @@ export function createFeedView(options = {}) {
       if (searchInput) {
         searchInput.value = "";
       }
-      applySearch("");
+      applySearch("").catch(() => {
+        toast?.show("Search reset failed. Please try again.", "error");
+      });
     });
     document.addEventListener("click", () => {
       closeActiveReactionPicker();
     });
+  }
+
+  function primeComposerInBackground() {
+    if (primingTask) {
+      return primingTask;
+    }
+    primed = true;
+    primingTask = feedComposer
+      .prime()
+      .then(() => {
+        rememberJokes(feedComposer.getCatalogSnapshot());
+      })
+      .catch(() => {
+        // Keep initial rendering resilient even if priming fails.
+      })
+      .finally(() => {
+        primingTask = null;
+      });
+    return primingTask;
   }
 
   async function activate() {
@@ -766,9 +838,7 @@ export function createFeedView(options = {}) {
       await duplicateTracker.hydrateFromFutureStorage();
       bindGlobalHandlers();
       if (!primed) {
-        primed = true;
-        await feedComposer.prime();
-        rememberJokes(feedComposer.getCatalogSnapshot());
+        primeComposerInBackground();
       }
       startObserver();
       renderSearchMetadata();
@@ -776,9 +846,7 @@ export function createFeedView(options = {}) {
       return;
     }
     if (!primed) {
-      primed = true;
-      await feedComposer.prime();
-      rememberJokes(feedComposer.getCatalogSnapshot());
+      primeComposerInBackground();
     }
     startObserver();
     if (feedList && feedList.children.length < 3 && !searchMode) {
@@ -809,7 +877,9 @@ export function createFeedView(options = {}) {
       if (searchInput) {
         searchInput.value = String(value);
       }
-      applySearch(value);
+      applySearch(value).catch(() => {
+        toast?.show("Search failed. Please try again.", "error");
+      });
     },
   };
 }

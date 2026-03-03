@@ -447,6 +447,17 @@ if (
 router.start();
 updateHeaderProfile(authService.getUser());
 
+// Safety net: ensure feed auto-loads even if route events are delayed.
+window.setTimeout(() => {
+  const route = router.getCurrentRoute();
+  const hasCards = Boolean(document.querySelector("[data-feed-list]")?.children.length);
+  if (route === routes.FEED && !hasCards) {
+    feedView.activate().catch(() => {
+      toast.show("Could not load jokes. Please try again.", "error");
+    });
+  }
+}, 1200);
+
 let authHeartbeatTimer = 0;
 function stopAuthHeartbeat() {
   if (authHeartbeatTimer) {
@@ -483,8 +494,14 @@ authService.refreshSession({ keepLocalOnFailure: true }).then((user) => {
 
 if ("serviceWorker" in navigator && window.isSecureContext) {
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register("/sw.js").catch(() => {
-      // Service worker failures should not block app startup.
-    });
+    navigator.serviceWorker
+      .register("/sw.js")
+      .then((registration) => {
+        // Trigger update checks so stale shells are replaced quickly.
+        registration.update().catch(() => null);
+      })
+      .catch(() => {
+        // Service worker failures should not block app startup.
+      });
   });
 }
